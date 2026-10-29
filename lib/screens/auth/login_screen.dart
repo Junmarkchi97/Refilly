@@ -1,0 +1,70 @@
+import 'package:flutter/material.dart';
+import '../../services/api.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _email = TextEditingController(), _pass = TextEditingController();
+  final _name = TextEditingController(), _phone = TextEditingController();
+  bool _signup = false, _busy = false;
+  String _role = 'customer';
+
+  Future<void> _submit() async {
+    setState(() => _busy = true);
+    try {
+      if (_signup) {
+        await sb.auth.signUp(email: _email.text.trim(), password: _pass.text, data: {
+          'full_name': _name.text.trim(),
+          'phone': _phone.text.trim(),
+          'role': _role,
+        });
+      } else {
+        await sb.auth.signInWithPassword(email: _email.text.trim(), password: _pass.text);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: ListView(padding: const EdgeInsets.all(24), shrinkWrap: true, children: [
+              Icon(Icons.water_drop, size: 64, color: Theme.of(context).colorScheme.primary),
+              Text('Refilly', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
+              const Text('Water & daily essentials, delivered', textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              if (_signup) ...[
+                TextField(controller: _name, decoration: const InputDecoration(labelText: 'Full name')),
+                TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Mobile (09xx)'), keyboardType: TextInputType.phone),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'customer', label: Text('Customer')),
+                    ButtonSegment(value: 'rider', label: Text('Rider')),
+                    ButtonSegment(value: 'owner', label: Text('Station owner')),
+                  ],
+                  selected: {_role},
+                  onSelectionChanged: (s) => setState(() => _role = s.first),
+                ),
+              ],
+              TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),
+              TextField(controller: _pass, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+              const SizedBox(height: 16),
+              FilledButton(onPressed: _busy ? null : _submit, child: Text(_signup ? 'Create account' : 'Log in')),
+              TextButton(
+                  onPressed: () => setState(() => _signup = !_signup),
+                  child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up')),
+            ]),
+          ),
+        ),
+      );
+}
