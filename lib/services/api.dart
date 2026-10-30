@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import '../config.dart';
 import '../models/models.dart';
+import '../models/refill_routine.dart';
 
 SupabaseClient get sb => Supabase.instance.client;
 
@@ -11,6 +12,34 @@ const orderSelect =
     '*, order_items(*, product:products(image_url)), customer:profiles!orders_customer_id_fkey(full_name, phone), station:stations(name, lat, lng, photo_url)';
 
 class Api {
+  static Future<List<RefillRoutine>> refillRoutines() async {
+    final user = sb.auth.currentUser;
+    if (user == null) return const [];
+    final rows = await sb.from('refill_routines').select()
+        .eq('customer_id', user.id).order('next_due_on');
+    return rows.map(RefillRoutine.fromMap).toList();
+  }
+
+  static Future<String> saveRefillRoutine(String orderId, int days) async =>
+      await sb.rpc('save_refill_routine', params: {
+        'p_order': orderId, 'p_interval_days': days,
+      }) as String;
+
+  static Future<void> manageRefillRoutine(String id, String action, {int? days}) async {
+    await sb.rpc('manage_refill_routine', params: {
+      'p_routine': id, 'p_action': action, 'p_interval_days': days,
+    });
+  }
+
+  static Future<void> recordRefillOrder(String routineId, String orderId) async {
+    await sb.rpc('record_refill_routine_order', params: {
+      'p_routine': routineId, 'p_order': orderId,
+    });
+  }
+
+  static Future<int> claimRefillReminders() async =>
+      (await sb.rpc('claim_refill_reminders') as num).toInt();
+
   static Future<Profile?> me() async {
     final u = sb.auth.currentUser;
     if (u == null) return null;
