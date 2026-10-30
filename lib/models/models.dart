@@ -52,11 +52,12 @@ class Product {
 
 class OrderItem {
   final String productName;
-  final String? imageUrl;
+  final String? productId, imageUrl;
   final double unitPrice;
   final int quantity;
   OrderItem.fromMap(Map<String, dynamic> m)
     : productName = m['product_name'],
+      productId = m['product_id'],
       imageUrl = (m['product'] as Map?)?['image_url'],
       unitPrice = _d(m['unit_price']),
       quantity = m['quantity'];
