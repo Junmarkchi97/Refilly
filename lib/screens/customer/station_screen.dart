@@ -125,7 +125,7 @@ class _StationScreenState extends State<StationScreen> {
                 child: Text(st.description!, style: const TextStyle(color: RF.muted)),
               ),
             const SizedBox(height: 10),
-            if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Text('${snap.error}')),
+            if (snap.hasError) const Padding(padding: EdgeInsets.all(20), child: Text('Could not load products. Reopen the station to retry.')),
             if (data == null && !snap.hasError) const SizedBox(height: 320, child: SkeletonList(count: 4, height: 70)),
             if (products.isNotEmpty)
               SingleChildScrollView(
