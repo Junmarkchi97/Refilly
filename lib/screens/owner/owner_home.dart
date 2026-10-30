@@ -32,6 +32,16 @@ class _OwnerHomeState extends State<OwnerHome> {
     future: _f,
     builder: (context, snap) {
       if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      if (snap.hasError) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Station unavailable'), actions: [logoutButton()]),
+          body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Could not load your station.'),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: _reload, child: const Text('Retry')),
+          ])),
+        );
+      }
       final s = snap.data;
       if (s == null) {
         return Scaffold(
