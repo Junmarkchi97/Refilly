@@ -2,17 +2,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Refilly design system: Cal AI-style monochrome (snow background, white cards,
-/// heavy black type, black pill buttons) with a single water-blue accent.
+/// Refilly identity: confident blue calls to action with charcoal typography and calm neutral surfaces.
 class RF {
   static const bg = Colors.white;
-  static const fill = Color(0xFFF3F3F5);
+  static const fill = Color(0xFFF5F7FB);
   static const card = Colors.white;
-  static const ink = Color(0xFF000000);
-  static const muted = Color(0xFF6B6B70);
-  static const line = Color(0xFFE8E8EC);
-  static const accent = Color(0xFF1A66F0);
-  static const accentSoft = Color(0xFFE8F0FE);
+  static const ink = Color(0xFF171D2A);
+  static const muted = Color(0xFF687387);
+  static const line = Color(0xFFE5E9F2);
+  static const accent = Color(0xFF0968EE);
+  static const accentSoft = Color(0xFFEDF4FF);
   static const radius = 14.0;
   static const sheetRadius = 26.0;
   static final shadow = [BoxShadow(color: Colors.black.withValues(alpha: .08), blurRadius: 18, offset: const Offset(0, 4))];
@@ -22,8 +21,8 @@ ThemeData refillyTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: RF.ink,
-      primary: RF.ink,
+      seedColor: RF.accent,
+      primary: RF.accent,
       onPrimary: Colors.white,
       secondary: RF.accent,
       surface: RF.bg,
@@ -66,7 +65,7 @@ ThemeData refillyTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: RF.ink,
+        backgroundColor: RF.accent,
         foregroundColor: Colors.white,
         disabledBackgroundColor: RF.line,
         minimumSize: const Size(64, 56),
@@ -86,7 +85,7 @@ ThemeData refillyTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: RF.ink,
+        foregroundColor: RF.accent,
         textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
       ),
     ),
@@ -102,12 +101,12 @@ ThemeData refillyTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: RF.ink, width: 1.5),
+        borderSide: const BorderSide(color: RF.accent, width: 1.5),
       ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: RF.fill,
-      selectedColor: RF.ink,
+      selectedColor: RF.accent,
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, color: RF.ink),
@@ -119,7 +118,7 @@ ThemeData refillyTheme() {
       style: ButtonStyle(
         shape: WidgetStatePropertyAll(pill),
         side: const WidgetStatePropertyAll(BorderSide(color: RF.line)),
-        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.ink : Colors.white),
+        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.accent : Colors.white),
         foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : RF.ink),
         iconColor: const WidgetStatePropertyAll(Colors.white),
       ),
@@ -127,11 +126,11 @@ ThemeData refillyTheme() {
     listTileTheme: const ListTileThemeData(iconColor: RF.ink),
     dividerTheme: const DividerThemeData(color: RF.line, space: 24),
     switchTheme: SwitchThemeData(
-      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.ink : RF.line),
+      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.accent : RF.line),
       thumbColor: const WidgetStatePropertyAll(Colors.white),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(color: RF.ink, linearTrackColor: RF.line),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: RF.accent, linearTrackColor: RF.line),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: RF.ink,
