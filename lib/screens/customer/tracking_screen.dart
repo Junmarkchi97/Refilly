@@ -104,7 +104,16 @@ class TrackingScreen extends StatelessWidget {
               if (o.status == 'pending')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: OutlinedButton(onPressed: () => Api.cancelOrder(o.id), child: const Text('Cancel order')),
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      try {
+                        await Api.cancelOrder(o.id);
+                      } catch (e) {
+                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not cancel: $e')));
+                      }
+                    },
+                    child: const Text('Cancel order'),
+                  ),
                 ),
             ],
           );

@@ -65,10 +65,20 @@ class Api {
     });
   }
 
-  static Future<void> setStatus(String orderId, String status) =>
-      sb.from('orders').update({'status': status, if (status == 'delivered') 'payment_status': 'paid'}).eq('id', orderId);
+  /// Supabase query builders are lazy: they only run when awaited, so every call here awaits.
+  /// `.select()` makes a blocked/no-op update (0 rows) surface as an error instead of failing silently.
+  static Future<void> setStatus(String orderId, String status) async {
+    final rows = await sb
+        .from('orders')
+        .update({'status': status, if (status == 'delivered') 'payment_status': 'paid'})
+        .eq('id', orderId)
+        .select('id');
+    if (rows.isEmpty) throw Exception('Could not update this order (it may have changed or you lack access).');
+  }
 
-  static Future<void> cancelOrder(String orderId) => sb.rpc('cancel_order', params: {'p_order': orderId});
+  static Future<void> cancelOrder(String orderId) async {
+    await sb.rpc('cancel_order', params: {'p_order': orderId});
+  }
 
   /// Owner: set the (account-less) rider's name/phone; returns a fresh secret link token.
   static Future<String> assignRider(String orderId, String name, String phone) async =>
@@ -82,10 +92,13 @@ class Api {
   // Rider (no login): every call is checked against the secret token in SQL.
   static Future<Map<String, dynamic>> riderOrder(String token) async =>
       Map<String, dynamic>.from(await sb.rpc('rider_get_order', params: {'p_token': token}));
-  static Future<void> riderLocation(String token, double lat, double lng, double? heading) =>
-      sb.rpc('rider_update_location', params: {'p_token': token, 'p_lat': lat, 'p_lng': lng, 'p_heading': heading});
-  static Future<void> riderStatus(String token, String status) =>
-      sb.rpc('rider_set_status', params: {'p_token': token, 'p_status': status});
+  static Future<void> riderLocation(String token, double lat, double lng, double? heading) async {
+    await sb.rpc('rider_update_location', params: {'p_token': token, 'p_lat': lat, 'p_lng': lng, 'p_heading': heading});
+  }
+
+  static Future<void> riderStatus(String token, String status) async {
+    await sb.rpc('rider_set_status', params: {'p_token': token, 'p_status': status});
+  }
 
   static Stream<Map<String, dynamic>?> watchRider(String orderId) =>
       sb.from('rider_locations').stream(primaryKey: ['order_id']).eq('order_id', orderId).map((rows) => rows.isEmpty ? null : rows.first);
@@ -124,8 +137,13 @@ class Api {
   static Future<String> docUrl(String path) => sb.storage.from('owner-docs').createSignedUrl(path, 600);
   static Future<void> submitApplication(Map<String, dynamic> data) =>
       sb.from('owner_applications').insert({...data, 'applicant_id': sb.auth.currentUser!.id});
-  static Future<void> approve(String id, String? notes) => sb.rpc('approve_owner_application', params: {'p_id': id, 'p_notes': notes});
-  static Future<void> reject(String id, String? notes) => sb.rpc('reject_owner_application', params: {'p_id': id, 'p_notes': notes});
+  static Future<void> approve(String id, String? notes) async {
+    await sb.rpc('approve_owner_application', params: {'p_id': id, 'p_notes': notes});
+  }
+
+  static Future<void> reject(String id, String? notes) async {
+    await sb.rpc('reject_owner_application', params: {'p_id': id, 'p_notes': notes});
+  }
 
   static Future<List<Map<String, dynamic>>> sales(String stationId, DateTime from, DateTime to) async => List<Map<String, dynamic>>.from(
     await sb.rpc(
