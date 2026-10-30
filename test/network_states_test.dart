@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:refilly/screens/network_states.dart';
+import 'package:refilly/screens/widgets.dart';
 
 void main() {
   test('identifies missing internet', () {
@@ -27,6 +28,22 @@ void main() {
     expect(find.text('No internet connection'), findsOneWidget);
     await tester.tap(find.text('Try again'));
     expect(attempts, 1);
+  });
+
+  testWidgets('empty state displays helpful copy and action', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: EmptyState(
+      icon: Icons.water_drop_outlined,
+      title: 'No stations nearby',
+      subtitle: 'Try refreshing the list.',
+      actionLabel: 'Refresh',
+      onAction: () => tapped = true,
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.text('No stations nearby'), findsOneWidget);
+    expect(find.text('Try refreshing the list.'), findsOneWidget);
+    await tester.tap(find.text('Refresh'));
+    expect(tapped, isTrue);
   });
 
   testWidgets('slow connection hint appears after delay', (tester) async {
