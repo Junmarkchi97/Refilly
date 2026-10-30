@@ -1,6 +1,9 @@
 name: Deploy Flutter web to GitHub Pages
 
 # Every commit to main is built and deployed. Manual runs can redeploy the latest.
+# Uses Refilly's browser-safe Supabase publishable key by default. GitHub
+# variable/secret overrides remain supported for future key rotations.
+# NEVER put a service-role or sb_secret_* key in this public web build.
 on:
   push:
     branches: [main]
@@ -40,12 +43,12 @@ jobs:
 
       - name: Validate production Supabase configuration
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://eregmlruwyzrziihihbt.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'sb_publishable_SzEekFNizxv3mJIgQnjeNw_-i8nIYCH' }}
         shell: bash
         run: |
           if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_ANON_KEY" ]]; then
-            echo "::error::Configure repository variable SUPABASE_URL and repository secret SUPABASE_ANON_KEY before deploying."
+            echo "::error::Supabase configuration is missing; provide an enabled publishable key and project URL."
             exit 1
           fi
           if [[ "$SUPABASE_URL" != https://*.supabase.co* ]]; then
@@ -55,8 +58,8 @@ jobs:
 
       - name: Build production web
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://eregmlruwyzrziihihbt.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'sb_publishable_SzEekFNizxv3mJIgQnjeNw_-i8nIYCH' }}
           APP_URL: https://junmarkchi97.github.io/Refilly
         shell: bash
         run: |
