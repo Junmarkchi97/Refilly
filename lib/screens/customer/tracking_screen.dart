@@ -9,6 +9,7 @@ import '../../theme.dart';
 import '../widgets.dart';
 import '../network_states.dart';
 import 'reorder.dart';
+import 'save_refill_routine.dart';
 
 /// Live order status + rider position (Supabase Realtime), Glide-style.
 Future<void> _reviewStation(BuildContext context, Order order) async {
@@ -168,6 +169,15 @@ class TrackingScreen extends StatelessWidget {
                   onPressed: () => _reviewStation(context, o),
                 ),
               ),
+              if (o.status == 'delivered')
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.event_repeat_rounded),
+                    label: const Text('Save to My Essentials'),
+                    onPressed: () => saveRoutineFromOrder(context, o),
+                  ),
+                ),
               if (o.status == 'delivered' || o.status == 'cancelled')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
