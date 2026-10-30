@@ -63,14 +63,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         payment: _payment,
       );
       if (!mounted) return;
-      Navigator.of(context)
-        ..pop()
-        ..pop();
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => TrackingScreen(orderId: id, customerId: widget.profile.id),
-        ),
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => TrackingScreen(orderId: id, customerId: widget.profile.id)),
+        (route) => route.isFirst,
       );
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
