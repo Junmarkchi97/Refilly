@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'dart:typed_data';
+
 import '../config.dart';
 import '../models/models.dart';
 
@@ -15,11 +17,9 @@ class Api {
     return r == null ? null : Profile.fromMap(r);
   }
 
-  static Future<List<Station>> stations() async =>
-      (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
+  static Future<List<Station>> stations() async => (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
 
-  static Future<List<Category>> categories() async =>
-      (await sb.from('categories').select().order('sort')).map(Category.fromMap).toList();
+  static Future<List<Category>> categories() async => (await sb.from('categories').select().order('sort')).map(Category.fromMap).toList();
 
   static Future<List<Product>> products(String stationId, {bool onlyAvailable = true}) async {
     var q = sb.from('products').select().eq('station_id', stationId);
@@ -39,16 +39,19 @@ class Api {
     String? notes,
     String payment = 'cod',
   }) async {
-    final id = await sb.rpc('place_order', params: {
-      'p_station': stationId,
-      'p_items': cart.entries.map((e) => {'product_id': e.key.id, 'quantity': e.value}).toList(),
-      'p_address': address,
-      'p_lat': lat,
-      'p_lng': lng,
-      'p_phone': phone,
-      'p_notes': notes,
-      'p_payment': payment,
-    });
+    final id = await sb.rpc(
+      'place_order',
+      params: {
+        'p_station': stationId,
+        'p_items': cart.entries.map((e) => {'product_id': e.key.id, 'quantity': e.value}).toList(),
+        'p_address': address,
+        'p_lat': lat,
+        'p_lng': lng,
+        'p_phone': phone,
+        'p_notes': notes,
+        'p_payment': payment,
+      },
+    );
     return id as String;
   }
 
@@ -84,11 +87,8 @@ class Api {
   static Future<void> riderStatus(String token, String status) =>
       sb.rpc('rider_set_status', params: {'p_token': token, 'p_status': status});
 
-  static Stream<Map<String, dynamic>?> watchRider(String orderId) => sb
-      .from('rider_locations')
-      .stream(primaryKey: ['order_id'])
-      .eq('order_id', orderId)
-      .map((rows) => rows.isEmpty ? null : rows.first);
+  static Stream<Map<String, dynamic>?> watchRider(String orderId) =>
+      sb.from('rider_locations').stream(primaryKey: ['order_id']).eq('order_id', orderId).map((rows) => rows.isEmpty ? null : rows.first);
 
   // Phone verification (Supabase phone OTP; needs an SMS provider in the dashboard)
   static Future<bool> requirePhoneVerification() async =>
@@ -101,6 +101,7 @@ class Api {
     if (d.startsWith('63')) return '+$d';
     return '+63$d';
   }
+
   static Future<void> sendPhoneOtp(String phone) => sb.auth.updateUser(UserAttributes(phone: toE164(phone)));
   static Future<void> verifyPhoneOtp(String phone, String code) async {
     await sb.auth.verifyOTP(type: OtpType.phoneChange, phone: toE164(phone), token: code);
@@ -108,13 +109,10 @@ class Api {
   }
 
   // Owner applications
-  static Future<List<OwnerApplication>> myApplications() async => (await sb
-          .from('owner_applications')
-          .select()
-          .eq('applicant_id', sb.auth.currentUser!.id)
-          .order('created_at', ascending: false))
-      .map(OwnerApplication.fromMap)
-      .toList();
+  static Future<List<OwnerApplication>> myApplications() async =>
+      (await sb.from('owner_applications').select().eq('applicant_id', sb.auth.currentUser!.id).order('created_at', ascending: false))
+          .map(OwnerApplication.fromMap)
+          .toList();
   static Future<List<OwnerApplication>> applications(String status) async =>
       (await sb.from('owner_applications').select().eq('status', status).order('created_at')).map(OwnerApplication.fromMap).toList();
   static Future<String> uploadDoc(String name, Uint8List bytes, String contentType) async {
@@ -122,23 +120,25 @@ class Api {
     await sb.storage.from('owner-docs').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: true));
     return path;
   }
+
   static Future<String> docUrl(String path) => sb.storage.from('owner-docs').createSignedUrl(path, 600);
   static Future<void> submitApplication(Map<String, dynamic> data) =>
       sb.from('owner_applications').insert({...data, 'applicant_id': sb.auth.currentUser!.id});
   static Future<void> approve(String id, String? notes) => sb.rpc('approve_owner_application', params: {'p_id': id, 'p_notes': notes});
   static Future<void> reject(String id, String? notes) => sb.rpc('reject_owner_application', params: {'p_id': id, 'p_notes': notes});
 
-  static Future<List<Map<String, dynamic>>> sales(String stationId, DateTime from, DateTime to) async =>
-      List<Map<String, dynamic>>.from(await sb.rpc('station_sales', params: {
-        'p_station': stationId,
-        'p_from': from.toUtc().toIso8601String(),
-        'p_to': to.toUtc().toIso8601String(),
-      }));
+  static Future<List<Map<String, dynamic>>> sales(String stationId, DateTime from, DateTime to) async => List<Map<String, dynamic>>.from(
+    await sb.rpc(
+      'station_sales',
+      params: {'p_station': stationId, 'p_from': from.toUtc().toIso8601String(), 'p_to': to.toUtc().toIso8601String()},
+    ),
+  );
 
   static Future<List<Map<String, dynamic>>> topProducts(String stationId, DateTime from, DateTime to) async =>
-      List<Map<String, dynamic>>.from(await sb.rpc('station_top_products', params: {
-        'p_station': stationId,
-        'p_from': from.toUtc().toIso8601String(),
-        'p_to': to.toUtc().toIso8601String(),
-      }));
+      List<Map<String, dynamic>>.from(
+        await sb.rpc(
+          'station_top_products',
+          params: {'p_station': stationId, 'p_from': from.toUtc().toIso8601String(), 'p_to': to.toUtc().toIso8601String()},
+        ),
+      );
 }

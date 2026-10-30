@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../services/api.dart';
 
 /// Supabase phone OTP. Requires an SMS provider (e.g. Twilio) under Auth → Providers → Phone.
@@ -27,27 +28,44 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Verify your mobile number')),
-        body: ListView(padding: const EdgeInsets.all(16), children: [
-          const Text('We text you a 6-digit code so stations know your orders are real.'),
-          TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Mobile (09xx xxx xxxx)'), keyboardType: TextInputType.phone),
+    appBar: AppBar(title: const Text('Verify your mobile number')),
+    body: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text('We text you a 6-digit code so stations know your orders are real.'),
+        TextField(
+          controller: _phone,
+          decoration: const InputDecoration(labelText: 'Mobile (09xx xxx xxxx)'),
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: _busy
+              ? null
+              : () => _run(() async {
+                  await Api.sendPhoneOtp(_phone.text);
+                  setState(() => _sent = true);
+                }),
+          child: Text(_sent ? 'Resend code' : 'Send code'),
+        ),
+        if (_sent) ...[
+          TextField(
+            controller: _code,
+            decoration: const InputDecoration(labelText: 'Code'),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 8),
-          OutlinedButton(
-              onPressed: _busy ? null : () => _run(() async {
-                    await Api.sendPhoneOtp(_phone.text);
-                    setState(() => _sent = true);
+          FilledButton(
+            onPressed: _busy
+                ? null
+                : () => _run(() async {
+                    await Api.verifyPhoneOtp(_phone.text, _code.text.trim());
+                    if (context.mounted) Navigator.pop(context, true);
                   }),
-              child: Text(_sent ? 'Resend code' : 'Send code')),
-          if (_sent) ...[
-            TextField(controller: _code, decoration: const InputDecoration(labelText: 'Code'), keyboardType: TextInputType.number),
-            const SizedBox(height: 8),
-            FilledButton(
-                onPressed: _busy ? null : () => _run(() async {
-                      await Api.verifyPhoneOtp(_phone.text, _code.text.trim());
-                      if (context.mounted) Navigator.pop(context, true);
-                    }),
-                child: const Text('Verify')),
-          ],
-        ]),
-      );
+            child: const Text('Verify'),
+          ),
+        ],
+      ],
+    ),
+  );
 }

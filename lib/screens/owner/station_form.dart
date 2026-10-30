@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../widgets.dart';
@@ -44,21 +45,43 @@ class _StationFormState extends State<StationForm> {
   }
 
   @override
-  Widget build(BuildContext context) => ListView(padding: const EdgeInsets.all(16), children: [
-        TextField(controller: _name, decoration: const InputDecoration(labelText: 'Station name')),
-        TextField(controller: _desc, decoration: const InputDecoration(labelText: 'Description')),
-        TextField(controller: _addr, decoration: const InputDecoration(labelText: 'Address')),
-        TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Phone')),
-        SwitchListTile(title: const Text('Open for orders'), value: _open, onChanged: (v) => setState(() => _open = v)),
-        const Text('Tap the map to set your station location'),
-        SizedBox(
-          height: 260,
-          child: FlutterMap(
-            options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
-            children: [osmTiles(), MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)])],
-          ),
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+    children: [
+      TextField(
+        controller: _name,
+        decoration: const InputDecoration(labelText: 'Station name'),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _desc,
+        decoration: const InputDecoration(labelText: 'Description'),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _addr,
+        decoration: const InputDecoration(labelText: 'Address'),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _phone,
+        decoration: const InputDecoration(labelText: 'Phone'),
+      ),
+      const SizedBox(height: 12),
+      SwitchListTile(title: const Text('Open for orders'), value: _open, onChanged: (v) => setState(() => _open = v)),
+      const Text('Tap the map to set your station location'),
+      SizedBox(
+        height: 260,
+        child: FlutterMap(
+          options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
+          children: [
+            osmTiles(),
+            MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)]),
+          ],
         ),
-        const SizedBox(height: 12),
-        FilledButton(onPressed: _save, child: const Text('Save station')),
-      ]);
+      ),
+      const SizedBox(height: 12),
+      FilledButton(onPressed: _save, child: const Text('Save station')),
+    ],
+  );
 }

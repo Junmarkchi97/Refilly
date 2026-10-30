@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../services/location.dart';
@@ -60,7 +61,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       Navigator.of(context)
         ..pop()
         ..pop();
-      Navigator.push(context, MaterialPageRoute(builder: (_) => TrackingScreen(orderId: id, customerId: widget.profile.id)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TrackingScreen(orderId: id, customerId: widget.profile.id),
+        ),
+      );
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
@@ -70,50 +76,76 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Checkout')),
-        body: ListView(padding: const EdgeInsets.all(16), children: [
-          for (final e in widget.cart.entries)
-            ListTile(dense: true, title: Text('${e.value} × ${e.key.name}'), trailing: Text(peso(e.key.price * e.value))),
-          ListTile(title: const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)), trailing: Text(peso(_total))),
-          const Divider(),
-          TextField(controller: _address, decoration: const InputDecoration(labelText: 'Delivery address (house no., street, barangay)')),
-          TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Contact number')),
-          TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes for rider (optional)')),
-          const SizedBox(height: 12),
-          Row(children: [
+    appBar: AppBar(),
+    body: ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text('Checkout', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 12),
+        for (final e in widget.cart.entries)
+          ListTile(dense: true, title: Text('${e.value} × ${e.key.name}'), trailing: Text(peso(e.key.price * e.value))),
+        ListTile(
+          title: const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
+          trailing: Text(peso(_total)),
+        ),
+        const Divider(),
+        TextField(
+          controller: _address,
+          decoration: const InputDecoration(labelText: 'Delivery address (house no., street, barangay)'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _phone,
+          decoration: const InputDecoration(labelText: 'Contact number'),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _notes,
+          decoration: const InputDecoration(labelText: 'Notes for rider (optional)'),
+        ),
+        const SizedBox(height: 12),
+        const SizedBox(height: 12),
+        Row(
+          children: [
             const Expanded(child: Text('Tap the map to pin your drop-off')),
             TextButton.icon(onPressed: _useMyLocation, icon: const Icon(Icons.my_location), label: const Text('Use my location')),
-          ]),
-          SizedBox(
-            height: 220,
-            child: FlutterMap(
-              mapController: _map,
-              options: MapOptions(
-                initialCenter: LatLng(widget.station.lat, widget.station.lng),
-                initialZoom: 14,
-                onTap: (_, p) => setState(() => _drop = p),
-              ),
-              children: [
-                osmTiles(),
-                MarkerLayer(markers: [
+          ],
+        ),
+        SizedBox(
+          height: 220,
+          child: FlutterMap(
+            mapController: _map,
+            options: MapOptions(
+              initialCenter: LatLng(widget.station.lat, widget.station.lng),
+              initialZoom: 14,
+              onTap: (_, p) => setState(() => _drop = p),
+            ),
+            children: [
+              osmTiles(),
+              MarkerLayer(
+                markers: [
                   pin(LatLng(widget.station.lat, widget.station.lng), Icons.store, Colors.blue),
                   if (_drop != null) pin(_drop!, Icons.location_pin, Colors.red),
-                ]),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          const Text('Payment'),
-          RadioGroup<String>(
-            groupValue: _payment,
-            onChanged: (v) => setState(() => _payment = v!),
-            child: const Column(children: [
+        ),
+        const SizedBox(height: 12),
+        const Text('Payment'),
+        RadioGroup<String>(
+          groupValue: _payment,
+          onChanged: (v) => setState(() => _payment = v!),
+          child: const Column(
+            children: [
               RadioListTile(value: 'cod', title: Text('Cash on delivery')),
               RadioListTile(value: 'gcash', title: Text('GCash (coming soon)'), enabled: false),
               RadioListTile(value: 'maya', title: Text('Maya (coming soon)'), enabled: false),
-            ]),
+            ],
           ),
-          FilledButton(onPressed: _busy ? null : _place, child: Text('Place order · ${peso(_total)}')),
-        ]),
-      );
+        ),
+        FilledButton(onPressed: _busy ? null : _place, child: Text('Place order · ${peso(_total)}')),
+      ],
+    ),
+  );
 }

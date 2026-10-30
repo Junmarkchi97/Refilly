@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../widgets.dart';
@@ -28,17 +29,30 @@ class _OwnerProductsState extends State<OwnerProducts> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
           title: Text(p == null ? 'New product' : 'Edit product'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            DropdownButtonFormField<String>(
-              initialValue: cat,
-              decoration: const InputDecoration(labelText: 'Category'),
-              items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
-              onChanged: (v) => setD(() => cat = v),
-            ),
-            TextField(controller: name, decoration: const InputDecoration(labelText: 'Name')),
-            TextField(controller: unit, decoration: const InputDecoration(labelText: 'Unit (gallon, kg, tank...)')),
-            TextField(controller: price, decoration: const InputDecoration(labelText: 'Price (₱)'), keyboardType: TextInputType.number),
-          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: cat,
+                decoration: const InputDecoration(labelText: 'Category'),
+                items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                onChanged: (v) => setD(() => cat = v),
+              ),
+              TextField(
+                controller: name,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: unit,
+                decoration: const InputDecoration(labelText: 'Unit (gallon, kg, tank...)'),
+              ),
+              TextField(
+                controller: price,
+                decoration: const InputDecoration(labelText: 'Price (₱)'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
             FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
@@ -68,28 +82,35 @@ class _OwnerProductsState extends State<OwnerProducts> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        floatingActionButton: FloatingActionButton.extended(onPressed: () => _edit(), icon: const Icon(Icons.add), label: const Text('Product')),
-        body: FutureBuilder<List<Product>>(
-          future: _f,
-          builder: (context, snap) {
-            if (snap.hasError) return Center(child: Text('${snap.error}'));
-            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-            return ListView(children: [
-              for (final p in snap.data!)
-                ListTile(
-                  title: Text(p.name),
-                  subtitle: Text('${peso(p.price)} / ${p.unit}'),
-                  onTap: () => _edit(p),
-                  trailing: Switch(
-                    value: p.isAvailable,
-                    onChanged: (v) async {
-                      await sb.from('products').update({'is_available': v}).eq('id', p.id);
-                      _reload();
-                    },
-                  ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () => _edit(),
+      icon: const Icon(Icons.add),
+      label: const Text('Product'),
+    ),
+    body: FutureBuilder<List<Product>>(
+      future: _f,
+      builder: (context, snap) {
+        if (snap.hasError) return Center(child: Text('${snap.error}'));
+        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        return ListView(
+          padding: const EdgeInsets.only(bottom: 120),
+          children: [
+            for (final p in snap.data!)
+              ListTile(
+                title: Text(p.name),
+                subtitle: Text('${peso(p.price)} / ${p.unit}'),
+                onTap: () => _edit(p),
+                trailing: Switch(
+                  value: p.isAvailable,
+                  onChanged: (v) async {
+                    await sb.from('products').update({'is_available': v}).eq('id', p.id);
+                    _reload();
+                  },
                 ),
-            ]);
-          },
-        ),
-      );
+              ),
+          ],
+        );
+      },
+    ),
+  );
 }

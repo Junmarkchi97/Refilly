@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../services/api.dart';
+import '../../theme.dart';
+import '../widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,10 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _busy = true);
     try {
       if (_signup) {
-        await sb.auth.signUp(email: _email.text.trim(), password: _pass.text, data: {
-          'full_name': _name.text.trim(),
-          'phone': _phone.text.trim(),
-        });
+        await sb.auth.signUp(
+          email: _email.text.trim(),
+          password: _pass.text,
+          data: {'full_name': _name.text.trim(), 'phone': _phone.text.trim()},
+        );
       } else {
         await sb.auth.signInWithPassword(email: _email.text.trim(), password: _pass.text);
       }
@@ -32,31 +36,79 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: ListView(padding: const EdgeInsets.all(24), shrinkWrap: true, children: [
-              Icon(Icons.water_drop, size: 64, color: Theme.of(context).colorScheme.primary),
-              Text('Refilly', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
-              const Text('Water & daily essentials, delivered', textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              if (_signup) ...[
-                TextField(controller: _name, decoration: const InputDecoration(labelText: 'Full name')),
-                TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Mobile (09xx)'), keyboardType: TextInputType.phone),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('Station owners: sign up, then tap "Become a station owner" to apply.', style: TextStyle(fontSize: 12)),
+    body: SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+            shrinkWrap: true,
+            children: [
+              Center(
+                child: Ring(
+                  value: .72,
+                  size: 96,
+                  stroke: 8,
+                  color: RF.accent,
+                  center: const Icon(Icons.water_drop_rounded, size: 40, color: RF.ink),
                 ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                _signup ? 'Create your\naccount' : 'Water at your\ndoor, fast.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Order from refilling stations near you and track your rider live.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: RF.muted, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 28),
+              if (_signup) ...[
+                TextField(
+                  controller: _name,
+                  decoration: const InputDecoration(labelText: 'Full name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _phone,
+                  decoration: const InputDecoration(labelText: 'Mobile (09xx)'),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 12),
               ],
-              TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),
-              TextField(controller: _pass, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
-              const SizedBox(height: 16),
+              TextField(
+                controller: _email,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pass,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+              ),
+              if (_signup)
+                const Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text(
+                    'Station owners: sign up, then apply in Profile → Become a station owner.',
+                    style: TextStyle(fontSize: 12, color: RF.muted),
+                  ),
+                ),
+              const SizedBox(height: 24),
               FilledButton(onPressed: _busy ? null : _submit, child: Text(_signup ? 'Create account' : 'Log in')),
+              const SizedBox(height: 8),
               TextButton(
-                  onPressed: () => setState(() => _signup = !_signup),
-                  child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up')),
-            ]),
+                onPressed: () => setState(() => _signup = !_signup),
+                child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up'),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }

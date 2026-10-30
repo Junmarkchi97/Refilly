@@ -13,6 +13,6 @@ class LocationService {
     return Geolocator.getCurrentPosition();
   }
 
-  static Stream<Position> stream() => Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 10));
+  static Stream<Position> stream() =>
+      Geolocator.getPositionStream(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 10));
 }
