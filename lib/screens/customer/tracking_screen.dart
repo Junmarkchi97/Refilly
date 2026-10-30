@@ -50,7 +50,7 @@ class TrackingScreen extends StatelessWidget {
   Widget build(BuildContext context) => StreamBuilder<Order?>(
     stream: Api.watchOrder(orderId),
     builder: (context, snap) {
-      if (snap.hasError) return Scaffold(
+      if (snap.hasError) { return Scaffold(
         appBar: AppBar(title: const Text('Track order')),
         body: LoadFailureView(
           error: snap.error!,
@@ -58,8 +58,8 @@ class TrackingScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => TrackingScreen(orderId: orderId, customerId: customerId)),
           ),
         ),
-      );
-      if (snap.connectionState == ConnectionState.waiting) return const Scaffold(body: Center(child: SlowLoadingHint()));
+      ); }
+      if (snap.connectionState == ConnectionState.waiting) { return const Scaffold(body: Center(child: SlowLoadingHint())); }
       final o = snap.data;
       if (o == null) {
         return Scaffold(
