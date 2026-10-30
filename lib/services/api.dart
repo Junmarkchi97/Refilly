@@ -104,6 +104,11 @@ class Api {
     await sb.rpc('rider_set_status', params: {'p_token': token, 'p_status': status});
   }
 
+  static Future<Order?> orderById(String orderId) async {
+    final row = await sb.from('orders').select(orderSelect).eq('id', orderId).maybeSingle();
+    return row == null ? null : Order.fromMap(row);
+  }
+
   static Stream<Map<String, dynamic>?> watchRider(String orderId) =>
       sb.from('rider_locations').stream(primaryKey: ['order_id']).eq('order_id', orderId).map((rows) => rows.isEmpty ? null : rows.first);
 
