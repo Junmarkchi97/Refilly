@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next() {
-    if (widget.finishing) return;
+    if (widget.finishing) { return; }
     HapticFeedback.selectionClick();
     if (_index == _slides.length - 1) {
       widget.onFinish();
@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _previous() {
-    if (_index == 0 || widget.finishing) return;
+    if (_index == 0 || widget.finishing) { return; }
     HapticFeedback.selectionClick();
     if (MediaQuery.of(context).disableAnimations) {
       _controller.jumpToPage(_index - 1);
@@ -129,9 +129,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: PageView.builder(
                     key: const Key('onboarding-pages'),
                     controller: _controller,
+                    physics: widget.finishing ? const NeverScrollableScrollPhysics() : null,
                     itemCount: _slides.length,
                     onPageChanged: (value) {
-                      if (mounted) setState(() => _index = value);
+                      if (mounted) { setState(() => _index = value); }
                     },
                     itemBuilder: (context, index) => _SlideContent(
                       index: index,
