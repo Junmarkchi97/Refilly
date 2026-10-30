@@ -56,6 +56,11 @@ class Api {
     return id as String;
   }
 
+  static Future<Order?> orderById(String orderId) async {
+    final row = await sb.from('orders').select(orderSelect).eq('id', orderId).maybeSingle();
+    return row == null ? null : Order.fromMap(row);
+  }
+
   static Stream<List<Order>> watchOrders({String? customerId, String? stationId}) {
     // Realtime stream keeps the list fresh; details (items/customer) are re-fetched.
     final col = customerId != null ? 'customer_id' : 'station_id';
@@ -69,12 +74,7 @@ class Api {
   /// Supabase query builders are lazy: they only run when awaited, so every call here awaits.
   /// `.select()` makes a blocked/no-op update (0 rows) surface as an error instead of failing silently.
   static Future<void> setStatus(String orderId, String status) async {
-    final rows = await sb
-        .from('orders')
-        .update({'status': status, if (status == 'delivered') 'payment_status': 'paid'})
-        .eq('id', orderId)
-        .select('id');
-    if (rows.isEmpty) throw Exception('Could not update this order (it may have changed or you lack access).');
+    await sb.rpc('owner_set_order_status', params: {'p_order': orderId, 'p_status': status});
   }
 
   static Future<void> cancelOrder(String orderId) async {
