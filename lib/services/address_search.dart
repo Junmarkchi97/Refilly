@@ -36,7 +36,9 @@ class AddressSuggestion {
     ];
     final distinct = <String>[];
     for (final p in parts) {
-      if (!distinct.any((existing) => existing.toLowerCase() == p.toLowerCase())) distinct.add(p);
+      if (!distinct.any((existing) => existing.toLowerCase() == p.toLowerCase())) {
+        distinct.add(p);
+      }
     }
     if (distinct.isEmpty) return null;
     return AddressSuggestion(label: distinct.join(', '), latitude: lat.toDouble(), longitude: lon.toDouble());
