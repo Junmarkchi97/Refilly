@@ -61,7 +61,9 @@ class AuthGate extends StatelessWidget {
         key: ValueKey(sb.auth.currentUser?.id),
         future: Api.me(),
         builder: (context, snap) {
-          if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          if (snap.hasError) return Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Could not load your profile: ${snap.error}'))));
+          if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          if (!snap.hasData) return const Scaffold(body: Center(child: Text('Your profile was not found. Please contact support.')));
           final p = snap.data!;
           switch (p.role) {
             case 'admin':
