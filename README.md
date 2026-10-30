@@ -1,53 +1,144 @@
-# Refilly
+<div align="center">
+  <img src="assets/brand/refilly_app_icon.png" alt="Refilly — blue R logo with refill and delivery motion" width="112" height="112" />
 
-Philippine marketplace focused exclusively on water-refilling stations and their water products. Rice/LPG expansion is out of scope for now.
+  # Refilly
 
-One Flutter app with role-based screens (roles: customer, owner, admin; riders have no accounts):
-- **Customer**: map of all stations (OpenStreetMap), browse products, cart + checkout with a required delivery map pin, station service-area check, server-priced delivery fee, Cash on Delivery, live order status and live rider tracking. Customers can review completed orders and view an in-app order notification inbox. Menu → **Verify my phone** (SMS OTP) and **Become a station owner** (apply with DTI/SEC or business permit + station photo).
-- **Station owner** (great on Flutter web): station profile, products/prices, incoming orders, accept/reject, **assign a rider by name + mobile** → a private delivery link to copy or share by SMS/Messenger, sales dashboard. Owners can switch between their own existing water stations and configure each station's delivery radius and fee.
-- **Rider (no login)**: opens the link `<APP_URL>/#/rider/<token>`, sees the order, taps Start delivery (shares live GPS), Mark delivered. The link stops working once the order is delivered/cancelled, a new link is made, or after 48h.
-- **Admin**: reviews owner applications (view documents, approve/reject). Approval runs `approve_owner_application`, which creates the station and makes the applicant an owner. Owners cannot create stations directly.
+  **Restock the essentials. Repeat without the hassle.**
 
-Stack: Flutter · Supabase (Auth, Postgres, RLS, Realtime) · flutter_map + OSM tiles · geolocator · fl_chart.
+  Discover local suppliers for the household essentials you buy again and again.
 
-## Setup
+  **Water refills available first · Rice & LPG gas planned**
 
-1. **Install Flutter** (3.35+): https://docs.flutter.dev/get-started/install
-2. **Create a Supabase project** at https://supabase.com.
-3. **Run the schema**: in the Supabase dashboard → SQL Editor, paste and run `supabase/migrations/20261030000000_init.sql`, then `supabase/seed.sql` (sample Metro Manila stations + water products).
-   Or with the CLI: `supabase link --project-ref <ref> && supabase db push` then run the seed. Also apply the later migrations in filename order, including `20261031030000_order_security.sql` and `20261031040000_water_marketplace.sql`.
-4. (Dev) Auth → Providers → Email: disable "Confirm email" for quick testing.
-5. **Configure the app**: `cp env.example.json env.json` and fill in your Project URL and anon/publishable key (Settings → API). `env.json` is git-ignored.
-6. **Run**:
+  [Features](#what-refilly-does) · [Showcase](#app-showcase) · [Setup](#run-locally) · [Roadmap](#roadmap)
+</div>
+
+---
+
+## What is Refilly?
+
+Refilly is a **repeat-essentials ordering platform**, built around everyday replenishment. Think **water refills, rice, and LPG gas**—products households need on a regular basis.
+
+It is **not** intended to be a general-purpose delivery, food-ordering, or courier app. Delivery is part of fulfilling an essentials order; **easy ordering and reordering are the core experience**.
+
+> **Current launch scope:** Water refilling stations and water products. **Rice and LPG gas are future categories**, not available to order yet. Automated recurring subscriptions and scheduled deliveries are also not implemented.
+
+## App showcase
+
+<div align="center">
+  <img src="docs/showcase/01-refill-essentials.svg" alt="Refilly: everyday essentials, water available now with rice and LPG planned" width="24%" />
+  <img src="docs/showcase/02-find-stations.svg" alt="Refilly: discover nearby water refilling stations on a map" width="24%" />
+  <img src="docs/showcase/03-reorder.svg" alt="Refilly: reorder completed or cancelled refill orders" width="24%" />
+  <img src="docs/showcase/04-order-updates.svg" alt="Refilly: follow order preparation and delivery status" width="24%" />
+</div>
+
+<div align="center">
+  <img src="docs/showcase/05-station-owner.svg" alt="Refilly for station owners: products, orders, and sales" width="24%" />
+</div>
+
+<sub>**Design previews:** App Store–style illustrations of product flows, **not literal screenshots or a guarantee of current UI appearance**. Sample names, amounts, and counts are illustrative. The app currently supports water refilling; rice and LPG are planned.</sub>
+
+## What Refilly does
+
+### For customers
+
+- **Discover nearby water refilling stations** on an OpenStreetMap-powered map.
+- **Browse refill products** and place an order with a confirmed drop-off pin and delivery-area validation.
+- **Review transparent pricing**, including station-configured delivery fees, before confirming Cash on Delivery (COD).
+- **Reorder essentials** from a delivered or cancelled order. The new cart checks current product availability and prices before checkout.
+- **Follow order updates**, view the in-app notification inbox, and see rider location only when a rider is actively sharing it.
+- **Review delivered orders**, verify a phone number through configured OTP, or apply to run a station.
+- **First-launch onboarding** for new visitors, with Skip and Get Started controls.
+
+### For station owners
+
+- Manage refill products, availability, prices, coverage radius, and delivery fees.
+- Accept, prepare, reject, and manage orders.
+- Assign a rider via a private, time-limited delivery link and confirm COD collection.
+- See sales reporting, order notifications, and switch between existing owned stations.
+
+### For riders and admins
+
+- **Riders:** Open a private delivery link without creating an account, update delivery status, and optionally share foreground location.
+- **Admins:** Review business documents and approve or reject station-owner applications.
+
+## Current availability vs. roadmap
+
+| Capability | Status |
+| --- | --- |
+| Water refilling stations and water products | ✅ Implemented in app code |
+| Cash on Delivery checkout | ✅ Implemented in app code |
+| Reorder from completed/cancelled orders | ✅ Implemented in app code |
+| Station coverage checks and delivery fees | ✅ Implemented in app code; database migrations required |
+| Owner dashboard and order management | ✅ Implemented in app code |
+| Order updates and in-app notification inbox | ✅ Implemented in app code |
+| Rice ordering | 🗓️ Planned |
+| LPG gas ordering | 🗓️ Planned |
+| Automatic scheduled refills / subscriptions | 🗓️ Planned |
+| GCash and Maya payments | 🗓️ Not enabled; requires verified payment processing |
+| Push notifications | 🗓️ Not integrated; in-app notifications are available |
+
+**Note:** “Implemented in app code” is not a claim that live Supabase migrations, provider settings, or production deployment have been verified. Rider GPS updates are foreground-dependent; a road-routing ETA is not integrated.
+
+## Technology
+
+- **Client:** Flutter (iOS, Android, and web) · Dart · Material 3
+- **Backend:** Supabase Auth, PostgreSQL, Row Level Security, Realtime, and Storage
+- **Map and location:** `flutter_map`, OpenStreetMap tiles, `geolocator`
+- **Other:** `fl_chart` sales reporting and an address-search/geocoding integration
+
+## Run locally
+
+1. [Install Flutter](https://docs.flutter.dev/get-started/install) (3.35+).
+2. Create a [Supabase](https://supabase.com) project.
+3. Apply **all** files in `supabase/migrations/` in filename order. With the Supabase CLI linked to your project, use:
+
    ```bash
-   flutter pub get
-   flutter run --dart-define-from-file=env.json            # phone/emulator
-   flutter run -d chrome --dart-define-from-file=env.json  # owner dashboard on web
-   flutter build web --dart-define-from-file=env.json      # deployable web build
+   supabase link --project-ref YOUR_PROJECT_REF
+   supabase db push
    ```
-7. **Make yourself admin** (SQL editor): `update profiles set role='admin' where id=(select id from auth.users where email='you@example.com');`
-8. **Flow**: sign up (everyone starts as a customer) → apply as owner → admin approves → owner accepts orders, assigns a rider and shares the link → rider opens it on their phone, no login.
-9. **Phone verification**: the app uses Supabase phone OTP. Configure an SMS provider (Twilio, MessageBird, Vonage or Textlocal) under Auth → Providers → Phone, then turn on the server-side gate:
-   `update app_config set require_phone_verification = true;`
-   While it is `false` (default, for testing) customers can order without a verified phone. When `true`, `place_order` rejects users whose `auth.users.phone_confirmed_at` is null and the app prompts for OTP at checkout.
-10. Set `APP_URL` in `env.json` to where the web build is hosted so rider links point there (defaults to the current web origin).
 
-## Data model
-`profiles` (role: customer/owner/admin; users may only edit name/phone) · `owner_applications` + private Storage bucket `owner-docs` · `stations` (lat/lng) · `categories` · `products` · `orders` (status, payment_method cod/gcash/maya, payment_status, payment_ref) · `order_items` · `order_rider_links` (secret token, owner-only) · `rider_locations` (one row per order, Realtime) · `app_config`.\nRider actions go through token-checked RPCs `rider_get_order`, `rider_update_location`, `rider_set_status`; customers cancel with `cancel_order`.
-Orders are created through the `place_order` RPC so prices are taken from the DB, not the client. Sales come from `station_sales` / `station_top_products` RPCs (Asia/Manila days, delivered orders only).
+   Apply the optional `supabase/seed.sql` only when sample data is wanted. **Test migration changes on staging before applying them to production.** GitHub Actions does not automatically deploy database changes.
+4. Copy the sample environment file and enter your Supabase project URL and publishable/anon key:
 
-## Water-station features
-- Station map, products, COD checkout, rider assignment and order tracking
-- Radius-based delivery coverage (straight-line distance, not road routing), with station-configured delivery fees enforced in the database
-- Delivered-order station reviews (one review per delivered order)
-- Private in-app order notifications for customers and station owners
-- Multi-station switcher for owners already associated with multiple stations (new stations still require admin approval)
+   ```bash
+   cp env.example.json env.json
+   flutter pub get
+   ```
 
-## Not yet integrated / production setup
-- GCash/Maya payments are **disabled** until verified PayMongo server-side checkout and webhook settlement are implemented and credentials supplied
-- In-app notifications work after migration; FCM **push delivery** is not configured or implemented
-- Road-based ETA/routing is not integrated; current distance estimates are approximate
-- Background rider tracking is intentionally out of scope
-- Rice and LPG catalogs are intentionally out of scope
+5. Run Refilly:
 
-Apply Supabase migrations before deploying the matching Flutter app. For a new project run every migration in order. GitHub Actions performs Flutter checks only; it does **not** deploy Supabase automatically.
+   ```bash
+   flutter run --dart-define-from-file=env.json
+   flutter run -d chrome --dart-define-from-file=env.json
+   flutter build web --dart-define-from-file=env.json
+   ```
+
+6. For test users, configure the Supabase Email and Phone auth settings appropriate to your environment. Phone OTP requires a working SMS integration. The optional `app_config.require_phone_verification` gate is enforced server-side when enabled.
+7. Set `APP_URL` in `env.json` to your hosted Flutter web origin so private rider links point to the correct application.
+
+**Typical development flow:** Sign up as a customer → apply to operate a water refilling station → admin approves → owner publishes products → customer orders or reorders → owner assigns a rider → rider fulfills the order.
+
+## Data model and security
+
+The schema includes `profiles`, `owner_applications`, `stations`, `categories`, `products`, `orders`, `order_items`, `station_reviews`, `user_notifications`, `order_rider_links`, `rider_locations`, and `app_config`.
+
+Order creation uses the `place_order` RPC so product prices and delivery fees are calculated by the database rather than accepted from client-supplied totals. Rider actions use token-checked RPCs; owner approval, status changes, COD collection, and reviews have server-side guards.
+
+## Refill-focused roadmap
+
+The long-term direction is **replenishment of essentials**, not open-ended parcel delivery:
+
+1. Expand product and seller flows for **rice** and **LPG gas**, with category-specific units, safety requirements, and fulfillment rules.
+2. Offer convenient **scheduled repeat orders and reminders**, with clear customer control over each purchase.
+3. Add verified digital payment options and push notifications once the required provider integrations are deployed.
+4. Continue improving search, delivery coverage, order reliability, and station management.
+
+---
+
+<div align="center">
+
+**Refilly — what you need, again and again.**
+
+[Repository](https://github.com/Junmarkchi97/Refilly) · [Flutter checks](https://github.com/Junmarkchi97/Refilly/actions)
+
+</div>
