@@ -64,6 +64,11 @@ class Api {
   static Stream<Order?> watchOrder(String orderId) =>
       sb.from('orders').stream(primaryKey: ['id']).eq('id', orderId).asyncMap((_) => orderById(orderId));
 
+  static Future<Order?> orderById(String orderId) async {
+    final row = await sb.from('orders').select(orderSelect).eq('id', orderId).maybeSingle();
+    return row == null ? null : Order.fromMap(row);
+  }
+
   static Stream<List<Order>> watchOrders({String? customerId, String? stationId}) {
     // Realtime stream keeps the list fresh; details (items/customer) are re-fetched.
     final col = customerId != null ? 'customer_id' : 'station_id';
