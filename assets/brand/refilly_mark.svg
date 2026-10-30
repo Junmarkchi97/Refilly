@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Refilly water drop and wave mark">
+<defs>
+<linearGradient id="back" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#07354C"/><stop offset="0.58" stop-color="#085F73"/><stop offset="1" stop-color="#0CD2C1"/></linearGradient>
+<radialGradient id="glow" cx="0.82" cy="0.05" r="0.88"><stop offset="0" stop-color="#72FFF0" stop-opacity="0.20"/><stop offset="1" stop-color="#72FFF0" stop-opacity="0"/></radialGradient>
+<linearGradient id="drop" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.55" stop-color="#E4FFFD"/><stop offset="1" stop-color="#41EDD4"/></linearGradient>
+<linearGradient id="wave" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#91FFF3"/><stop offset="0.48" stop-color="#22E7D1"/><stop offset="1" stop-color="#11BFAF"/></linearGradient>
+<clipPath id="dropClip"><path d="M512 146 C490 178 248 456 248 609 C248 778 366 888 511 888 C657 888 777 778 777 611 C777 458 535 179 512 146 Z"/></clipPath>
+</defs>
+<rect width="1024" height="1024" rx="224" fill="url(#back)"/>
+<rect width="1024" height="1024" rx="224" fill="url(#glow)"/>
+<path d="M512 146 C490 178 248 456 248 609 C248 778 366 888 511 888 C657 888 777 778 777 611 C777 458 535 179 512 146 Z" fill="url(#drop)"/>
+<g clip-path="url(#dropClip)">
+<path d="M229 697 C275 533 455 449 571 496 C669 535 691 608 663 674 C646 711 610 715 593 703 C564 683 591 648 552 614 C501 572 418 599 375 654 C331 709 319 791 337 868 L201 882 Z" fill="#073F53"/>
+<path d="M230 816 C272 695 350 631 427 628 C490 624 534 657 552 700 C561 724 578 737 597 735 C614 734 632 718 639 700 C652 778 693 817 757 824 C695 908 549 964 416 917 C310 880 248 854 230 816 Z" fill="url(#wave)"/>
+<path d="M253 761 C312 644 405 614 475 646 C514 664 539 698 551 716 C531 690 497 667 447 665 C364 659 298 748 276 847 Z" fill="#DBFFFD" opacity="0.82"/>
+</g>
+<path d="M385 369 C423 317 452 281 487 237" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="25" stroke-linecap="round"/>
+</svg>
