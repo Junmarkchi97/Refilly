@@ -10,6 +10,7 @@ import 'station_screen.dart';
 import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'app_drawer.dart';
+import '../notifications_screen.dart';
 import 'apply_owner_screen.dart';
 import '../auth/verify_phone_screen.dart';
 
@@ -89,6 +90,13 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
         const SectionTitle('Account'),
+        AppCard(child: ListTile(
+          leading: const Icon(Icons.notifications_outlined),
+          title: const Text('Order notifications'),
+          subtitle: const Text('Updates from your water stations'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => go(const NotificationsScreen()),
+        )),
         AppCard(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
