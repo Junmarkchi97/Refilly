@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
+import '../brand.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,24 +45,16 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: EdgeInsets.fromLTRB(24, 32, 24, bottomInset(context)),
             shrinkWrap: true,
             children: [
-              Center(
-                child: Ring(
-                  value: .72,
-                  size: 96,
-                  stroke: 8,
-                  color: RF.accent,
-                  center: const Icon(Icons.water_drop_rounded, size: 40, color: RF.ink),
-                ),
-              ),
+              const Center(child: RefillyMark(size: 104)),
               const SizedBox(height: 24),
               Text(
-                _signup ? 'Create your\naccount' : 'Water at your\ndoor, fast.',
+                _signup ? 'Create your\naccount' : 'Your local favorites.\nDelivered.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Order from refilling stations near you and track your rider live.',
+                'Discover nearby businesses, place an order, and track your delivery.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: RF.muted, fontWeight: FontWeight.w500),
               ),
