@@ -1,5 +1,7 @@
-// Supabase Auth "Send SMS" hook -> Semaphore (semaphore.co) OTP API.
-// Secrets: SEND_SMS_HOOK_SECRET (v1,whsec_...), SEMAPHORE_API_KEY, optional SEMAPHORE_SENDER_NAME.
+// Supabase Auth "Send SMS" hook -> UniSMS (unismsapi.com) or Semaphore (semaphore.co).
+// Secrets: SEND_SMS_HOOK_SECRET (v1,whsec_...), SMS_PROVIDER (unisms|semaphore, optional),
+//   UNISMS_API_KEY, UNISMS_SENDER_ID (default "Unisoft" test sender),
+//   SEMAPHORE_API_KEY, SEMAPHORE_SENDER_NAME (optional).
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 
 const json = (status: number, body: unknown) =>
@@ -32,34 +34,58 @@ Deno.serve(async (req) => {
   const number = toSemaphoreNumber(phone);
   if (!number || !otp) return hookError(400, "Only Philippine mobile numbers (+63 9XX XXX XXXX) are supported");
 
-  const apikey = Deno.env.get("SEMAPHORE_API_KEY");
-  if (!apikey) {
-    console.error("send-sms: SEMAPHORE_API_KEY is not set");
-    return hookError(500, "SMS provider is not configured yet");
-  }
-
-  const form = new URLSearchParams({ apikey, number, code: otp, message: "Your Refilly code is {otp}. It expires in 10 minutes. Do not share it." });
-  const sender = Deno.env.get("SEMAPHORE_SENDER_NAME");
-  if (sender) form.set("sendername", sender);
-
+  const provider = (Deno.env.get("SMS_PROVIDER") ??
+    (Deno.env.get("UNISMS_API_KEY") ? "unisms" : Deno.env.get("SEMAPHORE_API_KEY") ? "semaphore" : "unisms")).toLowerCase();
+  const message = `Your Refilly code is ${otp}. It expires in 10 minutes. Do not share it.`;
   try {
-    const r = await fetch("https://api.semaphore.co/api/v4/otp", { method: "POST", body: form });
-    const text = await r.text();
-    let ok = r.ok;
-    try {
-      const j = JSON.parse(text);
-      if (!Array.isArray(j) || j.length === 0 || j.some((m) => m.status === "Failed")) ok = false;
-    } catch (_) {
-      ok = false;
+    const err = provider === "semaphore" ? await sendSemaphore(number, otp) : await sendUniSms(number, message);
+    if (err) {
+      console.error(`send-sms[${provider}]: ${err}`);
+      return hookError(err.startsWith("not configured") ? 500 : 502, err.startsWith("not configured") ? "SMS provider is not configured yet" : "Could not send the SMS code. Please try again.");
     }
-    if (!ok) {
-      console.error(`send-sms: Semaphore rejected (${r.status}): ${text.slice(0, 300)}`);
-      return hookError(502, "Could not send the SMS code. Please try again.");
-    }
-    console.log(`send-sms: sent to ${number.slice(0, 4)}*****${number.slice(-2)}`);
+    console.log(`send-sms[${provider}]: sent to ${number.slice(0, 4)}*****${number.slice(-2)}`);
     return json(200, {});
   } catch (e) {
-    console.error("send-sms: network error", String(e));
+    console.error(`send-sms[${provider}]: network error`, String(e));
     return hookError(502, "SMS provider unreachable");
   }
 });
+
+/** UniSMS: POST https://unismsapi.com/api/sms, Basic auth (secret key as username, empty password). 201 on success. */
+async function sendUniSms(number: string, content: string): Promise<string | null> {
+  const key = Deno.env.get("UNISMS_API_KEY");
+  if (!key) return "not configured: UNISMS_API_KEY missing";
+  const r = await fetch("https://unismsapi.com/api/sms", {
+    method: "POST",
+    headers: { Authorization: "Basic " + btoa(`${key}:`), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: "+63" + number.slice(1),
+      content,
+      sender_id: Deno.env.get("UNISMS_SENDER_ID") || "Unisoft",
+      metadata: { source: "refilly-otp" },
+    }),
+  });
+  const text = await r.text();
+  if (r.status !== 201 && r.status !== 200) return `UniSMS rejected (${r.status}): ${text.slice(0, 300)}`;
+  try {
+    const m = JSON.parse(text).message;
+    if (m?.status === "failed" || m?.fail_reason) return `UniSMS failed: ${m.fail_reason ?? text.slice(0, 300)}`;
+  } catch (_) { /* non-JSON 201 is still accepted */ }
+  return null;
+}
+
+/** Semaphore: POST https://api.semaphore.co/api/v4/otp (form), uses our OTP via `code`. */
+async function sendSemaphore(number: string, otp: string): Promise<string | null> {
+  const apikey = Deno.env.get("SEMAPHORE_API_KEY");
+  if (!apikey) return "not configured: SEMAPHORE_API_KEY missing";
+  const form = new URLSearchParams({ apikey, number, code: otp, message: "Your Refilly code is {otp}. It expires in 10 minutes. Do not share it." });
+  const sender = Deno.env.get("SEMAPHORE_SENDER_NAME");
+  if (sender) form.set("sendername", sender);
+  const r = await fetch("https://api.semaphore.co/api/v4/otp", { method: "POST", body: form });
+  const text = await r.text();
+  try {
+    const j = JSON.parse(text);
+    if (r.ok && Array.isArray(j) && j.length > 0 && !j.some((m) => m.status === "Failed")) return null;
+  } catch (_) { /* fallthrough */ }
+  return `Semaphore rejected (${r.status}): ${text.slice(0, 300)}`;
+}
