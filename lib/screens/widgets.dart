@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -27,8 +29,7 @@ TileLayer osmTiles() => TileLayer(
   tileBuilder: (context, child, tile) => ColorFiltered(colorFilter: _pastel, child: child),
 );
 
-Widget osmAttribution() =>
-    const RichAttributionWidget(attributions: [TextSourceAttribution('© OpenStreetMap contributors')]);
+Widget osmAttribution() => const RichAttributionWidget(attributions: [TextSourceAttribution('© OpenStreetMap contributors')]);
 
 Marker pin(LatLng p, IconData icon, Color color, {VoidCallback? onTap}) => Marker(
   point: p,
@@ -448,7 +449,7 @@ class MapSheetScaffold extends StatelessWidget {
             ),
             child: ListView(
               controller: sc,
-              padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
+              padding: EdgeInsets.fromLTRB(0, 10, 0, bottomInset(context, bottomBar == null ? 32 : 16)),
               children: [
                 Center(
                   child: Container(
@@ -799,6 +800,269 @@ Marker dot(LatLng p, {Color color = RF.ink, double size = 22}) => Marker(
 LatLng shiftUp(LatLng p, [double zoom = 14]) => LatLng(p.latitude - 0.9 / (1 << zoom.round()) * 9, p.longitude);
 
 /// Camera fit that keeps all points visible above a half-height bottom sheet.
-CameraFit? fitAboveSheet(List<LatLng> pts) => pts.length < 2
-    ? null
-    : CameraFit.coordinates(coordinates: pts, padding: const EdgeInsets.fromLTRB(70, 110, 70, 470), maxZoom: 16);
+CameraFit? fitAboveSheet(List<LatLng> pts) =>
+    pts.length < 2 ? null : CameraFit.coordinates(coordinates: pts, padding: const EdgeInsets.fromLTRB(70, 110, 70, 470), maxZoom: 16);
+
+// ---------- Forms ----------
+
+/// Bottom space that clears the home indicator / mobile Safari toolbar.
+double bottomInset(BuildContext context, [double extra = 24]) => MediaQuery.viewPaddingOf(context).bottom + extra;
+
+/// Titled form section with 12px gaps between children.
+class FormSection extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final List<Widget> children;
+  const FormSection({super.key, required this.title, this.subtitle, required this.children});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        if (subtitle != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(subtitle!, style: const TextStyle(color: RF.muted, fontSize: 13)),
+          ),
+        const SizedBox(height: 12),
+        for (var i = 0; i < children.length; i++) ...[if (i > 0) const SizedBox(height: 12), children[i]],
+      ],
+    ),
+  );
+}
+
+/// Labelled filled field with a prefix icon.
+class LabeledField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final String? hint, prefixText;
+  final TextInputType? keyboard;
+  final ValueChanged<String>? onChanged;
+  final bool obscure;
+  final int maxLines;
+  const LabeledField({
+    super.key,
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.hint,
+    this.prefixText,
+    this.keyboard,
+    this.onChanged,
+    this.obscure = false,
+    this.maxLines = 1,
+  });
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(left: 4, bottom: 6),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: RF.muted),
+        ),
+      ),
+      TextField(
+        controller: controller,
+        keyboardType: keyboard,
+        obscureText: obscure,
+        maxLines: maxLines,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: prefixText == null
+              ? Icon(icon, size: 20, color: RF.muted)
+              : Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 20, color: RF.muted),
+                      const SizedBox(width: 8),
+                      Text(prefixText!, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    ],
+                  ),
+                ),
+        ),
+      ),
+    ],
+  );
+}
+
+/// Sticky white bottom bar holding the primary action, with safe-area inset.
+class BottomActionBar extends StatelessWidget {
+  final Widget child;
+  const BottomActionBar({super.key, required this.child});
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(top: BorderSide(color: RF.line)),
+    ),
+    child: Padding(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomInset(context, 14)),
+      child: Pressable(child: child),
+    ),
+  );
+}
+
+/// Black primary button with a spinner while [busy].
+class PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool busy;
+  const PrimaryButton({super.key, required this.label, this.onPressed, this.busy = false});
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: double.infinity,
+    child: FilledButton(
+      onPressed: busy ? null : onPressed,
+      child: AnimatedSwitcher(
+        duration: Motion.d(context, Motion.fast),
+        child: busy
+            ? const SizedBox(
+                key: ValueKey('b'),
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+              )
+            : Text(label, key: const ValueKey('l')),
+      ),
+    ),
+  );
+}
+
+/// Dashed outline painter for upload cards.
+class _DashedBorder extends CustomPainter {
+  final Color color;
+  _DashedBorder(this.color);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rr = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(RF.radius));
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    for (final m in (ui.Path()..addRRect(rr)).computeMetrics()) {
+      for (double d = 0; d < m.length; d += 10) {
+        canvas.drawPath(m.extractPath(d, d + 6), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorder o) => o.color != color;
+}
+
+/// Upload card: dashed when empty; shows thumbnail/filename, check, replace & remove once picked.
+class UploadCard extends StatelessWidget {
+  final IconData icon;
+  final String title, hint;
+  final String? fileName;
+  final Uint8List? thumb;
+  final VoidCallback onPick;
+  final VoidCallback? onRemove;
+  const UploadCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.hint,
+    this.fileName,
+    this.thumb,
+    required this.onPick,
+    this.onRemove,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final picked = fileName != null;
+    final body = Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 52,
+              height: 52,
+              color: picked ? RF.accentSoft : Colors.white,
+              child: thumb != null
+                  ? Image.memory(thumb!, fit: BoxFit.cover)
+                  : Icon(picked ? Icons.description_rounded : icon, color: RF.accent),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  picked ? fileName! : hint,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: RF.muted, fontSize: 13),
+                ),
+                if (picked)
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: onPick,
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 30), foregroundColor: RF.accent),
+                        child: const Text('Replace'),
+                      ),
+                      const SizedBox(width: 14),
+                      TextButton(
+                        onPressed: onRemove,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 30),
+                          foregroundColor: Colors.redAccent,
+                        ),
+                        child: const Text('Remove'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          AnimatedSwitcher(
+            duration: Motion.d(context, Motion.fast),
+            child: picked
+                ? const CircleAvatar(
+                    key: ValueKey('ok'),
+                    radius: 13,
+                    backgroundColor: Color(0xFF1DB954),
+                    child: Icon(Icons.check, size: 16, color: Colors.white),
+                  )
+                : const Icon(Icons.upload_rounded, key: ValueKey('up'), color: RF.ink),
+          ),
+        ],
+      ),
+    );
+    return Pressable(
+      enabled: !picked,
+      scale: .98,
+      child: Material(
+        color: picked ? Colors.white : RF.fill,
+        borderRadius: BorderRadius.circular(RF.radius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(RF.radius),
+          onTap: picked ? null : onPick,
+          child: picked
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(RF.radius),
+                    border: Border.all(color: RF.line),
+                  ),
+                  child: body,
+                )
+              : CustomPaint(painter: _DashedBorder(const Color(0xFFB9B9C0)), child: body),
+        ),
+      ),
+    );
+  }
+}

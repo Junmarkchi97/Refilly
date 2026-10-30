@@ -37,7 +37,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+    padding: EdgeInsets.fromLTRB(0, 0, 0, bottomInset(context, 100)),
     children: [
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

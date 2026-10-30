@@ -69,36 +69,39 @@ class _StationScreenState extends State<StationScreen> {
           bottomBar: AnimatedSize(
             duration: Motion.d(context, Motion.medium),
             curve: Motion.curve,
-            child: _cart.isEmpty ? const SizedBox(width: double.infinity) : AnimatedSlide(
-            offset: _cart.isEmpty ? const Offset(0, 1.4) : Offset.zero,
-            duration: Motion.d(context, Motion.slow),
-            curve: Motion.spring,
-            child: AnimatedOpacity(
-              opacity: _cart.isEmpty ? 0 : 1,
-              duration: Motion.d(context, Motion.fast),
-              child: Container(
-                color: Colors.white,
-                child: SafeArea(
-                  minimum: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                  child: Pressable(
-                    child: FilledButton(
-                      onPressed: st.isOpen && _cart.isNotEmpty
-                          ? () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => CheckoutScreen(station: st, cart: _cart, profile: widget.profile),
-                              ),
-                            )
-                          : null,
-                      child: st.isOpen
-                          ? AnimatedCount(value: _total, format: (v) => 'Confirm $count item${count == 1 ? '' : 's'} · ${peso(v)}')
-                          : const Text('Station closed'),
+            child: _cart.isEmpty
+                ? const SizedBox(width: double.infinity)
+                : AnimatedSlide(
+                    offset: _cart.isEmpty ? const Offset(0, 1.4) : Offset.zero,
+                    duration: Motion.d(context, Motion.slow),
+                    curve: Motion.spring,
+                    child: AnimatedOpacity(
+                      opacity: _cart.isEmpty ? 0 : 1,
+                      duration: Motion.d(context, Motion.fast),
+                      child: Container(
+                        color: Colors.white,
+                        child: SafeArea(
+                          minimum: EdgeInsets.fromLTRB(16, 10, 16, bottomInset(context, 14) - MediaQuery.viewPaddingOf(context).bottom),
+                          child: Pressable(
+                            child: FilledButton(
+                              onPressed: st.isOpen && _cart.isNotEmpty
+                                  ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => CheckoutScreen(station: st, cart: _cart, profile: widget.profile),
+                                      ),
+                                    )
+                                  : null,
+                              child: st.isOpen
+                                  ? AnimatedCount(value: _total, format: (v) => 'Confirm $count item${count == 1 ? '' : 's'} · ${peso(v)}')
+                                  : const Text('Station closed'),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          )),
+          ),
           sheet: (_) => [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

@@ -29,29 +29,34 @@ class _OwnerProductsState extends State<OwnerProducts> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
           title: Text(p == null ? 'New product' : 'Edit product'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: cat,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
-                onChanged: (v) => setD(() => cat = v),
-              ),
-              TextField(
-                controller: name,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: unit,
-                decoration: const InputDecoration(labelText: 'Unit (gallon, kg, tank...)'),
-              ),
-              TextField(
-                controller: price,
-                decoration: const InputDecoration(labelText: 'Price (₱)'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: cat,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                  onChanged: (v) => setD(() => cat = v),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: name,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: unit,
+                  decoration: const InputDecoration(labelText: 'Unit (gallon, kg, tank...)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: price,
+                  decoration: const InputDecoration(labelText: 'Price (₱)'),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -106,7 +111,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
                 );
               }
               return ListView(
-                padding: const EdgeInsets.only(bottom: 120),
+                padding: EdgeInsets.only(bottom: bottomInset(context, 140)),
                 children: [
                   for (final (pIdx, p) in (snap.data!).indexed)
                     FadeSlideIn(

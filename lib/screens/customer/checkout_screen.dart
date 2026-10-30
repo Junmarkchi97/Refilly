@@ -103,7 +103,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomBar: Container(
         color: Colors.white,
         child: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+          minimum: EdgeInsets.fromLTRB(16, 10, 16, bottomInset(context, 14) - MediaQuery.viewPaddingOf(context).bottom),
           child: Pressable(
             child: FilledButton(onPressed: _busy ? null : _place, child: Text(_busy ? 'Placing order…' : 'Place order · ${peso(_total)}')),
           ),

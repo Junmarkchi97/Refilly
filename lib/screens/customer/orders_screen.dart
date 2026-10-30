@@ -27,7 +27,7 @@ class OrdersScreen extends StatelessWidget {
               );
             }
             return ListView(
-              padding: const EdgeInsets.only(bottom: 120),
+              padding: EdgeInsets.only(bottom: bottomInset(context, 100)),
               children: [
                 for (final (oIdx, o) in (snap.data!).indexed)
                   FadeSlideIn(

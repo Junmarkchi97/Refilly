@@ -46,7 +46,7 @@ class _StationFormState extends State<StationForm> {
 
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+    padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset(context, 100)),
     children: [
       TextField(
         controller: _name,

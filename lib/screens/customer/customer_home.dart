@@ -53,7 +53,7 @@ class ProfileTab extends StatelessWidget {
   Widget build(BuildContext context) {
     void go(Widget w) => Navigator.push(context, MaterialPageRoute(builder: (_) => w));
     return ListView(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: EdgeInsets.only(bottom: bottomInset(context, 100)),
       children: [
         const PageHeader('Profile'),
         AppCard(

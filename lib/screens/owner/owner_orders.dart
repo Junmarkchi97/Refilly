@@ -45,7 +45,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                           onAction: _showDone ? null : () => setState(() => _showDone = true),
                         )
                       : ListView(
-                          padding: const EdgeInsets.only(bottom: 120),
+                          padding: EdgeInsets.only(bottom: bottomInset(context, 100)),
                           children: [for (final (i, o) in list.indexed) FadeSlideIn(index: i, child: _tile(o))],
                         ),
                 ),

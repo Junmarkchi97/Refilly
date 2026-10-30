@@ -117,7 +117,11 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
       min: .3,
       topRight: _gps != null ? const MapButton(Icons.gps_fixed_rounded, label: 'Live') : null,
       map: FlutterMap(
-        options: MapOptions(initialCenter: shiftUp(_me ?? drop ?? stPt ?? manila), initialZoom: 14, initialCameraFit: fitAboveSheet([?_me, ?drop, ?stPt])),
+        options: MapOptions(
+          initialCenter: shiftUp(_me ?? drop ?? stPt ?? manila),
+          initialZoom: 14,
+          initialCameraFit: fitAboveSheet([?_me, ?drop, ?stPt]),
+        ),
         children: [
           osmTiles(),
           if (drop != null && (stPt ?? _me) != null)
@@ -134,7 +138,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
       bottomBar: Container(
         color: Colors.white,
         child: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+          minimum: EdgeInsets.fromLTRB(16, 10, 16, bottomInset(context, 14) - MediaQuery.viewPaddingOf(context).bottom),
           child: Pressable(
             child: status != 'out_for_delivery'
                 ? FilledButton(onPressed: _busy ? null : () => _status('out_for_delivery'), child: const Text('Start delivery'))

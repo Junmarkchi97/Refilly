@@ -47,7 +47,11 @@ class TrackingScreen extends StatelessWidget {
             topLeft: MapButton(Icons.arrow_back_rounded, onTap: () => Navigator.pop(context)),
             topRight: MapButton(Icons.verified_user_rounded, label: 'Safety', onTap: () {}),
             map: FlutterMap(
-              options: MapOptions(initialCenter: shiftUp(riderPt ?? drop ?? stationPt ?? manila), initialZoom: 14, initialCameraFit: fitAboveSheet([?riderPt, ?drop, ?stationPt])),
+              options: MapOptions(
+                initialCenter: shiftUp(riderPt ?? drop ?? stationPt ?? manila),
+                initialZoom: 14,
+                initialCameraFit: fitAboveSheet([?riderPt, ?drop, ?stationPt]),
+              ),
               children: [
                 osmTiles(),
                 if (stationPt != null && drop != null)
