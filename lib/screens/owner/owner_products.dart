@@ -7,6 +7,7 @@ import '../../theme.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../widgets.dart';
+import '../network_states.dart';
 
 class OwnerProducts extends StatefulWidget {
   final Station station;
@@ -16,7 +17,7 @@ class OwnerProducts extends StatefulWidget {
 }
 
 class _OwnerProductsState extends State<OwnerProducts> {
-  late Future<List<Product>> _f = Api.products(widget.station.id, onlyAvailable: false);
+  late Future<List<Product>> _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20)).timeout(const Duration(seconds: 20));
   final Future<List<Category>> _cats = Api.categories();
 
   void _reload() => setState(() => _f = Api.products(widget.station.id, onlyAvailable: false));
@@ -181,8 +182,8 @@ class _OwnerProductsState extends State<OwnerProducts> {
           key: ValueKey(snap.hasData),
           child: Builder(
             builder: (context) {
-              if (snap.hasError) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Could not load products'), const SizedBox(height: 12), FilledButton(onPressed: _reload, child: const Text('Retry'))]));
-              if (!snap.hasData) return const SkeletonList();
+              if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
+              if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
               if (snap.data!.isEmpty) {
                 return EmptyState(
                   icon: Icons.inventory_2_rounded,
