@@ -10,8 +10,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pages: write
 
+# The site's publishing source is gh-pages (/), not GitHub Actions.
 # Do not publish an older commit after a newer one has been queued.
 concurrency:
   group: refilly-github-pages
@@ -80,27 +82,37 @@ jobs:
           test -s build/web/index.html
           test -s build/web/main.dart.js
 
-      - name: Upload GitHub Pages site
-        uses: actions/upload-pages-artifact@v4
+      - name: Publish built site to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: build/web
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: build/web
+          force_orphan: true
+          enable_jekyll: false
+          full_commit_message: 'deploy(web): publish ${{ github.sha }}'
 
-  deploy:
-    name: Publish website
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Publish latest Flutter build
-        id: deployment
-        uses: actions/deploy-pages@v4
+      # GitHub deliberately does not trigger Pages branch builds when the
+      # branch push was made using GITHUB_TOKEN. Request it explicitly.
+      # This is the Pages REST API: POST /repos/{owner}/{repo}/pages/builds.
+      - name: Trigger GitHub Pages rebuild
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          response=$(curl --silent --show-error --retry 3 --retry-all-errors \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --header "Content-Type: application/json" \
+            --request POST \
+            --write-out '\n%{http_code}' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/builds")
+          status="${response##*\n'}"
+          payload="${response%\n'*}"
+          if [[ "$status" != "201" && "$status" != "202" ]]; then
+            echo "::error::GitHub Pages rebuild request failed (HTTP $status)."
+            echo "$payload" | head -c 1000
+            exit 1
+          fi
+          echo "GitHub Pages build accepted (HTTP $status)."
