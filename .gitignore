@@ -50,3 +50,4 @@ app.*.map.json
 env.json
 .env
 .supabase-db-password
+.test-accounts.json
