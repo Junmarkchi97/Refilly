@@ -18,18 +18,19 @@ class OwnerHome extends StatefulWidget {
 }
 
 class _OwnerHomeState extends State<OwnerHome> {
-  late Future<Station?> _f = _load();
+  late Future<List<Station>> _f = _load();
+  String? _selectedStationId;
   int _tab = 0;
 
-  Future<Station?> _load() async {
-    final r = await sb.from('stations').select().eq('owner_id', widget.profile.id).limit(1).maybeSingle();
-    return r == null ? null : Station.fromMap(r);
+  Future<List<Station>> _load() async {
+    final rows = await sb.from('stations').select().eq('owner_id', widget.profile.id).order('name');
+    return rows.map(Station.fromMap).toList();
   }
 
   void _reload() => setState(() => _f = _load());
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<Station?>(
+  Widget build(BuildContext context) => FutureBuilder<List<Station>>(
     future: _f,
     builder: (context, snap) {
       if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -43,18 +44,19 @@ class _OwnerHomeState extends State<OwnerHome> {
           ])),
         );
       }
-      final s = snap.data;
-      if (s == null) {
+      final stations = snap.data ?? <Station>[];
+      if (stations.isEmpty) {
         return Scaffold(
           appBar: AppBar(title: const Text('No station yet'), actions: [logoutButton()]),
           body: const Center(child: Text('Your station is created when an admin approves your application.')),
         );
       }
+      final s = stations.where((item) => item.id == _selectedStationId).firstOrNull ?? stations.first;
       final pages = [
-        OwnerOrders(station: s),
-        OwnerProducts(station: s),
-        SalesScreen(station: s),
-        StationForm(ownerId: widget.profile.id, station: s, onSaved: _reload),
+        OwnerOrders(key: ValueKey('orders-${s.id}'), station: s),
+        OwnerProducts(key: ValueKey('products-${s.id}'), station: s),
+        SalesScreen(key: ValueKey('sales-${s.id}'), station: s),
+        StationForm(key: ValueKey('station-${s.id}'), ownerId: widget.profile.id, station: s, onSaved: _reload),
       ];
       const items = [(Icons.receipt_long, 'Orders'), (Icons.inventory_2, 'Products'), (Icons.bar_chart, 'Sales'), (Icons.store, 'Station')];
       final wide = MediaQuery.sizeOf(context).width > 800;
@@ -72,7 +74,14 @@ class _OwnerHomeState extends State<OwnerHome> {
               ),
             ],
           ),
-          actions: [IconButton(tooltip: 'Order notifications', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_outlined)), logoutButton(), const SizedBox(width: 8)],
+          actions: [
+             if (stations.length > 1) PopupMenuButton<String>(
+               tooltip: 'Select water station',
+               icon: const Icon(Icons.storefront_rounded),
+               onSelected: (id) => setState(() { _selectedStationId = id; _tab = 0; }),
+               itemBuilder: (_) => [for (final st in stations) PopupMenuItem(value: st.id, child: Text(st.name))],
+             ),
+             IconButton(tooltip: 'Order notifications', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_outlined)), logoutButton(), const SizedBox(width: 8)],
         ),
         body: wide
             ? Row(
