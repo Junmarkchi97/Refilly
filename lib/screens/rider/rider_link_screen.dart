@@ -26,7 +26,6 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
   LatLng? _me;
   bool _busy = false;
   bool _sendingLocation = false;
-  bool _sendingLocation = false;
 
   @override
   void initState() {
@@ -37,7 +36,6 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
   Future<void> _load() async {
     try {
       final o = await Api.riderOrder(widget.token);
-      if (!mounted) return;
       if (!mounted) return;
       setState(() {
         _o = o;
