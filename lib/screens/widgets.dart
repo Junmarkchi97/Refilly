@@ -31,6 +31,43 @@ TileLayer osmTiles() => TileLayer(
 
 Widget osmAttribution() => const RichAttributionWidget(attributions: [TextSourceAttribution('© OpenStreetMap contributors')]);
 
+/// Circular station profile photo with a water-drop fallback.
+class StationAvatar extends StatelessWidget {
+  final String? url;
+  final double size;
+  final Color? border;
+  const StationAvatar(this.url, {super.key, this.size = 40, this.border});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: border == null ? null : Border.all(color: border!, width: 3),
+    ),
+    child: ClipOval(child: ProductThumb(url, size: size, radius: size)),
+  );
+}
+
+/// Map marker that shows the station photo (falls back to an icon pin).
+Marker photoPin(LatLng p, String? url, {bool dim = false, VoidCallback? onTap}) => (url == null || url.isEmpty)
+    ? pin(p, Icons.water_drop_rounded, dim ? RF.muted : RF.ink, onTap: onTap)
+    : Marker(
+        point: p,
+        width: 48,
+        height: 48,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Opacity(
+            opacity: dim ? .6 : 1,
+            child: Container(
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: RF.shadow),
+              child: StationAvatar(url, size: 48, border: Colors.white),
+            ),
+          ),
+        ),
+      );
+
 Marker pin(LatLng p, IconData icon, Color color, {VoidCallback? onTap}) => Marker(
   point: p,
   width: 44,
@@ -559,11 +596,12 @@ class RouteBox extends StatelessWidget {
 /// "Saved place" style row: round gray icon, bold title, gray subtitle, chevron.
 class PlaceRow extends StatelessWidget {
   final IconData icon;
+  final String? photoUrl;
   final String title;
   final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
-  const PlaceRow({super.key, required this.icon, required this.title, this.subtitle, this.trailing, this.onTap});
+  const PlaceRow({super.key, required this.icon, this.photoUrl, required this.title, this.subtitle, this.trailing, this.onTap});
   @override
   Widget build(BuildContext context) => Pressable(
     enabled: onTap != null,
@@ -574,12 +612,15 @@ class PlaceRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(color: RF.fill, shape: BoxShape.circle),
-              child: Icon(icon, size: 20, color: RF.ink),
-            ),
+            if (photoUrl != null && photoUrl!.isNotEmpty)
+              StationAvatar(photoUrl, size: 44)
+            else
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(color: RF.fill, shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: RF.ink),
+              ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

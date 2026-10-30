@@ -174,7 +174,7 @@ class _StationsMapState extends State<StationsMap> {
             MarkerLayer(
               markers: [
                 for (final s in stations)
-                  pin(LatLng(s.lat, s.lng), Icons.water_drop_rounded, s.isOpen ? RF.ink : RF.muted, onTap: () => _open(s)),
+                  photoPin(LatLng(s.lat, s.lng), s.photoUrl, dim: !s.isOpen, onTap: () => _open(s)),
               ],
             ),
             osmAttribution(),
@@ -226,6 +226,7 @@ class _StationsMapState extends State<StationsMap> {
               index: i,
               child: PlaceRow(
                 icon: Icons.water_drop_rounded,
+                photoUrl: s.photoUrl,
                 title: s.name,
                 subtitle: s.address,
                 trailing: StatusPill(s.isOpen ? 'open' : 'closed'),

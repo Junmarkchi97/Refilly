@@ -1,0 +1,7 @@
+-- Starter station photos (files in supabase/seed-images/stations, uploaded to station-photos/<id>/default.jpg)
+ update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/d901df68-5140-4a74-9d68-5eba473227e6/default.jpg' where id='d901df68-5140-4a74-9d68-5eba473227e6' and photo_url is null;
+update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/5eaf3c23-3c31-41c2-aea3-6c4b06a2d4f3/default.jpg' where id='5eaf3c23-3c31-41c2-aea3-6c4b06a2d4f3' and photo_url is null;
+update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/3566cb5d-640d-4372-9ed8-f94b599519b5/default.jpg' where id='3566cb5d-640d-4372-9ed8-f94b599519b5' and photo_url is null;
+update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/56247ed0-15aa-42cb-928b-b244c33b4914/default.jpg' where id='56247ed0-15aa-42cb-928b-b244c33b4914' and photo_url is null;
+update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/5f13e011-addf-47d3-a1c4-38cb5282f7ed/default.jpg' where id='5f13e011-addf-47d3-a1c4-38cb5282f7ed' and photo_url is null;
+update public.stations set photo_url='https://eregmlruwyzrziihihbt.supabase.co/storage/v1/object/public/station-photos/00984dd4-2983-4e2a-9c75-b01bffff6461/default.jpg' where id='00984dd4-2983-4e2a-9c75-b01bffff6461' and photo_url is null;

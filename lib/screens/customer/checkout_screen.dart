@@ -96,7 +96,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Polyline(points: [stPt, _drop!], strokeWidth: 4, color: RF.ink),
               ],
             ),
-          MarkerLayer(markers: [pin(stPt, Icons.water_drop_rounded, RF.ink), if (_drop != null) dot(_drop!)]),
+          MarkerLayer(markers: [photoPin(stPt, widget.station.photoUrl), if (_drop != null) dot(_drop!)]),
           osmAttribution(),
         ],
       ),

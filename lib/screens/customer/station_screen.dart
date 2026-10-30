@@ -62,7 +62,7 @@ class _StationScreenState extends State<StationScreen> {
             options: MapOptions(initialCenter: LatLng(pt.latitude - .006, pt.longitude), initialZoom: 15),
             children: [
               osmTiles(),
-              MarkerLayer(markers: [pin(pt, Icons.water_drop_rounded, RF.ink)]),
+              MarkerLayer(markers: [photoPin(pt, st.photoUrl)]),
               osmAttribution(),
             ],
           ),
@@ -107,6 +107,8 @@ class _StationScreenState extends State<StationScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
+                  StationAvatar(st.photoUrl, size: 52),
+                  const SizedBox(width: 12),
                   Expanded(child: Text(st.name, style: Theme.of(context).textTheme.headlineSmall)),
                   StatusPill(st.isOpen ? 'open' : 'closed'),
                 ],

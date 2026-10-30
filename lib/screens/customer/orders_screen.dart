@@ -41,7 +41,23 @@ class OrdersScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Container(
+                          (o.station?['photo_url'] as String?)?.isNotEmpty ?? false
+                              ? Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    StationAvatar(o.station!['photo_url'], size: 48),
+                                    Positioned(
+                                      right: -3,
+                                      bottom: -3,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(color: statusColor(o.status), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                                        child: Icon(o.status == 'delivered' ? Icons.check_rounded : Icons.local_shipping_rounded, size: 11, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Container(
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(

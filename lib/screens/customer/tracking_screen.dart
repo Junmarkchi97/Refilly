@@ -61,7 +61,7 @@ class TrackingScreen extends StatelessWidget {
                     ],
                   ),
                 MarkerLayer(
-                  markers: [if (stationPt != null) pin(stationPt, Icons.water_drop_rounded, RF.ink), if (drop != null) dot(drop)],
+                  markers: [if (stationPt != null) photoPin(stationPt, station?['photo_url']), if (drop != null) dot(drop)],
                 ),
                 if (riderPt != null) GlidingMarker(point: riderPt, builder: (p) => pin(p, Icons.delivery_dining_rounded, RF.accent)),
                 osmAttribution(),

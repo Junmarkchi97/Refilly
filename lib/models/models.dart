@@ -9,7 +9,7 @@ class Profile {
 
 class Station {
   final String id, name;
-  final String? ownerId, address, phone, description;
+  final String? ownerId, address, phone, description, photoUrl;
   final double lat, lng;
   final bool isOpen;
   Station.fromMap(Map<String, dynamic> m)
@@ -21,6 +21,7 @@ class Station {
       description = m['description'],
       lat = _d(m['lat']),
       lng = _d(m['lng']),
+      photoUrl = m['photo_url'],
       isOpen = m['is_open'] ?? true;
 }
 
