@@ -8,6 +8,7 @@ import 'station_form.dart';
 import 'owner_orders.dart';
 import 'owner_products.dart';
 import 'sales_screen.dart';
+import '../network_states.dart';
 import '../notifications_screen.dart';
 
 class OwnerHome extends StatefulWidget {
@@ -18,7 +19,7 @@ class OwnerHome extends StatefulWidget {
 }
 
 class _OwnerHomeState extends State<OwnerHome> {
-  late Future<List<Station>> _f = _load();
+  late Future<List<Station>> _f = _load().timeout(const Duration(seconds: 20));
   String? _selectedStationId;
   int _tab = 0;
 
@@ -27,21 +28,17 @@ class _OwnerHomeState extends State<OwnerHome> {
     return rows.map(Station.fromMap).toList();
   }
 
-  void _reload() => setState(() => _f = _load());
+  void _reload() => setState(() => _f = _load().timeout(const Duration(seconds: 20)));
 
   @override
   Widget build(BuildContext context) => FutureBuilder<List<Station>>(
     future: _f,
     builder: (context, snap) {
-      if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: SlowLoadingHint()));
       if (snap.hasError) {
         return Scaffold(
           appBar: AppBar(title: const Text('Station unavailable'), actions: [logoutButton()]),
-          body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Could not load your station.'),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: _reload, child: const Text('Retry')),
-          ])),
+          body: LoadFailureView(error: snap.error!, onRetry: _reload),
         );
       }
       final stations = snap.data ?? <Station>[];
