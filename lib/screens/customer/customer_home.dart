@@ -218,7 +218,7 @@ class _StationsMapState extends State<StationsMap> {
             ),
           ),
           const SizedBox(height: 6),
-          if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Text('${snap.error}')),
+          if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('Could not load stations'), const SizedBox(height: 8), FilledButton(onPressed: () => setState(() => _f = Api.stations()), child: const Text('Retry'))])),
           if (!snap.hasData && !snap.hasError) const SizedBox(height: 300, child: SkeletonList(count: 3, height: 60)),
           if (snap.hasData && shown.isEmpty)
             EmptyState(
