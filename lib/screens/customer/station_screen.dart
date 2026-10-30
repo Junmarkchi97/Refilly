@@ -12,7 +12,8 @@ import '../network_states.dart';
 class StationScreen extends StatefulWidget {
   final Station station;
   final Profile profile;
-  const StationScreen({super.key, required this.station, required this.profile});
+  final Map<String, int> initialQuantities;
+  const StationScreen({super.key, required this.station, required this.profile, this.initialQuantities = const {}});
   @override
   State<StationScreen> createState() => _StationScreenState();
 }
@@ -20,10 +21,22 @@ class StationScreen extends StatefulWidget {
 class _StationScreenState extends State<StationScreen> {
   late Future<(List<Product>, List<Category>)> _f = _load().timeout(const Duration(seconds: 20));
 
-  Future<(List<Product>, List<Category>)> _load() async => (await Api.products(widget.station.id), await Api.categories());
+  Future<(List<Product>, List<Category>)> _load() async {
+    final products = await Api.products(widget.station.id);
+    final categories = await Api.categories();
+    if (widget.initialQuantities.isNotEmpty && !_restoredCart) {
+      _restoredCart = true;
+      for (final p in products) {
+        final qty = widget.initialQuantities[p.id];
+        if (qty != null && qty > 0) _cart[p] = qty;
+      }
+    }
+    return (products, categories);
+  }
 
   void _retry() => setState(() => _f = _load().timeout(const Duration(seconds: 20)));
   final Map<Product, int> _cart = {};
+  bool _restoredCart = false;
   late final Future<List<Map<String, dynamic>>> _reviews = Api.stationReviews(widget.station.id);
   String? _cat;
 
