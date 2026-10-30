@@ -41,14 +41,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
       return;
     }
-    if (_drop == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tap the map to select your delivery location')));
-      return;
-    }
-    if (_drop == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
-      return;
-    }
     if (_address.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery address')));
       return;
