@@ -26,17 +26,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   LatLng? _drop;
   final String _payment = 'cod';
   bool _busy = false;
+  bool _quoting = false;
+  double? _deliveryFee;
+  String? _quoteError;
+  int _quoteSequence = 0;
+
+  double get _grandTotal => _total + (_deliveryFee ?? 0);
+
+  Future<void> _setDrop(LatLng value) async {
+    final sequence = ++_quoteSequence;
+    setState(() { _drop = value; _deliveryFee = null; _quoteError = null; _quoting = true; });
+    try {
+      final fee = await Api.deliveryQuote(widget.station.id, value.latitude, value.longitude);
+      if (!mounted || sequence != _quoteSequence) return;
+      setState(() { _deliveryFee = fee; _quoting = false; });
+    } catch (e) {
+      if (!mounted || sequence != _quoteSequence) return;
+      setState(() { _quoteError = 'Delivery unavailable: $e'; _quoting = false; });
+    }
+  }
 
   double get _total => widget.cart.entries.fold(0, (t, e) => t + e.key.price * e.value);
 
   Future<void> _useMyLocation() async {
     final p = await LocationService.current();
     if (p == null) return;
-    setState(() => _drop = LatLng(p.latitude, p.longitude));
-    _map.move(_drop!, 16);
+    if (!mounted) return;
+    await _setDrop(LatLng(p.latitude, p.longitude));
+    if (mounted) _map.move(LatLng(p.latitude, p.longitude), 16);
   }
 
   Future<void> _place() async {
+    if (_deliveryFee == null || _quoting || _quoteError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a serviceable delivery location first.')));
+      return;
+    }
     if (_drop == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
       return;
@@ -95,7 +119,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       topRight: MapButton(Icons.my_location_rounded, label: 'Use my location', onTap: _useMyLocation),
       map: FlutterMap(
         mapController: _map,
-        options: MapOptions(initialCenter: LatLng(st.lat - .006, st.lng), initialZoom: 14, onTap: (_, p) => setState(() => _drop = p)),
+        options: MapOptions(initialCenter: LatLng(st.lat - .006, st.lng), initialZoom: 14, onTap: (_, p) => _setDrop(p)),
         children: [
           osmTiles(),
           if (_drop != null)
@@ -113,7 +137,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: SafeArea(
           minimum: EdgeInsets.fromLTRB(16, 10, 16, bottomInset(context, 14) - MediaQuery.viewPaddingOf(context).bottom),
           child: Pressable(
-            child: FilledButton(onPressed: _busy ? null : _place, child: Text(_busy ? 'Placing order…' : 'Place order · ${peso(_total)}')),
+            child: FilledButton(onPressed: _busy || _quoting || _deliveryFee == null ? null : _place, child: Text(_busy ? 'Placing order…' : _quoting ? 'Checking delivery area…' : 'Place order · ${peso(_grandTotal)}')),
           ),
         ),
       ),
@@ -151,6 +175,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             style: const TextStyle(color: RF.muted, fontSize: 13),
           ),
         ),
+        if (_quoteError != null) Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Text(_quoteError!, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -163,7 +188,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    AnimatedCount(value: _total, format: peso, style: Theme.of(context).textTheme.headlineLarge),
+                    AnimatedCount(value: _grandTotal, format: peso, style: Theme.of(context).textTheme.headlineLarge),
                     const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -228,8 +253,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             peso(e.key.price * e.value),
             leading: ProductThumb(e.key.imageUrl, size: 40, radius: 10),
           ),
-        const KeyValueRow('Delivery fee', 'Free'),
-        KeyValueRow('Total', peso(_total), bold: true),
+        KeyValueRow('Delivery fee', _deliveryFee == null ? 'Choose a pin' : _deliveryFee == 0 ? 'Free' : peso(_deliveryFee!)),
+        KeyValueRow('Total', peso(_grandTotal), bold: true),
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
