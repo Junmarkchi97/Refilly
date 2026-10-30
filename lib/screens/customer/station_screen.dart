@@ -7,6 +7,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'checkout_screen.dart';
+import '../network_states.dart';
 
 class StationScreen extends StatefulWidget {
   final Station station;
@@ -17,9 +18,11 @@ class StationScreen extends StatefulWidget {
 }
 
 class _StationScreenState extends State<StationScreen> {
-  late final Future<(List<Product>, List<Category>)> _f = _load();
+  late Future<(List<Product>, List<Category>)> _f = _load();
 
   Future<(List<Product>, List<Category>)> _load() async => (await Api.products(widget.station.id), await Api.categories());
+
+  void _retry() => setState(() => _f = _load().timeout(const Duration(seconds: 20)));
   final Map<Product, int> _cart = {};
   late final Future<List<Map<String, dynamic>>> _reviews = Api.stationReviews(widget.station.id);
   String? _cat;
@@ -48,7 +51,7 @@ class _StationScreenState extends State<StationScreen> {
     final pt = LatLng(st.lat, st.lng);
     final count = _cart.values.fold(0, (a, b) => a + b);
     return FutureBuilder(
-      future: _f,
+      future: _f.timeout(const Duration(seconds: 20)),
       builder: (context, snap) {
         final data = snap.data;
         final products = data?.$1 ?? const <Product>[];
@@ -146,8 +149,8 @@ class _StationScreenState extends State<StationScreen> {
               },
             ),
             const SizedBox(height: 10),
-            if (snap.hasError) const Padding(padding: EdgeInsets.all(20), child: Text('Could not load products. Reopen the station to retry.')),
-            if (data == null && !snap.hasError) const SizedBox(height: 320, child: SkeletonList(count: 4, height: 70)),
+            if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: _retry),
+            if (data == null && !snap.hasError) const Column(children: [SlowLoadingHint(), SkeletonList(count: 4, height: 70)]),
             if (products.isNotEmpty)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
