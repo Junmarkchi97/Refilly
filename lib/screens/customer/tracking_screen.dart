@@ -8,6 +8,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import '../network_states.dart';
+import 'reorder.dart';
 
 /// Live order status + rider position (Supabase Realtime), Glide-style.
 Future<void> _reviewStation(BuildContext context, Order order) async {
@@ -167,6 +168,33 @@ class TrackingScreen extends StatelessWidget {
                   onPressed: () => _reviewStation(context, o),
                 ),
               ),
+              if (o.status == 'delivered' || o.status == 'cancelled')
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Reorder'),
+                    onPressed: () async {
+                      try {
+                        final profile = await Api.me();
+                        if (!context.mounted) return;
+                        if (profile == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please sign in to reorder.')),
+                          );
+                          return;
+                        }
+                        await startReorder(context, o, profile);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not prepare your reorder. Please retry.')),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ),
               if (o.status == 'pending')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
