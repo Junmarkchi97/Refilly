@@ -14,11 +14,12 @@ class TrackingScreen extends StatelessWidget {
   const TrackingScreen({super.key, required this.orderId, required this.customerId});
 
   @override
-  Widget build(BuildContext context) => StreamBuilder<List<Order>>(
-    stream: Api.watchOrders(customerId: customerId),
+  Widget build(BuildContext context) => StreamBuilder<Order?>(
+    stream: Api.watchOrder(orderId),
     builder: (context, snap) {
-      if (!snap.hasData) return const Scaffold(body: SkeletonList());
-      final o = snap.data!.where((x) => x.id == orderId).firstOrNull;
+      if (snap.hasError) return Scaffold(body: Center(child: Text('Unable to load order: ${snap.error}')));
+      if (snap.connectionState == ConnectionState.waiting) return const Scaffold(body: SkeletonList());
+      final o = snap.data;
       if (o == null) {
         return Scaffold(
           appBar: AppBar(),
