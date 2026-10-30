@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/brand/refilly_app_icon.png" alt="Refilly — blue R logo with refill and delivery motion" width="112" height="112" />
+  <img src="assets/brand/refilly_icon.svg" alt="Refilly blue R delivery-inspired logo with a transparent outer background" width="112" height="112" />
 
   # Refilly
 
@@ -9,7 +9,7 @@
 
   **Water refills available first · Rice & LPG gas planned**
 
-  [Features](#what-refilly-does) · [Showcase](#app-showcase) · [Setup](#run-locally) · [Roadmap](#roadmap)
+  [Features](#what-refilly-does) · [Preview](#product-preview) · [Setup](#run-locally) · [Roadmap](#refill-focused-roadmap)
 </div>
 
 ---
@@ -22,7 +22,17 @@ It is **not** intended to be a general-purpose delivery, food-ordering, or couri
 
 > **Current launch scope:** Water refilling stations and water products. **Rice and LPG gas are future categories**, not available to order yet. Automated recurring subscriptions and scheduled deliveries are also not implemented.
 
-## App showcase
+## Product preview
+
+<div align="center">
+  <a href="docs/showcase/refilly-product-overview.svg">
+    <img src="docs/showcase/refilly-product-overview.svg" alt="Refilly product mockup: water-station discovery, address-aware checkout and one-tap reordering" width="100%" />
+  </a>
+</div>
+
+<sub>Conceptual product mockup based on existing Flutter flows; **not an actual screenshot**. Water refilling is the current category. Rice and LPG gas are planned.</sub>
+
+## Feature showcase
 
 <div align="center">
   <img src="docs/showcase/01-refill-essentials.svg" alt="Refilly: everyday essentials, water available now with rice and LPG planned" width="24%" />
