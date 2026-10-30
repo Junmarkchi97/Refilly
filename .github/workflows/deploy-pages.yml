@@ -108,8 +108,8 @@ jobs:
             --request POST \
             --write-out '\n%{http_code}' \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/builds")
-          status="${response##*\n'}"
-          payload="${response%\n'*}"
+          status="$(printf '%s\n' "$response" | tail -n 1)"
+          payload="$(printf '%s\n' "$response" | sed '$d')"
           if [[ "$status" != "201" && "$status" != "202" ]]; then
             echo "::error::GitHub Pages rebuild request failed (HTTP $status)."
             echo "$payload" | head -c 1000
