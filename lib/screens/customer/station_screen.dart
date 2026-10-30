@@ -13,7 +13,8 @@ class StationScreen extends StatefulWidget {
   final Station station;
   final Profile profile;
   final Map<String, int> initialQuantities;
-  const StationScreen({super.key, required this.station, required this.profile, this.initialQuantities = const {}});
+  final String? refillRoutineId;
+  const StationScreen({super.key, required this.station, required this.profile, this.initialQuantities = const {}, this.refillRoutineId});
   @override
   State<StationScreen> createState() => _StationScreenState();
 }
@@ -105,7 +106,7 @@ class _StationScreenState extends State<StationScreen> {
                                   ? () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => CheckoutScreen(station: st, cart: _cart, profile: widget.profile),
+                                        builder: (_) => CheckoutScreen(station: st, cart: _cart, profile: widget.profile, refillRoutineId: widget.refillRoutineId),
                                       ),
                                     )
                                   : null,
