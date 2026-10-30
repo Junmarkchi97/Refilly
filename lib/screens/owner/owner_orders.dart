@@ -37,7 +37,9 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                       children: [
                         const Icon(Icons.history_rounded, size: 20, color: RF.muted),
                         const SizedBox(width: 10),
-                        const Expanded(child: Text('Show delivered & cancelled', style: TextStyle(fontWeight: FontWeight.w600))),
+                        const Expanded(
+                          child: Text('Show delivered & cancelled', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ),
                         Switch(value: _showDone, onChanged: (v) => setState(() => _showDone = v)),
                       ],
                     ),
@@ -221,6 +223,8 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
+                    ProductThumb(i.imageUrl, size: 36, radius: 9),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text('${i.quantity} × ${i.productName}', style: const TextStyle(color: RF.muted)),
                     ),

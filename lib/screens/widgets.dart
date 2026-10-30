@@ -643,12 +643,14 @@ class OptionTile extends StatelessWidget {
 class KeyValueRow extends StatelessWidget {
   final String k, v;
   final bool bold;
-  const KeyValueRow(this.k, this.v, {super.key, this.bold = false});
+  final Widget? leading;
+  const KeyValueRow(this.k, this.v, {super.key, this.bold = false, this.leading});
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
     child: Row(
       children: [
+        if (leading != null) ...[leading!, const SizedBox(width: 12)],
         Expanded(
           child: Text(
             k,
@@ -1062,6 +1064,54 @@ class UploadCard extends StatelessWidget {
                 )
               : CustomPaint(painter: _DashedBorder(const Color(0xFFB9B9C0)), child: body),
         ),
+      ),
+    );
+  }
+}
+
+/// Rounded product photo with a shimmer while loading, fade-in, and an icon fallback.
+class ProductThumb extends StatelessWidget {
+  final String? url;
+  final double size;
+  final double radius;
+  const ProductThumb(this.url, {super.key, this.size = 60, this.radius = 14});
+  @override
+  Widget build(BuildContext context) {
+    final fallback = Container(
+      width: size,
+      height: size,
+      color: RF.fill,
+      child: Icon(Icons.water_drop_rounded, color: RF.accent, size: size * .45),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: url == null || url!.isEmpty
+            ? fallback
+            : Image.network(
+                url!,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                frameBuilder: (context, child, frame, sync) => sync
+                    ? child
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (frame == null) Shimmer(child: Container(color: RF.fill)),
+                          AnimatedOpacity(
+                            opacity: frame == null ? 0 : 1,
+                            duration: const Duration(milliseconds: 260),
+                            curve: Curves.easeOut,
+                            child: child,
+                          ),
+                        ],
+                      ),
+                errorBuilder: (_, _, _) => fallback,
+              ),
       ),
     );
   }

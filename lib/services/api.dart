@@ -7,7 +7,8 @@ import '../models/models.dart';
 
 SupabaseClient get sb => Supabase.instance.client;
 
-const orderSelect = '*, order_items(*), customer:profiles!orders_customer_id_fkey(full_name, phone), station:stations(name, lat, lng)';
+const orderSelect =
+    '*, order_items(*, product:products(image_url)), customer:profiles!orders_customer_id_fkey(full_name, phone), station:stations(name, lat, lng)';
 
 class Api {
   static Future<Profile?> me() async {
@@ -132,6 +133,24 @@ class Api {
     final path = '${sb.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}_$name';
     await sb.storage.from('owner-docs').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: true));
     return path;
+  }
+
+  /// Product photos live in the public `product-images` bucket under `<station_id>/` (owner-only writes via RLS).
+  static Future<String> uploadProductImage(String stationId, Uint8List bytes, String ext, String contentType) async {
+    final path = '$stationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await sb.storage.from('product-images').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: true));
+    return sb.storage.from('product-images').getPublicUrl(path);
+  }
+
+  static Future<void> deleteProductImage(String url) async {
+    const marker = '/product-images/';
+    final i = url.indexOf(marker);
+    if (i < 0 || url.contains('/defaults/')) return;
+    try {
+      await sb.storage.from('product-images').remove([url.substring(i + marker.length)]);
+    } catch (_) {
+      /* best effort */
+    }
   }
 
   static Future<String> docUrl(String path) => sb.storage.from('owner-docs').createSignedUrl(path, 600);

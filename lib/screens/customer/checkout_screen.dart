@@ -214,7 +214,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        for (final e in widget.cart.entries) KeyValueRow('${e.value} × ${e.key.name}', peso(e.key.price * e.value)),
+        for (final e in widget.cart.entries)
+          KeyValueRow(
+            '${e.value} × ${e.key.name}',
+            peso(e.key.price * e.value),
+            leading: ProductThumb(e.key.imageUrl, size: 40, radius: 10),
+          ),
         const KeyValueRow('Delivery fee', 'Free'),
         KeyValueRow('Total', peso(_total), bold: true),
         const SizedBox(height: 8),

@@ -31,7 +31,7 @@ class Category {
 
 class Product {
   final String id, stationId, name, unit;
-  final String? categoryId, description;
+  final String? categoryId, description, imageUrl;
   final double price;
   final bool isAvailable;
   Product.fromMap(Map<String, dynamic> m)
@@ -41,15 +41,21 @@ class Product {
       unit = m['unit'] ?? 'pc',
       categoryId = m['category_id'],
       description = m['description'],
+      imageUrl = m['image_url'],
       price = _d(m['price']),
       isAvailable = m['is_available'] ?? true;
 }
 
 class OrderItem {
   final String productName;
+  final String? imageUrl;
   final double unitPrice;
   final int quantity;
-  OrderItem.fromMap(Map<String, dynamic> m) : productName = m['product_name'], unitPrice = _d(m['unit_price']), quantity = m['quantity'];
+  OrderItem.fromMap(Map<String, dynamic> m)
+    : productName = m['product_name'],
+      imageUrl = (m['product'] as Map?)?['image_url'],
+      unitPrice = _d(m['unit_price']),
+      quantity = m['quantity'];
 }
 
 const orderStatuses = ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];

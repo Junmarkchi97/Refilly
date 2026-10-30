@@ -165,12 +165,7 @@ class _StationScreenState extends State<StationScreen> {
                   onTap: () => setState(() => _cart[p] = (_cart[p] ?? 0) + 1),
                   child: Row(
                     children: [
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(color: RF.fill, borderRadius: BorderRadius.circular(12)),
-                        child: const Icon(Icons.water_drop_rounded, color: RF.accent, size: 26),
-                      ),
+                      ProductThumb(p.imageUrl, size: 60),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(

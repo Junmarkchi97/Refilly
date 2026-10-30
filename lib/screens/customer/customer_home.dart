@@ -9,6 +9,7 @@ import '../widgets.dart';
 import 'station_screen.dart';
 import '../../services/location.dart';
 import 'orders_screen.dart';
+import 'app_drawer.dart';
 import 'apply_owner_screen.dart';
 import '../auth/verify_phone_screen.dart';
 
@@ -28,7 +29,14 @@ class _CustomerHomeState extends State<CustomerHome> {
   );
   @override
   Widget build(BuildContext context) {
-    if (_tab == 0) return StationsMap(profile: widget.profile, bottomBar: _nav);
+    if (_tab == 0) {
+      return StationsMap(
+        profile: widget.profile,
+        bottomBar: _nav,
+        onMenu: () =>
+            showAppDrawer(context, widget.profile, onOrders: () => setState(() => _tab = 1), onAccount: () => setState(() => _tab = 2)),
+      );
+    }
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -120,7 +128,8 @@ class ProfileTab extends StatelessWidget {
 class StationsMap extends StatefulWidget {
   final Profile profile;
   final Widget? bottomBar;
-  const StationsMap({super.key, required this.profile, this.bottomBar});
+  final VoidCallback? onMenu;
+  const StationsMap({super.key, required this.profile, this.bottomBar, this.onMenu});
   @override
   State<StationsMap> createState() => _StationsMapState();
 }
@@ -155,7 +164,7 @@ class _StationsMapState extends State<StationsMap> {
         bottomBar: widget.bottomBar,
         initial: .46,
         min: .22,
-        topLeft: MapButton(Icons.menu_rounded, onTap: () => setState(() => _f = Api.stations())),
+        topLeft: MapButton(Icons.menu_rounded, onTap: widget.onMenu ?? () => setState(() => _f = Api.stations())),
         topRight: MapButton(Icons.my_location_rounded, label: 'Locate', onTap: _locate),
         map: FlutterMap(
           mapController: _map,

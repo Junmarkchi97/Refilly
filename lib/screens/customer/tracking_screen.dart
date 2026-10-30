@@ -99,7 +99,12 @@ class TrackingScreen extends StatelessWidget {
                 child: RouteBox(from: o.station?['name'] ?? 'Station', to: o.deliveryAddress),
               ),
               const SizedBox(height: 8),
-              for (final i in o.items) KeyValueRow('${i.quantity} × ${i.productName}', peso(i.unitPrice * i.quantity)),
+              for (final i in o.items)
+                KeyValueRow(
+                  '${i.quantity} × ${i.productName}',
+                  peso(i.unitPrice * i.quantity),
+                  leading: ProductThumb(i.imageUrl, size: 40, radius: 10),
+                ),
               KeyValueRow('Total', peso(o.total), bold: true),
               if (o.status == 'pending')
                 Padding(
