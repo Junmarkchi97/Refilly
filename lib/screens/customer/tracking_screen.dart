@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
+import '../network_states.dart';
 
 /// Live order status + rider position (Supabase Realtime), Glide-style.
 Future<void> _reviewStation(BuildContext context, Order order) async {
@@ -49,8 +50,16 @@ class TrackingScreen extends StatelessWidget {
   Widget build(BuildContext context) => StreamBuilder<Order?>(
     stream: Api.watchOrder(orderId),
     builder: (context, snap) {
-      if (snap.hasError) return Scaffold(body: Center(child: Text('Unable to load order: ${snap.error}')));
-      if (snap.connectionState == ConnectionState.waiting) return const Scaffold(body: SkeletonList());
+      if (snap.hasError) return Scaffold(
+        appBar: AppBar(title: const Text('Track order')),
+        body: LoadFailureView(
+          error: snap.error!,
+          onRetry: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => TrackingScreen(orderId: orderId, customerId: customerId)),
+          ),
+        ),
+      );
+      if (snap.connectionState == ConnectionState.waiting) return const Scaffold(body: Center(child: SlowLoadingHint()));
       final o = snap.data;
       if (o == null) {
         return Scaffold(
