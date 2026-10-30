@@ -8,6 +8,7 @@ import 'station_form.dart';
 import 'owner_orders.dart';
 import 'owner_products.dart';
 import 'sales_screen.dart';
+import '../notifications_screen.dart';
 
 class OwnerHome extends StatefulWidget {
   final Profile profile;
@@ -71,7 +72,7 @@ class _OwnerHomeState extends State<OwnerHome> {
               ),
             ],
           ),
-          actions: [logoutButton(), const SizedBox(width: 8)],
+          actions: [IconButton(tooltip: 'Order notifications', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_outlined)), logoutButton(), const SizedBox(width: 8)],
         ),
         body: wide
             ? Row(
