@@ -313,14 +313,14 @@ class FloatingNav extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(items[i].$1, size: 25, color: i == index ? RF.ink : const Color(0xFF9A9AA0)),
+                        Icon(items[i].$1, size: 25, color: i == index ? RF.accent : RF.muted),
                         const SizedBox(height: 3),
                         AnimatedDefaultTextStyle(
                           duration: Motion.d(context, Motion.fast),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
-                            color: i == index ? RF.ink : const Color(0xFF9A9AA0),
+                            color: i == index ? RF.accent : RF.muted,
                           ),
                           child: Text(items[i].$2),
                         ),
