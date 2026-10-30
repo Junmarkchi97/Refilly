@@ -56,6 +56,19 @@ class Api {
     return id as String;
   }
 
+  static Future<double> deliveryQuote(String stationId, double lat, double lng) async {
+    final value = await sb.rpc('delivery_quote', params: {'p_station': stationId, 'p_lat': lat, 'p_lng': lng});
+    return (value as num).toDouble();
+  }
+
+  static Future<List<Map<String, dynamic>>> stationReviews(String stationId) async =>
+      List<Map<String, dynamic>>.from(await sb.from('station_reviews').select('rating, comment, created_at').eq('station_id', stationId).order('created_at', ascending: false).limit(30));
+
+  static Future<void> submitReview(Order order, int rating, String comment) => sb.from('station_reviews').insert({
+    'order_id': order.id, 'station_id': order.stationId, 'customer_id': order.customerId,
+    'rating': rating, 'comment': comment.trim(),
+  });
+
   static Future<Order?> orderById(String orderId) async {
     final row = await sb.from('orders').select(orderSelect).eq('id', orderId).maybeSingle();
     return row == null ? null : Order.fromMap(row);
