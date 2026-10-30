@@ -4,6 +4,7 @@ import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
+import '../network_states.dart';
 
 class OwnerOrders extends StatefulWidget {
   final Station station;
@@ -13,7 +14,9 @@ class OwnerOrders extends StatefulWidget {
 }
 
 class _OwnerOrdersState extends State<OwnerOrders> {
-  late final _stream = Api.watchOrders(stationId: widget.station.id);
+  late Stream<List<Order>> _stream = Api.watchOrders(stationId: widget.station.id);
+
+  void _retry() => setState(() => _stream = Api.watchOrders(stationId: widget.station.id));
   bool _showDone = false;
 
   @override
@@ -24,8 +27,8 @@ class _OwnerOrdersState extends State<OwnerOrders> {
         key: ValueKey(snap.hasData),
         child: Builder(
           builder: (context) {
-            if (snap.hasError) return Center(child: Text('${snap.error}'));
-            if (!snap.hasData) return const SkeletonList();
+            if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _retry);
+            if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
             final list = snap.data!.where((o) => _showDone || !(o.status == 'delivered' || o.status == 'cancelled')).toList();
             return Column(
               children: [
