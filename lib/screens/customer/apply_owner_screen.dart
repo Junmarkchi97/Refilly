@@ -63,7 +63,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
       _addressSearchError = null;
       _addressSuggestions = const [];
       _showAddressSuggestions = query.length >= 3;
-      _searchingAddress = false;
+      _searchingAddress = query.length >= 3;
     });
     if (query.length < 3) return;
     _addressDebounce = Timer(const Duration(milliseconds: 650), () async {
