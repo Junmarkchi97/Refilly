@@ -100,9 +100,10 @@ class Api {
     String? phone,
     String? notes,
     String payment = 'cod',
+    required String requestId,
   }) async {
     final id = await sb.rpc(
-      'place_order',
+      'place_order_idempotent',
       params: {
         'p_station': stationId,
         'p_items': cart.entries.map((e) => {'product_id': e.key.id, 'quantity': e.value}).toList(),
@@ -112,6 +113,7 @@ class Api {
         'p_phone': phone,
         'p_notes': notes,
         'p_payment': payment,
+        'p_request_id': requestId,
       },
     );
     return id as String;
