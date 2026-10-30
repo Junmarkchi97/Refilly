@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../widgets.dart';
+import '../network_states.dart';
 
 /// Admin-only: review owner applications. Approval creates the station and makes the applicant an owner (SQL).
 class AdminHome extends StatefulWidget {
@@ -16,9 +17,9 @@ class AdminHome extends StatefulWidget {
 class _AdminHomeState extends State<AdminHome> {
   String _status = 'pending';
   bool _deciding = false;
-  late Future<List<OwnerApplication>> _f = Api.applications(_status);
+  late Future<List<OwnerApplication>> _f = Api.applications(_status).timeout(const Duration(seconds: 20));
 
-  void _reload() => setState(() => _f = Api.applications(_status));
+  void _reload() => setState(() => _f = Api.applications(_status).timeout(const Duration(seconds: 20)));
 
   Future<void> _open(String path) async {
     try {
@@ -85,8 +86,8 @@ class _AdminHomeState extends State<AdminHome> {
                 key: ValueKey(snap.hasData),
                 child: Builder(
                   builder: (context) {
-                    if (snap.hasError) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Unable to load applications'), const SizedBox(height: 12), FilledButton(onPressed: _reload, child: const Text('Retry'))]));
-                    if (!snap.hasData) return const SkeletonList();
+                    if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
+                    if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
                     if (snap.data!.isEmpty) {
                       return EmptyState(
                         icon: _status == 'pending' ? Icons.inbox_rounded : Icons.folder_off_rounded,
