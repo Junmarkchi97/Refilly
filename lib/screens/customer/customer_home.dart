@@ -12,6 +12,7 @@ import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'app_drawer.dart';
 import '../notifications_screen.dart';
+import '../brand.dart';
 import 'apply_owner_screen.dart';
 import '../auth/verify_phone_screen.dart';
 
@@ -27,7 +28,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   Widget get _nav => FloatingNav(
     index: _tab,
     onTap: (i) => setState(() => _tab = i),
-    items: const [(Icons.water_drop_rounded, 'Order'), (Icons.receipt_long_rounded, 'Orders'), (Icons.person_rounded, 'Account')],
+    items: const [(Icons.storefront_rounded, 'Explore'), (Icons.receipt_long_rounded, 'Orders'), (Icons.person_rounded, 'Account')],
   );
   @override
   Widget build(BuildContext context) {
@@ -94,7 +95,7 @@ class ProfileTab extends StatelessWidget {
         AppCard(child: ListTile(
           leading: const Icon(Icons.notifications_outlined),
           title: const Text('Order notifications'),
-          subtitle: const Text('Updates from your water stations'),
+          subtitle: const Text('Updates on your orders'),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => go(const NotificationsScreen()),
         )),
@@ -113,7 +114,7 @@ class ProfileTab extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.storefront_rounded),
                 title: const Text('Become a station owner', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Sell water & essentials on Refilly'),
+                subtitle: const Text('Start selling to customers nearby'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => go(const ApplyOwnerScreen()),
               ),
@@ -199,7 +200,11 @@ class _StationsMapState extends State<StationsMap> {
         sheet: (_) => [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text('Where to order?', style: Theme.of(context).textTheme.headlineSmall),
+            child: Row(children: [
+              const RefillyMark(size: 42),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Explore nearby', style: Theme.of(context).textTheme.headlineSmall)),
+            ]),
           ),
           const SizedBox(height: 14),
           Padding(
@@ -208,7 +213,7 @@ class _StationsMapState extends State<StationsMap> {
               controller: _q,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Search stations or areas',
+                hintText: 'Search local stores or areas',
                 prefixIcon: const Icon(Icons.search_rounded, color: RF.ink),
                 suffixIcon: Container(
                   margin: const EdgeInsets.all(8),
