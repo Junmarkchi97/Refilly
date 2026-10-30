@@ -25,6 +25,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
   StreamSubscription<Position>? _gps;
   LatLng? _me;
   bool _busy = false;
+  bool _sendingLocation = false;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
   Future<void> _load() async {
     try {
       final o = await Api.riderOrder(widget.token);
+      if (!mounted) return;
       setState(() {
         _o = o;
         _error = null;
@@ -42,7 +44,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
     } catch (_) {
       await _gps?.cancel();
       _gps = null;
-      setState(() => _error = 'This delivery link has expired or is invalid.');
+      if (mounted) setState(() => _error = 'This delivery link has expired or is invalid.');
     }
   }
 
@@ -55,11 +57,16 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
     }
     await _gps?.cancel();
     _gps = LocationService.stream().listen((p) async {
+      if (!mounted) return;
       setState(() => _me = LatLng(p.latitude, p.longitude));
+      if (_sendingLocation) return;
+      _sendingLocation = true;
       try {
         await Api.riderLocation(widget.token, p.latitude, p.longitude, p.heading);
       } catch (_) {
-        _load();
+        if (mounted) await _load();
+      } finally {
+        _sendingLocation = false;
       }
     });
     setState(() {});
