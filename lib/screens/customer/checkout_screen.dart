@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
+import '../../services/checkout_request.dart';
 import '../../services/location.dart';
 import '../../services/address_search.dart';
 import '../../theme.dart';
@@ -28,6 +29,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   late final _phone = TextEditingController(text: widget.profile.phone);
   final _map = MapController();
   final _geocoder = AddressSearchService();
+  final _request = CheckoutRequest();
   Timer? _addressDebounce;
   int _addressRequestId = 0;
   bool _showAddressSuggestions = false;
@@ -43,6 +45,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   int _quoteSequence = 0;
 
   void _onAddressChanged(String input) {
+    _request.reset();
     _addressDebounce?.cancel();
     final requestId = ++_addressRequestId;
     final query = input.trim();
@@ -99,6 +102,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double get _grandTotal => _total + (_deliveryFee ?? 0);
 
   Future<void> _setDrop(LatLng value) async {
+    _request.reset();
     _addressDebounce?.cancel();
     ++_addressRequestId;
     final sequence = ++_quoteSequence;
@@ -160,6 +164,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         phone: _phone.text.trim(),
         notes: _notes.text.trim(),
         payment: _payment,
+        requestId: _request.id,
       );
       if (widget.refillRoutineId != null) {
         try {
