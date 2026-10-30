@@ -17,7 +17,7 @@ class OrdersScreen extends StatelessWidget {
         key: ValueKey(snap.hasData),
         child: Builder(
           builder: (context) {
-            if (snap.hasError) return Center(child: Text('${snap.error}'));
+            if (snap.hasError) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Could not load your orders. Check your connection and try again.')));
             if (!snap.hasData) return const SkeletonList();
             if (snap.data!.isEmpty) {
               return const EmptyState(
