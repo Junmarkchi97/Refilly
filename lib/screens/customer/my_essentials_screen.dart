@@ -36,7 +36,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
   }
 
   void _refresh() {
-    if (!mounted) return;
+    if (!mounted) { return; }
     setState(() => _routines = _load());
   }
 
@@ -144,7 +144,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
         if (snapshot.hasError) {
           return LoadFailureView(error: snapshot.error!, onRetry: _refresh);
         }
-        if (!snapshot.hasData) return const Center(child: SlowLoadingHint());
+        if (!snapshot.hasData) { return const Center(child: SlowLoadingHint()); }
         final items = snapshot.data!;
         final dueCount = items.where((r) => r.isDue(DateTime.now())).length;
         return ListView(
