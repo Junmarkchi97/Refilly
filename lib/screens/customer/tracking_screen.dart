@@ -27,7 +27,7 @@ class TrackingScreen extends StatelessWidget {
       }
       final station = o.station;
       final stationPt = station == null ? null : LatLng((station['lat'] as num).toDouble(), (station['lng'] as num).toDouble());
-      final drop = o.deliveryLat == null ? null : LatLng(o.deliveryLat!, o.deliveryLng!);
+      final drop = o.deliveryLat == null || o.deliveryLng == null ? null : LatLng(o.deliveryLat!, o.deliveryLng!);
       return StreamBuilder<Map<String, dynamic>?>(
         stream: o.status == 'out_for_delivery' ? Api.watchRider(o.id) : const Stream.empty(),
         builder: (context, rs) {
@@ -45,7 +45,7 @@ class TrackingScreen extends StatelessWidget {
             initial: .5,
             min: .28,
             topLeft: MapButton(Icons.arrow_back_rounded, onTap: () => Navigator.pop(context)),
-            topRight: MapButton(Icons.verified_user_rounded, label: 'Safety', onTap: () {}),
+            topRight: null,
             map: FlutterMap(
               options: MapOptions(
                 initialCenter: shiftUp(riderPt ?? drop ?? stationPt ?? manila),
