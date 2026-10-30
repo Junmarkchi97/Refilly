@@ -84,23 +84,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _address.dispose();
     _notes.dispose();
     _phone.dispose();
-    super.dispose();
-  }
-
-  @override
-  void dispose() {
-    _address.dispose();
-    _notes.dispose();
-    _phone.dispose();
     _map.dispose();
-    super.dispose();
-  }
-
-  @override
-  void dispose() {
-    _address.dispose();
-    _notes.dispose();
-    _phone.dispose();
     super.dispose();
   }
 
