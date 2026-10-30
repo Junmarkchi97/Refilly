@@ -152,6 +152,13 @@ class _StationsMapState extends State<StationsMap> {
   }
 
   @override
+  void dispose() {
+    _q.dispose();
+    _map.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => FutureBuilder<List<Station>>(
     future: _f,
     builder: (context, snap) {
@@ -173,7 +180,7 @@ class _StationsMapState extends State<StationsMap> {
             osmTiles(),
             MarkerLayer(
               markers: [
-                for (final s in stations)
+                for (final s in shown)
                   photoPin(LatLng(s.lat, s.lng), s.photoUrl, dim: !s.isOpen, onTap: () => _open(s)),
               ],
             ),
@@ -193,7 +200,7 @@ class _StationsMapState extends State<StationsMap> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: 'Search stations or areas',
-                prefixIcon: const Icon(Icons.circle, size: 10, color: RF.ink),
+                prefixIcon: const Icon(Icons.search_rounded, color: RF.ink),
                 suffixIcon: Container(
                   margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
