@@ -55,6 +55,10 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a file smaller than 10 MB')));
       return null;
     }
+    if (f.size > 10 * 1024 * 1024) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a file smaller than 10 MB')));
+      return null;
+    }
     return _Doc(f.name, await f.readAsBytes());
   }
 
