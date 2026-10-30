@@ -20,6 +20,38 @@ class Api {
     return rows.map(RefillRoutine.fromMap).toList();
   }
 
+  /// A safety check before opening a routine's cart. This does not submit an order.
+  /// The cart still goes through checkout and its normal submit guard.
+  static Future<bool> hasMatchingActiveOrder(Order source) async {
+    final customer = sb.auth.currentUser;
+    if (customer == null) return false;
+    final rows = await sb.from('orders').select(orderSelect)
+        .eq('customer_id', customer.id).eq('station_id', source.stationId)
+        .inFilter('status', ['pending', 'accepted', 'preparing', 'out_for_delivery'])
+        .limit(30);
+    final expected = <String, int>{};
+    for (final item in source.items) {
+      if (item.productId != null) {
+        expected[item.productId!] = (expected[item.productId!] ?? 0) + item.quantity;
+      }
+    }
+    if (expected.isEmpty) return false;
+    for (final row in rows) {
+      final order = Order.fromMap(row);
+      final actual = <String, int>{};
+      for (final item in order.items) {
+        if (item.productId != null) {
+          actual[item.productId!] = (actual[item.productId!] ?? 0) + item.quantity;
+        }
+      }
+      if (actual.length == expected.length &&
+          expected.keys.every((key) => actual[key] == expected[key])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static Future<String> saveRefillRoutine(String orderId, int days) async =>
       await sb.rpc('save_refill_routine', params: {
         'p_order': orderId, 'p_interval_days': days,
