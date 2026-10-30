@@ -10,6 +10,7 @@ import 'station_screen.dart';
 import '../network_states.dart';
 import '../../services/location.dart';
 import 'orders_screen.dart';
+import 'my_essentials_screen.dart';
 import 'app_drawer.dart';
 import '../notifications_screen.dart';
 import '../brand.dart';
@@ -25,32 +26,56 @@ class CustomerHome extends StatefulWidget {
 
 class _CustomerHomeState extends State<CustomerHome> {
   int _tab = 0;
+  int _routineRefresh = 0;
+
+  void _go(int tab) => setState(() {
+    _tab = tab;
+    if (tab == 0) _routineRefresh++;
+  });
+
   Widget get _nav => FloatingNav(
     index: _tab,
-    onTap: (i) => setState(() => _tab = i),
-    items: const [(Icons.storefront_rounded, 'Explore'), (Icons.receipt_long_rounded, 'Orders'), (Icons.person_rounded, 'Account')],
+    onTap: _go,
+    items: const [
+      (Icons.repeat_rounded, 'Essentials'),
+      (Icons.storefront_rounded, 'Explore'),
+      (Icons.receipt_long_rounded, 'Orders'),
+      (Icons.person_rounded, 'Account'),
+    ],
   );
+
   @override
   Widget build(BuildContext context) {
-    if (_tab == 0) {
+    if (_tab == 1) {
       return StationsMap(
         profile: widget.profile,
         bottomBar: _nav,
-        onMenu: () =>
-            showAppDrawer(context, widget.profile, onOrders: () => setState(() => _tab = 1), onAccount: () => setState(() => _tab = 2)),
+        onMenu: () => showAppDrawer(
+          context, widget.profile,
+          onOrders: () => _go(2),
+          onAccount: () => _go(3),
+        ),
       );
     }
+
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: _tab == 1
-            ? Column(
-                children: [
-                  const PageHeader('Orders', subtitle: 'Track your deliveries live'),
-                  Expanded(child: OrdersScreen(profile: widget.profile)),
-                ],
-              )
-            : ProfileTab(profile: widget.profile),
+        child: switch (_tab) {
+          0 => MyEssentialsScreen(
+              key: ValueKey(_routineRefresh),
+              profile: widget.profile,
+              onExplore: () => _go(1),
+              onOrders: () => _go(2),
+            ),
+          2 => Column(
+              children: [
+                const PageHeader('Orders', subtitle: 'Track, reorder and save your essentials'),
+                Expanded(child: OrdersScreen(profile: widget.profile)),
+              ],
+            ),
+          _ => ProfileTab(profile: widget.profile),
+        },
       ),
       bottomNavigationBar: _nav,
     );
