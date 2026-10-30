@@ -37,6 +37,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _place() async {
+    if (_drop == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
+      return;
+    }
     if (_address.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery address')));
       return;
@@ -73,6 +77,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _address.dispose();
+    _notes.dispose();
+    _phone.dispose();
+    super.dispose();
   }
 
   @override
