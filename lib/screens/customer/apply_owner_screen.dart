@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../services/location.dart';
+import '../../services/address_search.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 
@@ -31,6 +34,13 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
       _addr = TextEditingController(),
       _phone = TextEditingController();
   final _map = MapController();
+  final _geocoder = AddressSearchService();
+  Timer? _addressDebounce;
+  int _addressRequestId = 0;
+  bool _searchingAddress = false;
+  bool _showAddressSuggestions = false;
+  String? _addressSearchError;
+  List<AddressSuggestion> _addressSuggestions = const [];
   LatLng _pt = manila;
   bool _pinned = false, _busy = false, _sent = false;
   _Doc? _permit, _photo;
@@ -43,6 +53,68 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
       _permit != null &&
       _photo != null &&
       _pinned;
+
+  void _onAddressChanged(String input) {
+    _addressDebounce?.cancel();
+    final requestId = ++_addressRequestId;
+    final query = input.trim();
+    setState(() {
+      _pinned = false;
+      _addressSearchError = null;
+      _addressSuggestions = const [];
+      _showAddressSuggestions = query.length >= 3;
+      _searchingAddress = false;
+    });
+    if (query.length < 3) return;
+    _addressDebounce = Timer(const Duration(milliseconds: 650), () async {
+      if (!mounted || requestId != _addressRequestId) return;
+      setState(() => _searchingAddress = true);
+      try {
+        final suggestions = await _geocoder.search(query);
+        if (!mounted || requestId != _addressRequestId) return;
+        setState(() {
+          _searchingAddress = false;
+          _addressSuggestions = suggestions;
+        });
+      } catch (_) {
+        if (!mounted || requestId != _addressRequestId) return;
+        setState(() {
+          _searchingAddress = false;
+          _addressSearchError = 'Suggestions unavailable. You can set the pin on the map below.';
+        });
+      }
+    });
+  }
+
+  void _selectAddress(AddressSuggestion suggestion) {
+    _addressDebounce?.cancel();
+    ++_addressRequestId;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _addr.text = suggestion.label;
+      _addr.selection = TextSelection.collapsed(offset: _addr.text.length);
+      _pt = LatLng(suggestion.latitude, suggestion.longitude);
+      _pinned = true;
+      _searchingAddress = false;
+      _showAddressSuggestions = false;
+      _addressSuggestions = const [];
+      _addressSearchError = null;
+    });
+    _map.move(_pt, 17);
+  }
+
+  @override
+  void dispose() {
+    _addressDebounce?.cancel();
+    ++_addressRequestId;
+    _geocoder.dispose();
+    _biz.dispose();
+    _station.dispose();
+    _addr.dispose();
+    _phone.dispose();
+    _map.dispose();
+    super.dispose();
+  }
 
   Future<_Doc?> _pick(List<String> ext) async {
     final f = (await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ext)).firstOrNull;
@@ -169,8 +241,67 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
                     label: 'Station address',
                     icon: Icons.place_rounded,
                     hint: 'House no., street, barangay, city',
-                    onChanged: (_) => setState(() {}),
+                    onChanged: _onAddressChanged,
                   ),
+                  if (_showAddressSuggestions)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 12),
+                      child: Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        clipBehavior: Clip.antiAlias,
+                        elevation: 2,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_searchingAddress)
+                              const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(child: Text('Searching Philippine addresses…')),
+                                  ],
+                                ),
+                              )
+                            else if (_addressSearchError != null)
+                              Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Text(
+                                  _addressSearchError!,
+                                  style: const TextStyle(color: RF.muted, fontSize: 13),
+                                ),
+                              )
+                            else if (_addressSuggestions.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(14),
+                                child: Text(
+                                  'No matching addresses yet. Try a landmark or pin the map manually.',
+                                  style: TextStyle(color: RF.muted, fontSize: 13),
+                                ),
+                              )
+                            else
+                              for (final result in _addressSuggestions)
+                                ListTile(
+                                  dense: true,
+                                  leading: const Icon(Icons.place_outlined, color: RF.muted),
+                                  title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                  onTap: () => _selectAddress(result),
+                                ),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: Text('Address suggestions · OpenStreetMap / Photon',
+                                style: TextStyle(fontSize: 11, color: RF.muted)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   LabeledField(
                     controller: _phone,
                     label: 'Station mobile',
@@ -214,7 +345,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
               ),
               FormSection(
                 title: 'Station location',
-                subtitle: 'Drag the map so the pin sits on your station.',
+                subtitle: 'Choose an address suggestion above to position the pin, then drag the map to fine-tune it.',
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(RF.radius),
@@ -231,7 +362,11 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
                                 initialZoom: 13,
                                 onPositionChanged: (cam, gesture) {
                                   if (gesture) {
+                                    _addressDebounce?.cancel();
+                                    ++_addressRequestId;
                                     setState(() {
+                                      _showAddressSuggestions = false;
+                                      _searchingAddress = false;
                                       _pt = cam.center;
                                       _pinned = true;
                                     });
