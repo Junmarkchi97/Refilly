@@ -6,6 +6,7 @@ import '../../theme.dart';
 import '../widgets.dart';
 import 'tracking_screen.dart';
 import 'reorder.dart';
+import 'save_refill_routine.dart';
 import '../network_states.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -104,6 +105,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           ),
                           Text(peso(o.total), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                           ]),
+                          if (o.status == 'delivered') ...[
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: () => saveRoutineFromOrder(context, o),
+                              icon: const Icon(Icons.event_repeat_rounded),
+                              label: const Text('Save to My Essentials'),
+                            ),
+                          ],
                           if (o.status == 'delivered' || o.status == 'cancelled') ...[
                             const SizedBox(height: 12),
                             OutlinedButton.icon(
