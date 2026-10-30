@@ -22,11 +22,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (item['is_read'] == true) { return; }
     try {
       await sb.from('user_notifications').update({'is_read': true}).eq('id', item['id']);
-      if (mounted) _refresh();
+      if (mounted) { _refresh(); }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to mark notification as read.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to mark notification as read.')),
+        );
+      }
     }
   }
 
@@ -38,14 +40,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     body: FutureBuilder<List<Map<String, dynamic>>>(
       future: _items,
       builder: (context, snapshot) {
-        if (snapshot.hasError) return Center(child: Column(
+        if (snapshot.hasError) { return Center(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Notifications unavailable'),
             const SizedBox(height: 10),
             FilledButton(onPressed: _refresh, child: const Text('Retry')),
           ],
-        ));
+        )); }
         if (!snapshot.hasData) { return const Center(child: CircularProgressIndicator()); }
         final entries = snapshot.data!;
         if (entries.isEmpty) { return const Center(child: Text('No notifications yet')); }
