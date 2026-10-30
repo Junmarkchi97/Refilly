@@ -5,20 +5,30 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'tracking_screen.dart';
+import '../network_states.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   final Profile profile;
   const OrdersScreen({super.key, required this.profile});
   @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  late Stream<List<Order>> _orders = Api.watchOrders(customerId: widget.profile.id);
+
+  void _retry() => setState(() => _orders = Api.watchOrders(customerId: widget.profile.id));
+
+  @override
   Widget build(BuildContext context) => StreamBuilder<List<Order>>(
-    stream: Api.watchOrders(customerId: profile.id),
+    stream: _orders,
     builder: (context, snap) => StateSwitcher(
       child: KeyedSubtree(
         key: ValueKey(snap.hasData),
         child: Builder(
           builder: (context) {
-            if (snap.hasError) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Could not load your orders. Check your connection and try again.')));
-            if (!snap.hasData) return const SkeletonList();
+            if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _retry);
+            if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
             if (snap.data!.isEmpty) {
               return const EmptyState(
                 icon: Icons.receipt_long_rounded,
@@ -36,7 +46,7 @@ class OrdersScreen extends StatelessWidget {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => TrackingScreen(orderId: o.id, customerId: profile.id),
+                          builder: (_) => TrackingScreen(orderId: o.id, customerId: widget.profile.id),
                         ),
                       ),
                       child: Row(
