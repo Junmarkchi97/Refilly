@@ -57,7 +57,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          APP_URL: https://junmarkchi97.github.io/Refilly/
+          APP_URL: https://junmarkchi97.github.io/Refilly
         shell: bash
         run: |
           # Publishable keys are safe for a browser app; NEVER use a service-role key.
