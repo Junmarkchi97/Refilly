@@ -7,6 +7,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
+import '../network_states.dart';
 import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'app_drawer.dart';
@@ -143,7 +144,7 @@ class StationsMap extends StatefulWidget {
 }
 
 class _StationsMapState extends State<StationsMap> {
-  late Future<List<Station>> _f = Api.stations();
+  late Future<List<Station>> _f = Api.stations().timeout(const Duration(seconds: 20)).timeout(const Duration(seconds: 20));
   final _q = TextEditingController();
   final _map = MapController();
 
@@ -227,7 +228,7 @@ class _StationsMapState extends State<StationsMap> {
           ),
           const SizedBox(height: 6),
           if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('Could not load stations'), const SizedBox(height: 8), FilledButton(onPressed: () => setState(() => _f = Api.stations()), child: const Text('Retry'))])),
-          if (!snap.hasData && !snap.hasError) const SizedBox(height: 300, child: SkeletonList(count: 3, height: 60)),
+          if (!snap.hasData && !snap.hasError) const Column(children: [SlowLoadingHint(), SkeletonList(count: 3, height: 60)]),
           if (snap.hasData && shown.isEmpty)
             EmptyState(
               icon: Icons.location_off_rounded,
