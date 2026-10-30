@@ -25,6 +25,16 @@ It is **not** intended to be a general-purpose delivery, food-ordering, or couri
 ## Product preview
 
 <div align="center">
+  <a href="docs/showcase/refilly-product-mockup.webp">
+    <img src="docs/showcase/refilly-product-mockup.webp" alt="Refilly showcase: recurring household essentials with water available now, rice and LPG planned, and three phone mockups of browsing, ordering and address entry" width="100%" />
+  </a>
+</div>
+
+<p align="center"><sub>Product concept supplied for Refilly branding. It includes illustrative screens and sample details, not actual screenshots. Water refilling is available first; rice and LPG are planned.</sub></p>
+
+### Feature-flow illustration
+
+<div align="center">
   <a href="docs/showcase/refilly-product-overview.svg">
     <img src="docs/showcase/refilly-product-overview.svg" alt="Refilly product mockup: water-station discovery, address-aware checkout and one-tap reordering" width="100%" />
   </a>
