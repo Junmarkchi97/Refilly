@@ -12,6 +12,7 @@ class Station {
   final String? ownerId, address, phone, description, photoUrl;
   final double lat, lng;
   final bool isOpen;
+  final double deliveryRadiusKm, deliveryFee;
   Station.fromMap(Map<String, dynamic> m)
     : id = m['id'],
       name = m['name'],
@@ -22,7 +23,9 @@ class Station {
       lat = _d(m['lat']),
       lng = _d(m['lng']),
       photoUrl = m['photo_url'],
-      isOpen = m['is_open'] ?? true;
+      isOpen = m['is_open'] ?? true,
+      deliveryRadiusKm = _d(m['delivery_radius_km'] ?? 10),
+      deliveryFee = _d(m['delivery_fee']);
 }
 
 class Category {
@@ -66,7 +69,7 @@ class Order {
   final String id, customerId, stationId, status, deliveryAddress, paymentMethod, paymentStatus;
   final String? riderName, riderPhone, contactPhone, notes;
   final double? deliveryLat, deliveryLng;
-  final double total;
+  final double total, deliveryFee;
   final DateTime createdAt;
   final List<OrderItem> items;
   final Map<String, dynamic>? customer, station;
@@ -85,6 +88,7 @@ class Order {
       deliveryLat = (m['delivery_lat'] as num?)?.toDouble(),
       deliveryLng = (m['delivery_lng'] as num?)?.toDouble(),
       total = _d(m['total']),
+      deliveryFee = _d(m['delivery_fee']),
       createdAt = DateTime.parse(m['created_at']).toLocal(),
       items = ((m['order_items'] as List?) ?? []).map((e) => OrderItem.fromMap(e)).toList(),
       customer = m['customer'],
