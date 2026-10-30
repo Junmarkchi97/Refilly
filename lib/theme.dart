@@ -2,27 +2,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Refilly design system: Cal AI-style monochrome (snow background, white cards,
-/// heavy black type, black pill buttons) with a single water-blue accent.
+/// Refilly design system: clean marine tones, airy surfaces, and friendly curves.
+/// A deep sea-green primary keeps buttons accessible while fresh aqua adds delight.
 class RF {
-  static const bg = Colors.white;
-  static const fill = Color(0xFFF3F3F5);
+  static const bg = Color(0xFFF7FBFA);
+  static const fill = Color(0xFFEEF6F5);
   static const card = Colors.white;
-  static const ink = Color(0xFF000000);
-  static const muted = Color(0xFF6B6B70);
-  static const line = Color(0xFFE8E8EC);
-  static const accent = Color(0xFF1A66F0);
-  static const accentSoft = Color(0xFFE8F0FE);
-  static const radius = 14.0;
-  static const sheetRadius = 26.0;
-  static final shadow = [BoxShadow(color: Colors.black.withValues(alpha: .08), blurRadius: 18, offset: const Offset(0, 4))];
+  static const ink = Color(0xFF123B45);
+  static const muted = Color(0xFF657D82);
+  static const line = Color(0xFFDFEBE9);
+  static const accent = Color(0xFF087F7C);
+  static const accentSoft = Color(0xFFE1F7F2);
+  static const aqua = Color(0xFF1BC8B5);
+  static const radius = 20.0;
+  static const sheetRadius = 30.0;
+  static final shadow = [BoxShadow(color: const Color(0xFF13454A).withValues(alpha: .07), blurRadius: 24, offset: const Offset(0, 8))];
 }
 
 ThemeData refillyTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: RF.ink,
+      seedColor: RF.accent,
       primary: RF.ink,
       onPrimary: Colors.white,
       secondary: RF.accent,
@@ -39,7 +40,7 @@ ThemeData refillyTheme() {
         titleLarge: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -.3, color: RF.ink),
         titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: RF.ink),
       );
-  final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
+  final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
   return base.copyWith(
     pageTransitionsTheme: PageTransitionsTheme(
       builders: {for (final p in TargetPlatform.values) p: const CupertinoPageTransitionsBuilder()},
@@ -95,19 +96,19 @@ ThemeData refillyTheme() {
       fillColor: RF.fill,
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       labelStyle: const TextStyle(color: RF.muted),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: RF.line),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: RF.ink, width: 1.5),
+        borderSide: const BorderSide(color: RF.accent, width: 1.6),
       ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: RF.fill,
-      selectedColor: RF.ink,
+      selectedColor: RF.accent,
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, color: RF.ink),
@@ -119,7 +120,7 @@ ThemeData refillyTheme() {
       style: ButtonStyle(
         shape: WidgetStatePropertyAll(pill),
         side: const WidgetStatePropertyAll(BorderSide(color: RF.line)),
-        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.ink : Colors.white),
+        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.accent : Colors.white),
         foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Colors.white : RF.ink),
         iconColor: const WidgetStatePropertyAll(Colors.white),
       ),
@@ -127,11 +128,11 @@ ThemeData refillyTheme() {
     listTileTheme: const ListTileThemeData(iconColor: RF.ink),
     dividerTheme: const DividerThemeData(color: RF.line, space: 24),
     switchTheme: SwitchThemeData(
-      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.ink : RF.line),
+      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? RF.accent : RF.line),
       thumbColor: const WidgetStatePropertyAll(Colors.white),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(color: RF.ink, linearTrackColor: RF.line),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: RF.accent, linearTrackColor: RF.line),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: RF.ink,
