@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -5,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../services/location.dart';
+import '../../services/address_search.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'tracking_screen.dart';
@@ -23,6 +26,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _address = TextEditingController(), _notes = TextEditingController();
   late final _phone = TextEditingController(text: widget.profile.phone);
   final _map = MapController();
+  final _geocoder = AddressSearchService();
+  Timer? _addressDebounce;
+  int _addressRequestId = 0;
+  bool _showAddressSuggestions = false;
+  bool _searchingAddress = false;
+  String? _addressSearchError;
+  List<AddressSuggestion> _addressSuggestions = const [];
   LatLng? _drop;
   final String _payment = 'cod';
   bool _busy = false;
@@ -31,11 +41,74 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? _quoteError;
   int _quoteSequence = 0;
 
+  void _onAddressChanged(String input) {
+    _addressDebounce?.cancel();
+    final requestId = ++_addressRequestId;
+    final query = input.trim();
+    ++_quoteSequence;
+    setState(() {
+      // Editing a chosen address invalidates its former pin and delivery quote.
+      // This prevents sending an order to a different location from its address.
+      _drop = null;
+      _deliveryFee = null;
+      _quoteError = null;
+      _quoting = false;
+      _addressSuggestions = const [];
+      _addressSearchError = null;
+      _showAddressSuggestions = query.length >= 3;
+      _searchingAddress = query.length >= 3;
+    });
+    if (query.length < 3) return;
+    _addressDebounce = Timer(const Duration(milliseconds: 650), () async {
+      if (!mounted || requestId != _addressRequestId) return;
+      try {
+        final results = await _geocoder.search(query);
+        if (!mounted || requestId != _addressRequestId) return;
+        setState(() {
+          _addressSuggestions = results;
+          _searchingAddress = false;
+        });
+      } catch (_) {
+        if (!mounted || requestId != _addressRequestId) return;
+        setState(() {
+          _searchingAddress = false;
+          _addressSearchError = 'Address lookup unavailable. You can pin the map manually.';
+        });
+      }
+    });
+  }
+
+  Future<void> _selectAddress(AddressSuggestion suggestion) async {
+    _addressDebounce?.cancel();
+    ++_addressRequestId;
+    FocusScope.of(context).unfocus();
+    final point = LatLng(suggestion.latitude, suggestion.longitude);
+    setState(() {
+      _address.text = suggestion.label;
+      _address.selection = TextSelection.collapsed(offset: _address.text.length);
+      _showAddressSuggestions = false;
+      _searchingAddress = false;
+      _addressSuggestions = const [];
+      _addressSearchError = null;
+    });
+    _map.move(point, 16);
+    await _setDrop(point);
+  }
+
   double get _grandTotal => _total + (_deliveryFee ?? 0);
 
   Future<void> _setDrop(LatLng value) async {
+    _addressDebounce?.cancel();
+    ++_addressRequestId;
     final sequence = ++_quoteSequence;
-    setState(() { _drop = value; _deliveryFee = null; _quoteError = null; _quoting = true; });
+    setState(() {
+      _drop = value;
+      _deliveryFee = null;
+      _quoteError = null;
+      _quoting = true;
+      _showAddressSuggestions = false;
+      _searchingAddress = false;
+    });
     try {
       final fee = await Api.deliveryQuote(widget.station.id, value.latitude, value.longitude);
       if (!mounted || sequence != _quoteSequence) return;
@@ -100,6 +173,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
+    _addressDebounce?.cancel();
+    ++_addressRequestId;
+    _geocoder.dispose();
     _address.dispose();
     _notes.dispose();
     _phone.dispose();
@@ -156,6 +232,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             to: '',
             toField: TextField(
               controller: _address,
+              onChanged: _onAddressChanged,
+              textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 hintText: 'House no., street, barangay',
                 filled: false,
@@ -168,6 +246,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         ),
+        if (_showAddressSuggestions)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Material(
+              color: Colors.white,
+              elevation: 3,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_searchingAddress)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(children: [
+                        SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                        SizedBox(width: 12),
+                        Expanded(child: Text('Searching Philippine addresses…')),
+                      ]),
+                    )
+                  else if (_addressSearchError != null)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(_addressSearchError!, style: const TextStyle(color: RF.muted)),
+                    )
+                  else if (_addressSuggestions.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('No matches yet. Try a landmark or set the pin on the map.',
+                        style: TextStyle(color: RF.muted)),
+                    )
+                  else
+                    for (final result in _addressSuggestions)
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.place_outlined, color: RF.muted),
+                        title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        onTap: () => _selectAddress(result),
+                      ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('Address suggestions · OpenStreetMap / Photon',
+                      style: TextStyle(color: RF.muted, fontSize: 11)),
+                  ),
+                ],
+              ),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Text(
