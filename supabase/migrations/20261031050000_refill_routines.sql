@@ -104,6 +104,32 @@ end $$;
 revoke all on function public.record_refill_routine_order(uuid,uuid) from public,anon;
 grant execute on function public.record_refill_routine_order(uuid,uuid) to authenticated;
 
+-- Also provisions the private in-app notifications inbox on deployments that
+-- have not yet applied the water_marketplace migration. Existing inboxes
+-- remain intact; subsequent marketplace migration policies can coexist.
+create table if not exists public.user_notifications(
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  order_id uuid references public.orders(id) on delete cascade,
+  title text not null,
+  body text not null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists user_notifications_user_created
+  on public.user_notifications(user_id, created_at desc);
+alter table public.user_notifications enable row level security;
+drop policy if exists "routine notifications owner read" on public.user_notifications;
+create policy "routine notifications owner read" on public.user_notifications
+  for select to authenticated using (user_id = (select auth.uid()));
+drop policy if exists "routine notifications owner update" on public.user_notifications;
+create policy "routine notifications owner update" on public.user_notifications
+  for update to authenticated using(user_id = (select auth.uid()))
+  with check(user_id = (select auth.uid()));
+revoke all on public.user_notifications from anon, authenticated;
+grant select on public.user_notifications to authenticated;
+grant update(is_read) on public.user_notifications to authenticated;
+
 -- Reminder uniqueness is persisted in the database, even across devices.
 -- Notifications are only created when the customer opens the app / routine tab;
 -- this is an in-app reminder, not a push notification scheduler.
