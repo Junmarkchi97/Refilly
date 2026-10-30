@@ -1,11 +1,11 @@
 {
-    "name": "Refilly — Fresh water, delivered",
-    "short_name": "Refilly",
+    "name": "refilly",
+    "short_name": "refilly",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0B4756",
-    "theme_color": "#0B4756",
-    "description": "Discover local water refilling stations and get fresh water delivered.",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

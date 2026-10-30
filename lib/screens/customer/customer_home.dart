@@ -12,7 +12,6 @@ import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'app_drawer.dart';
 import '../notifications_screen.dart';
-import '../brand.dart';
 import 'apply_owner_screen.dart';
 import '../auth/verify_phone_screen.dart';
 
@@ -66,7 +65,7 @@ class ProfileTab extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.only(bottom: bottomInset(context, 100)),
       children: [
-        const PageHeader('Profile', subtitle: 'Your account & preferences', trailing: RefillyMark(size: 40)),
+        const PageHeader('Profile'),
         AppCard(
           child: Row(
             children: [
@@ -114,7 +113,7 @@ class ProfileTab extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.storefront_rounded),
                 title: const Text('Become a station owner', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Bring your water station to Refilly'),
+                subtitle: const Text('Sell water & essentials on Refilly'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => go(const ApplyOwnerScreen()),
               ),
@@ -199,36 +198,8 @@ class _StationsMapState extends State<StationsMap> {
         ),
         sheet: (_) => [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 2, 20, 4),
-            child: Row(
-              children: [
-                const RefillyMark(size: 44),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Refilly', style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: -.8)),
-                      const Text(
-                        'Find your next water refill',
-                        style: TextStyle(color: RF.muted, fontWeight: FontWeight.w500, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: RF.accentSoft, borderRadius: BorderRadius.circular(100)),
-                  child: const Text(
-                    'LOCAL',
-                    style: TextStyle(fontSize: 10, letterSpacing: 1,
-                      fontWeight: FontWeight.w800, color: RF.accent),
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Where to order?', style: Theme.of(context).textTheme.headlineSmall),
           ),
           const SizedBox(height: 14),
           Padding(
@@ -237,7 +208,7 @@ class _StationsMapState extends State<StationsMap> {
               controller: _q,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Search water stations or areas',
+                hintText: 'Search stations or areas',
                 prefixIcon: const Icon(Icons.search_rounded, color: RF.ink),
                 suffixIcon: Container(
                   margin: const EdgeInsets.all(8),

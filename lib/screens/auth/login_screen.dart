@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
-import '../brand.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,31 +41,27 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: ListView(
-            padding: EdgeInsets.fromLTRB(24, 26, 24, bottomInset(context)),
+            padding: EdgeInsets.fromLTRB(24, 32, 24, bottomInset(context)),
             shrinkWrap: true,
             children: [
-              const Center(child: RefillyMark(size: 106)),
-              const SizedBox(height: 14),
-              const Center(
-                child: Text(
-                  'REFILLY',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: RF.accent,
-                    letterSpacing: 3.2,
-                  ),
+              Center(
+                child: Ring(
+                  value: .72,
+                  size: 96,
+                  stroke: 8,
+                  color: RF.accent,
+                  center: const Icon(Icons.water_drop_rounded, size: 40, color: RF.ink),
                 ),
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 24),
               Text(
-                _signup ? 'Your refill\nstarts here.' : 'Fresh water.\nAt your door.',
+                _signup ? 'Create your\naccount' : 'Water at your\ndoor, fast.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Discover trusted local water stations, reorder in seconds, and track every delivery.',
+                'Order from refilling stations near you and track your rider live.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: RF.muted, fontWeight: FontWeight.w500),
               ),
