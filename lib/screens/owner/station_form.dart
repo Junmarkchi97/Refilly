@@ -7,20 +7,20 @@ import '../widgets.dart';
 
 class StationForm extends StatefulWidget {
   final String ownerId;
-  final Station? station;
+  final Station station;
   final VoidCallback onSaved;
-  const StationForm({super.key, required this.ownerId, this.station, required this.onSaved});
+  const StationForm({super.key, required this.ownerId, required this.station, required this.onSaved});
   @override
   State<StationForm> createState() => _StationFormState();
 }
 
 class _StationFormState extends State<StationForm> {
-  late final _name = TextEditingController(text: widget.station?.name);
-  late final _desc = TextEditingController(text: widget.station?.description);
-  late final _addr = TextEditingController(text: widget.station?.address);
-  late final _phone = TextEditingController(text: widget.station?.phone);
-  late LatLng _pt = widget.station == null ? manila : LatLng(widget.station!.lat, widget.station!.lng);
-  late bool _open = widget.station?.isOpen ?? true;
+  late final _name = TextEditingController(text: widget.station.name);
+  late final _desc = TextEditingController(text: widget.station.description);
+  late final _addr = TextEditingController(text: widget.station.address);
+  late final _phone = TextEditingController(text: widget.station.phone);
+  late LatLng _pt = LatLng(widget.station.lat, widget.station.lng);
+  late bool _open = widget.station.isOpen;
 
   Future<void> _save() async {
     final data = {
@@ -34,11 +34,8 @@ class _StationFormState extends State<StationForm> {
       'is_open': _open,
     };
     try {
-      if (widget.station == null) {
-        await sb.from('stations').insert(data);
-      } else {
-        await sb.from('stations').update(data).eq('id', widget.station!.id);
-      }
+      data.remove('owner_id');
+      await sb.from('stations').update(data).eq('id', widget.station.id);
       widget.onSaved();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved')));
     } catch (e) {

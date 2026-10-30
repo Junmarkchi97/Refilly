@@ -6,6 +6,7 @@ import '../../services/api.dart';
 import '../../services/location.dart';
 import '../widgets.dart';
 import 'tracking_screen.dart';
+import '../auth/verify_phone_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final Station station;
@@ -37,6 +38,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (_address.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery address')));
       return;
+    }
+    if (!Api.phoneVerified && await Api.requirePhoneVerification()) {
+      if (!mounted) return;
+      final ok = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => VerifyPhoneScreen(initialPhone: _phone.text)));
+      if (ok != true) return;
     }
     setState(() => _busy = true);
     try {

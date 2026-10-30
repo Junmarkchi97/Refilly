@@ -26,7 +26,7 @@ class TrackingScreen extends StatelessWidget {
             return Column(children: [
               Expanded(
                 child: StreamBuilder<Map<String, dynamic>?>(
-                  stream: o.riderId != null && o.status == 'out_for_delivery' ? Api.watchRider(o.riderId!) : const Stream.empty(),
+                  stream: o.status == 'out_for_delivery' ? Api.watchRider(o.id) : const Stream.empty(),
                   builder: (context, rs) {
                     final r = rs.data;
                     final riderPt = r == null ? null : LatLng((r['lat'] as num).toDouble(), (r['lng'] as num).toDouble());
@@ -52,9 +52,10 @@ class TrackingScreen extends StatelessWidget {
                   if (o.status != 'cancelled') LinearProgressIndicator(value: (step + 1) / 5),
                   const SizedBox(height: 8),
                   Text('${o.station?['name'] ?? ''} · ${peso(o.total)} · ${o.paymentMethod.toUpperCase()}'),
+                  if (o.riderName != null) Text('Rider: ${o.riderName}${o.riderPhone != null ? ' · ${o.riderPhone}' : ''}'),
                   for (final i in o.items) Text('${i.quantity} × ${i.productName}'),
                   if (o.status == 'pending')
-                    TextButton(onPressed: () => Api.setStatus(o.id, 'cancelled'), child: const Text('Cancel order')),
+                    TextButton(onPressed: () => Api.cancelOrder(o.id), child: const Text('Cancel order')),
                 ]),
               ),
             ]);

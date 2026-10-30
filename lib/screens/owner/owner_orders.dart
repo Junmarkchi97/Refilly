@@ -12,7 +12,6 @@ class OwnerOrders extends StatefulWidget {
 
 class _OwnerOrdersState extends State<OwnerOrders> {
   late final _stream = Api.watchOrders(stationId: widget.station.id);
-  late Future<List<Profile>> _riders = Api.riders(widget.station.id);
   bool _showDone = false;
 
   @override
@@ -33,6 +32,40 @@ class _OwnerOrdersState extends State<OwnerOrders> {
         },
       );
 
+  Future<void> _assign(Order o) async {
+    final name = TextEditingController(text: o.riderName), phone = TextEditingController(text: o.riderPhone);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Rider for this order'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: name, decoration: const InputDecoration(labelText: 'Rider name')),
+          TextField(controller: phone, decoration: const InputDecoration(labelText: 'Rider mobile (09xx)'), keyboardType: TextInputType.phone),
+          const SizedBox(height: 8),
+          const Text('A private delivery link is created. Send it to the rider; no account needed. Making a new link disables the old one.',
+              style: TextStyle(fontSize: 12)),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Create link')),
+        ],
+      ),
+    );
+    if (ok != true || name.text.trim().isEmpty) return;
+    try {
+      final token = await Api.assignRider(o.id, name.text, phone.text);
+      if (mounted) await shareRiderLink(context, Api.riderLink(token), name.text.trim());
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Future<void> _shareExisting(Order o) async {
+    final t = await Api.riderToken(o.id);
+    if (t == null || !mounted) return;
+    await shareRiderLink(context, Api.riderLink(t), o.riderName ?? 'Rider');
+  }
+
   Widget _tile(Order o) => Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: ExpansionTile(
@@ -46,6 +79,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
             Text('Address: ${o.deliveryAddress}'),
             if (o.notes?.isNotEmpty ?? false) Text('Notes: ${o.notes}'),
             Text('Payment: ${o.paymentMethod.toUpperCase()} (${o.paymentStatus})'),
+            if (o.riderName != null) Text('Rider: ${o.riderName} ${o.riderPhone ?? ''}'),
             const Divider(),
             for (final i in o.items) Text('${i.quantity} × ${i.productName} @ ${peso(i.unitPrice)}'),
             const SizedBox(height: 8),
@@ -55,20 +89,14 @@ class _OwnerOrdersState extends State<OwnerOrders> {
               if (o.status == 'pending' || o.status == 'accepted')
                 OutlinedButton(onPressed: () => Api.setStatus(o.id, 'cancelled'), child: const Text('Reject')),
               if (o.status == 'out_for_delivery') OutlinedButton(onPressed: () => Api.setStatus(o.id, 'delivered'), child: const Text('Mark delivered')),
-              if (o.status != 'delivered' && o.status != 'cancelled')
-                FutureBuilder<List<Profile>>(
-                  future: _riders,
-                  builder: (context, rs) => DropdownButton<String>(
-                    hint: const Text('Assign rider'),
-                    value: (rs.data ?? []).any((r) => r.id == o.riderId) ? o.riderId : null,
-                    items: [for (final r in rs.data ?? <Profile>[]) DropdownMenuItem(value: r.id, child: Text(r.fullName ?? r.phone ?? 'Rider'))],
-                    onChanged: (v) async {
-                      if (v == null) return;
-                      await Api.assignRider(o.id, v);
-                      setState(() => _riders = Api.riders(widget.station.id));
-                    },
-                  ),
+              if (o.status != 'delivered' && o.status != 'cancelled' && o.status != 'pending')
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.delivery_dining),
+                  label: Text(o.riderName == null ? 'Assign rider' : 'Rider: ${o.riderName}'),
+                  onPressed: () => _assign(o),
                 ),
+              if (o.riderName != null && o.status != 'delivered' && o.status != 'cancelled')
+                TextButton.icon(icon: const Icon(Icons.share), label: const Text('Share rider link'), onPressed: () => _shareExisting(o)),
             ]),
           ],
         ),

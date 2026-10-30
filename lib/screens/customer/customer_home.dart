@@ -6,6 +6,8 @@ import '../../services/api.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
 import 'orders_screen.dart';
+import 'apply_owner_screen.dart';
+import '../auth/verify_phone_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   final Profile profile;
@@ -18,7 +20,17 @@ class _CustomerHomeState extends State<CustomerHome> {
   int _tab = 0;
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(_tab == 0 ? 'Stations near you' : 'My orders'), actions: [logoutButton()]),
+        appBar: AppBar(title: Text(_tab == 0 ? 'Stations near you' : 'My orders'), actions: [
+          PopupMenuButton<String>(
+            onSelected: (v) => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => v == 'owner' ? const ApplyOwnerScreen() : VerifyPhoneScreen(initialPhone: widget.profile.phone))),
+            itemBuilder: (_) => [
+              if (!Api.phoneVerified) const PopupMenuItem(value: 'phone', child: Text('Verify my phone')),
+              const PopupMenuItem(value: 'owner', child: Text('Become a station owner')),
+            ],
+          ),
+          logoutButton(),
+        ]),
         body: _tab == 0 ? StationsMap(profile: widget.profile) : OrdersScreen(profile: widget.profile),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _tab,

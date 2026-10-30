@@ -11,7 +11,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController(), _pass = TextEditingController();
   final _name = TextEditingController(), _phone = TextEditingController();
   bool _signup = false, _busy = false;
-  String _role = 'customer';
 
   Future<void> _submit() async {
     setState(() => _busy = true);
@@ -20,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
         await sb.auth.signUp(email: _email.text.trim(), password: _pass.text, data: {
           'full_name': _name.text.trim(),
           'phone': _phone.text.trim(),
-          'role': _role,
         });
       } else {
         await sb.auth.signInWithPassword(email: _email.text.trim(), password: _pass.text);
@@ -45,15 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_signup) ...[
                 TextField(controller: _name, decoration: const InputDecoration(labelText: 'Full name')),
                 TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Mobile (09xx)'), keyboardType: TextInputType.phone),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'customer', label: Text('Customer')),
-                    ButtonSegment(value: 'rider', label: Text('Rider')),
-                    ButtonSegment(value: 'owner', label: Text('Station owner')),
-                  ],
-                  selected: {_role},
-                  onSelectionChanged: (s) => setState(() => _role = s.first),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('Station owners: sign up, then tap "Become a station owner" to apply.', style: TextStyle(fontSize: 12)),
                 ),
               ],
               TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email'), keyboardType: TextInputType.emailAddress),

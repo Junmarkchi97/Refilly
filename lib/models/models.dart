@@ -2,13 +2,12 @@ double _d(dynamic v) => v == null ? 0 : (v as num).toDouble();
 
 class Profile {
   final String id;
-  final String? fullName, phone, stationId;
+  final String? fullName, phone;
   final String role;
   Profile.fromMap(Map<String, dynamic> m)
       : id = m['id'],
         fullName = m['full_name'],
         phone = m['phone'],
-        stationId = m['station_id'],
         role = m['role'] ?? 'customer';
 }
 
@@ -65,7 +64,7 @@ String statusLabel(String s) => s.replaceAll('_', ' ').toUpperCase();
 
 class Order {
   final String id, customerId, stationId, status, deliveryAddress, paymentMethod, paymentStatus;
-  final String? riderId, contactPhone, notes;
+  final String? riderName, riderPhone, contactPhone, notes;
   final double? deliveryLat, deliveryLng;
   final double total;
   final DateTime createdAt;
@@ -79,7 +78,8 @@ class Order {
         deliveryAddress = m['delivery_address'] ?? '',
         paymentMethod = m['payment_method'] ?? 'cod',
         paymentStatus = m['payment_status'] ?? 'unpaid',
-        riderId = m['rider_id'],
+        riderName = m['rider_name'],
+        riderPhone = m['rider_phone'],
         contactPhone = m['contact_phone'],
         notes = m['notes'],
         deliveryLat = (m['delivery_lat'] as num?)?.toDouble(),
@@ -89,4 +89,25 @@ class Order {
         items = ((m['order_items'] as List?) ?? []).map((e) => OrderItem.fromMap(e)).toList(),
         customer = m['customer'],
         station = m['station'];
+}
+
+class OwnerApplication {
+  final String id, applicantId, businessName, stationName, address, permitPath, photoPath, status;
+  final String? phone, notes;
+  final double lat, lng;
+  final DateTime createdAt;
+  OwnerApplication.fromMap(Map<String, dynamic> m)
+      : id = m['id'],
+        applicantId = m['applicant_id'],
+        businessName = m['business_name'],
+        stationName = m['station_name'],
+        address = m['address'],
+        permitPath = m['permit_path'],
+        photoPath = m['photo_path'],
+        status = m['status'],
+        phone = m['phone'],
+        notes = m['notes'],
+        lat = _d(m['lat']),
+        lng = _d(m['lng']),
+        createdAt = DateTime.parse(m['created_at']).toLocal();
 }

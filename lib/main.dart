@@ -5,7 +5,8 @@ import 'models/models.dart';
 import 'services/api.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/customer/customer_home.dart';
-import 'screens/rider/rider_home.dart';
+import 'screens/rider/rider_link_screen.dart';
+import 'screens/admin/admin_home.dart';
 import 'screens/owner/owner_home.dart';
 
 Future<void> main() async {
@@ -24,7 +25,7 @@ class RefillyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(colorSchemeSeed: const Color(0xFF0288D1), useMaterial3: true),
         home: AppConfig.isConfigured
-            ? const AuthGate()
+            ? (riderTokenFromUrl() != null ? RiderLinkScreen(token: riderTokenFromUrl()!) : const AuthGate())
             : const Scaffold(
                 body: Center(
                     child: Padding(
@@ -32,6 +33,14 @@ class RefillyApp extends StatelessWidget {
                         child: Text('Supabase not configured.\nRun with --dart-define-from-file=env.json (see README).',
                             textAlign: TextAlign.center)))),
       );
+}
+
+/// Riders open `<app>/#/rider/<token>` (or `/rider/<token>`) with no login.
+String? riderTokenFromUrl() {
+  final u = Uri.base;
+  final path = u.fragment.isNotEmpty ? u.fragment : u.path;
+  final m = RegExp(r'^/?rider/([A-Za-z0-9]{32,128})').firstMatch(path);
+  return m?.group(1);
 }
 
 class AuthGate extends StatelessWidget {
@@ -48,8 +57,8 @@ class AuthGate extends StatelessWidget {
               if (!snap.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
               final p = snap.data!;
               switch (p.role) {
-                case 'rider':
-                  return RiderHome(profile: p);
+                case 'admin':
+                  return AdminHome(profile: p);
                 case 'owner':
                   return OwnerHome(profile: p);
                 default:

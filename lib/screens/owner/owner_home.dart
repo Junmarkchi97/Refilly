@@ -5,7 +5,6 @@ import '../widgets.dart';
 import 'station_form.dart';
 import 'owner_orders.dart';
 import 'owner_products.dart';
-import 'owner_riders.dart';
 import 'sales_screen.dart';
 
 class OwnerHome extends StatefulWidget {
@@ -34,22 +33,20 @@ class _OwnerHomeState extends State<OwnerHome> {
           final s = snap.data;
           if (s == null) {
             return Scaffold(
-              appBar: AppBar(title: const Text('Set up your station'), actions: [logoutButton()]),
-              body: StationForm(ownerId: widget.profile.id, onSaved: _reload),
+              appBar: AppBar(title: const Text('No station yet'), actions: [logoutButton()]),
+              body: const Center(child: Text('Your station is created when an admin approves your application.')),
             );
           }
           final pages = [
             OwnerOrders(station: s),
             OwnerProducts(station: s),
             SalesScreen(station: s),
-            OwnerRiders(station: s),
             StationForm(ownerId: widget.profile.id, station: s, onSaved: _reload),
           ];
           const items = [
             (Icons.receipt_long, 'Orders'),
             (Icons.inventory_2, 'Products'),
             (Icons.bar_chart, 'Sales'),
-            (Icons.delivery_dining, 'Riders'),
             (Icons.store, 'Station'),
           ];
           final wide = MediaQuery.sizeOf(context).width > 800;
