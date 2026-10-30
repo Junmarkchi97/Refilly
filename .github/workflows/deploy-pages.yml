@@ -1,0 +1,103 @@
+name: Deploy Flutter web to GitHub Pages
+
+# Every commit to main is built and deployed. Manual runs can redeploy the latest.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Do not publish an older commit after a newer one has been queued.
+concurrency:
+  group: refilly-github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Validate and build Flutter web
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Validate production Supabase configuration
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
+        run: |
+          if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_ANON_KEY" ]]; then
+            echo "::error::Configure repository variable SUPABASE_URL and repository secret SUPABASE_ANON_KEY before deploying."
+            exit 1
+          fi
+          if [[ "$SUPABASE_URL" != https://*.supabase.co* ]]; then
+            echo "::error::SUPABASE_URL must be a valid HTTPS Supabase project URL."
+            exit 1
+          fi
+
+      - name: Build production web
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          APP_URL: https://junmarkchi97.github.io/Refilly/
+        shell: bash
+        run: |
+          # Publishable keys are safe for a browser app; NEVER use a service-role key.
+          # Dart defines are written to a temp file rather than passed on the command line.
+          python3 - <<'PY'
+          import json, os
+          with open('/tmp/refilly-web-defines.json', 'w', encoding='utf-8') as f:
+              json.dump({
+                  'SUPABASE_URL': os.environ['SUPABASE_URL'],
+                  'SUPABASE_ANON_KEY': os.environ['SUPABASE_ANON_KEY'],
+                  'APP_URL': os.environ['APP_URL'],
+              }, f)
+          PY
+          flutter build web --release --base-href /Refilly/ --pwa-strategy=none --dart-define-from-file=/tmp/refilly-web-defines.json
+          rm -f /tmp/refilly-web-defines.json
+          touch build/web/.nojekyll
+          test -s build/web/index.html
+          test -s build/web/main.dart.js
+
+      - name: Upload GitHub Pages site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/web
+
+  deploy:
+    name: Publish website
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Publish latest Flutter build
+        id: deployment
+        uses: actions/deploy-pages@v4
