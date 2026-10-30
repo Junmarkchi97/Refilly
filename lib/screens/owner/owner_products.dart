@@ -115,7 +115,14 @@ class _OwnerProductsState extends State<OwnerProducts> {
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
+            FilledButton(onPressed: () {
+              final amount = double.tryParse(price.text.trim());
+              if (name.text.trim().isEmpty || unit.text.trim().isEmpty || amount == null || !amount.isFinite || amount <= 0) {
+                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Add a name, unit, and valid price above ₱0.')));
+                return;
+              }
+              Navigator.pop(ctx, true);
+            }, child: const Text('Save')),
           ],
         ),
       ),
