@@ -49,7 +49,7 @@ returns text language plpgsql security definer set search_path = '' as $$
 declare t text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
 begin
   if nullif(trim(coalesce(p_name,'')), '') is null
-    or trim(coalesce(p_phone,'')) !~ '^([+]63|63|0)9[0-9]{9}  then raise exception 'valid rider name and Philippine mobile number required'; end if;
+    or not (trim(coalesce(p_phone,'')) ~ concat('^([+]63|63|0)9[0-9]{9}', chr(36)))
   update public.orders set rider_name = trim(p_name), rider_phone = trim(p_phone)
     where id = p_order and public.owns_station(station_id) and status in ('accepted','preparing');
   if not found then raise exception 'order not assignable'; end if;
