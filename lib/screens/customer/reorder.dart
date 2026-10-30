@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import 'station_screen.dart';
+import '../../models/refill_routine.dart';
 
 class ReorderCart {
   const ReorderCart(this.quantities, this.unavailable, this.priceChanges);
@@ -33,8 +34,20 @@ class ReorderCart {
 }
 
 /// Opens a reviewable, prefilled cart; never submits an order automatically.
-Future<void> startReorder(BuildContext context, Order order, Profile profile) async {
+Future<void> startReorder(BuildContext context, Order order, Profile profile, {RefillRoutine? routine}) async {
   if (order.status != 'delivered' && order.status != 'cancelled') return;
+  if (routine != null) {
+    final active = await Api.hasMatchingActiveOrder(order);
+    if (!context.mounted) return;
+    if (active) {
+      await showDialog<void>(context: context, builder: (c) => AlertDialog(
+        title: const Text('Refill already in progress'),
+        content: const Text('You already have an active order for these essentials. Check Orders before ordering again.'),
+        actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+      ));
+      return;
+    }
+  }
   // Give feedback on slow connections and prevent repeated taps while loading.
   showDialog<void>(
     context: context,
@@ -106,6 +119,7 @@ Future<void> startReorder(BuildContext context, Order order, Profile profile) as
       station: station!,
       profile: profile,
       initialQuantities: readyCart.quantities,
+      refillRoutineId: routine?.id,
     ),
   ));
 }
