@@ -150,6 +150,22 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     }
   }
 
+  Future<void> _confirmCod(Order order) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Confirm cash received?'),
+      content: Text('Confirm you collected ${peso(order.total)} for this delivery. This cannot be undone here.'),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cash collected'))],
+    ));
+    if (confirmed != true) return;
+    try {
+      await sb.rpc('confirm_cod_collection', params: {'p_order': order.id});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('COD payment marked as collected')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment confirmation failed: $e')));
+    }
+  }
+
   Widget _btn(String label, VoidCallback? onTap, {bool primary = true, bool busy = false}) {
     final style = ButtonStyle(
       minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
@@ -259,6 +275,10 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                   ),
                 ),
               ),
+            if (o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid') ...[
+              const SizedBox(height: 12),
+              Row(children: [_btn('Confirm cash collected', () => _confirmCod(o))]),
+            ],
             if (open) const SizedBox(height: 12),
             if (o.status == 'pending')
               Row(
