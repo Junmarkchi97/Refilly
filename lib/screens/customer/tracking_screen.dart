@@ -9,6 +9,38 @@ import '../../theme.dart';
 import '../widgets.dart';
 
 /// Live order status + rider position (Supabase Realtime), Glide-style.
+Future<void> _reviewStation(BuildContext context, Order order) async {
+  int rating = 5;
+  final note = TextEditingController();
+  try {
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(builder: (dialogContext, setDialogState) => AlertDialog(
+        title: const Text('Rate your water station'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Wrap(children: [for (var n = 1; n <= 5; n++) IconButton(
+            tooltip: '$n stars',
+            icon: Icon(n <= rating ? Icons.star_rounded : Icons.star_border_rounded, color: Colors.amber),
+            onPressed: () => setDialogState(() => rating = n),
+          )]),
+          TextField(controller: note, maxLength: 1000, maxLines: 3, decoration: const InputDecoration(hintText: 'Optional feedback')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Submit')),
+        ],
+      )),
+    );
+    if (approved != true) return;
+    await Api.submitReview(order, rating, note.text);
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thanks for reviewing the station!')));
+  } catch (_) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This order may already have a review.')));
+  } finally {
+    note.dispose();
+  }
+}
+
 class TrackingScreen extends StatelessWidget {
   final String orderId, customerId;
   const TrackingScreen({super.key, required this.orderId, required this.customerId});
@@ -116,7 +148,16 @@ class TrackingScreen extends StatelessWidget {
                   peso(i.unitPrice * i.quantity),
                   leading: ProductThumb(i.imageUrl, size: 40, radius: 10),
                 ),
+              KeyValueRow('Delivery fee', o.deliveryFee == 0 ? 'Free' : peso(o.deliveryFee)),
               KeyValueRow('Total', peso(o.total), bold: true),
+              if (o.status == 'delivered') Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.star_rounded),
+                  label: const Text('Rate this water station'),
+                  onPressed: () => _reviewStation(context, o),
+                ),
+              ),
               if (o.status == 'pending')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
