@@ -15,11 +15,19 @@ class AdminHome extends StatefulWidget {
 
 class _AdminHomeState extends State<AdminHome> {
   String _status = 'pending';
+  bool _deciding = false;
   late Future<List<OwnerApplication>> _f = Api.applications(_status);
 
   void _reload() => setState(() => _f = Api.applications(_status));
 
-  Future<void> _open(String path) async => launchUrl(Uri.parse(await Api.docUrl(path)));
+  Future<void> _open(String path) async {
+    try {
+      final ok = await launchUrl(Uri.parse(await Api.docUrl(path)), mode: LaunchMode.externalApplication);
+      if (!ok) throw Exception('Could not open document');
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open document. Please try again.')));
+    }
+  }
 
   Future<void> _decide(OwnerApplication a, bool approve) async {
     final notes = TextEditingController();
@@ -37,12 +45,15 @@ class _AdminHomeState extends State<AdminHome> {
         ],
       ),
     );
-    if (ok != true) return;
+    if (ok != true || _deciding) return;
+    setState(() => _deciding = true);
     try {
       approve ? await Api.approve(a.id, notes.text) : await Api.reject(a.id, notes.text);
       _reload();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save the decision: $e')));
+    } finally {
+      if (mounted) setState(() => _deciding = false);
     }
   }
 
@@ -74,7 +85,7 @@ class _AdminHomeState extends State<AdminHome> {
                 key: ValueKey(snap.hasData),
                 child: Builder(
                   builder: (context) {
-                    if (snap.hasError) return Center(child: Text('${snap.error}'));
+                    if (snap.hasError) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Unable to load applications'), const SizedBox(height: 12), FilledButton(onPressed: _reload, child: const Text('Retry'))]));
                     if (!snap.hasData) return const SkeletonList();
                     if (snap.data!.isEmpty) {
                       return EmptyState(
@@ -105,9 +116,9 @@ class _AdminHomeState extends State<AdminHome> {
                                         TextButton(onPressed: () => _open(a.permitPath), child: const Text('View permit')),
                                         TextButton(onPressed: () => _open(a.photoPath), child: const Text('View photo')),
                                         if (a.status == 'pending')
-                                          FilledButton(onPressed: () => _decide(a, true), child: const Text('Approve')),
+                                          FilledButton(onPressed: _deciding ? null : () => _decide(a, true), child: const Text('Approve')),
                                         if (a.status == 'pending')
-                                          OutlinedButton(onPressed: () => _decide(a, false), child: const Text('Reject')),
+                                          OutlinedButton(onPressed: _deciding ? null : () => _decide(a, false), child: const Text('Reject')),
                                       ],
                                     ),
                                   ],
