@@ -1,7 +1,5 @@
-// Supabase Auth "Send SMS" hook -> UniSMS (unismsapi.com) or Semaphore (semaphore.co).
-// Secrets: SEND_SMS_HOOK_SECRET (v1,whsec_...), SMS_PROVIDER (unisms|semaphore, optional),
-//   UNISMS_API_KEY, UNISMS_SENDER_ID (default "Unisoft" test sender),
-//   SEMAPHORE_API_KEY, SEMAPHORE_SENDER_NAME (optional).
+// Supabase Auth "Send SMS" hook -> UniSMS (https://unismsapi.com/docs/sms).
+// Secrets: SEND_SMS_HOOK_SECRET (v1,whsec_...), UNISMS_API_KEY, optional UNISMS_SENDER_ID (default "Unisoft" test sender).
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 
 const json = (status: number, body: unknown) =>
@@ -9,8 +7,8 @@ const json = (status: number, body: unknown) =>
 
 const hookError = (status: number, message: string) => json(status, { error: { http_code: status, message } });
 
-/** Semaphore wants PH mobiles as 09XXXXXXXXX (63XXXXXXXXXX also accepted). */
-export function toSemaphoreNumber(raw: string): string | null {
+/** Normalises PH mobiles to +639XXXXXXXXX (UniSMS also accepts 09XXXXXXXXX). */
+export function toPhMobile(raw: string): string | null {
   const d = raw.replace(/\D/g, "");
   if (/^639\d{9}$/.test(d)) return "0" + d.slice(2);
   if (/^09\d{9}$/.test(d)) return d;
@@ -31,22 +29,21 @@ Deno.serve(async (req) => {
 
   const phone = data.user?.phone ?? "";
   const otp = data.sms?.otp ?? "";
-  const number = toSemaphoreNumber(phone);
+  const number = toPhMobile(phone);
   if (!number || !otp) return hookError(400, "Only Philippine mobile numbers (+63 9XX XXX XXXX) are supported");
 
-  const provider = (Deno.env.get("SMS_PROVIDER") ??
-    (Deno.env.get("UNISMS_API_KEY") ? "unisms" : Deno.env.get("SEMAPHORE_API_KEY") ? "semaphore" : "unisms")).toLowerCase();
   const message = `Your Refilly code is ${otp}. It expires in 10 minutes. Do not share it.`;
   try {
-    const err = provider === "semaphore" ? await sendSemaphore(number, otp) : await sendUniSms(number, message);
+    const err = await sendUniSms(number, message);
     if (err) {
-      console.error(`send-sms[${provider}]: ${err}`);
-      return hookError(err.startsWith("not configured") ? 500 : 502, err.startsWith("not configured") ? "SMS provider is not configured yet" : "Could not send the SMS code. Please try again.");
+      console.error(`send-sms: ${err}`);
+      const missing = err.startsWith("not configured");
+      return hookError(missing ? 500 : 502, missing ? "SMS provider is not configured yet" : "Could not send the SMS code. Please try again.");
     }
-    console.log(`send-sms[${provider}]: sent to ${number.slice(0, 4)}*****${number.slice(-2)}`);
+    console.log(`send-sms: sent to ${number.slice(0, 4)}*****${number.slice(-2)}`);
     return json(200, {});
   } catch (e) {
-    console.error(`send-sms[${provider}]: network error`, String(e));
+    console.error("send-sms: network error", String(e));
     return hookError(502, "SMS provider unreachable");
   }
 });
@@ -72,20 +69,4 @@ async function sendUniSms(number: string, content: string): Promise<string | nul
     if (m?.status === "failed" || m?.fail_reason) return `UniSMS failed: ${m.fail_reason ?? text.slice(0, 300)}`;
   } catch (_) { /* non-JSON 201 is still accepted */ }
   return null;
-}
-
-/** Semaphore: POST https://api.semaphore.co/api/v4/otp (form), uses our OTP via `code`. */
-async function sendSemaphore(number: string, otp: string): Promise<string | null> {
-  const apikey = Deno.env.get("SEMAPHORE_API_KEY");
-  if (!apikey) return "not configured: SEMAPHORE_API_KEY missing";
-  const form = new URLSearchParams({ apikey, number, code: otp, message: "Your Refilly code is {otp}. It expires in 10 minutes. Do not share it." });
-  const sender = Deno.env.get("SEMAPHORE_SENDER_NAME");
-  if (sender) form.set("sendername", sender);
-  const r = await fetch("https://api.semaphore.co/api/v4/otp", { method: "POST", body: form });
-  const text = await r.text();
-  try {
-    const j = JSON.parse(text);
-    if (r.ok && Array.isArray(j) && j.length > 0 && !j.some((m) => m.status === "Failed")) return null;
-  } catch (_) { /* fallthrough */ }
-  return `Semaphore rejected (${r.status}): ${text.slice(0, 300)}`;
 }
