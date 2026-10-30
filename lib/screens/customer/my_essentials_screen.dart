@@ -47,9 +47,11 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
       await Api.manageRefillRoutine(routine.id, action, days: days);
       _refresh();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to update routine: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to update routine: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _working.remove(routine.id));
     }
@@ -116,9 +118,11 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
       if (order == null) throw StateError('This saved order is unavailable.');
       await startReorder(context, order, widget.profile, routine: routine);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to prepare refill: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to prepare refill: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _working.remove(routine.id));
     }
