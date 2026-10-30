@@ -22,6 +22,8 @@ class _StationFormState extends State<StationForm> {
   late final _desc = TextEditingController(text: widget.station.description);
   late final _addr = TextEditingController(text: widget.station.address);
   late final _phone = TextEditingController(text: widget.station.phone);
+  late final _radius = TextEditingController(text: widget.station.deliveryRadiusKm.toStringAsFixed(1));
+  late final _fee = TextEditingController(text: widget.station.deliveryFee.toStringAsFixed(2));
   late LatLng _pt = LatLng(widget.station.lat, widget.station.lng);
   late bool _open = widget.station.isOpen;
   late String? _photo = widget.station.photoUrl;
@@ -69,6 +71,12 @@ class _StationFormState extends State<StationForm> {
   }
 
   Future<void> _save() async {
+    final radius = double.tryParse(_radius.text.trim());
+    final fee = double.tryParse(_fee.text.trim());
+    if (radius == null || !radius.isFinite || radius <= 0 || radius > 100 || fee == null || !fee.isFinite || fee < 0 || fee > 5000) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery radius of 0–100 km and a valid delivery fee.')));
+      return;
+    }
     final data = {
       'owner_id': widget.ownerId,
       'name': _name.text.trim(),
@@ -78,6 +86,8 @@ class _StationFormState extends State<StationForm> {
       'lat': _pt.latitude,
       'lng': _pt.longitude,
       'is_open': _open,
+      'delivery_radius_km': radius,
+      'delivery_fee': fee,
     };
     try {
       data.remove('owner_id');
@@ -87,6 +97,12 @@ class _StationFormState extends State<StationForm> {
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose(); _desc.dispose(); _addr.dispose(); _phone.dispose(); _radius.dispose(); _fee.dispose();
+    super.dispose();
   }
 
   @override
@@ -139,6 +155,10 @@ class _StationFormState extends State<StationForm> {
         controller: _phone,
         decoration: const InputDecoration(labelText: 'Phone'),
       ),
+      const SizedBox(height: 12),
+      TextField(controller: _radius, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Delivery coverage radius (km)')),
+      const SizedBox(height: 12),
+      TextField(controller: _fee, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Delivery fee (₱)')),
       const SizedBox(height: 12),
       SwitchListTile(title: const Text('Open for orders'), value: _open, onChanged: (v) => setState(() => _open = v)),
       const Text('Tap the map to set your station location'),
