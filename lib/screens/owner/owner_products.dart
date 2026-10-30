@@ -17,10 +17,10 @@ class OwnerProducts extends StatefulWidget {
 }
 
 class _OwnerProductsState extends State<OwnerProducts> {
-  late Future<List<Product>> _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20)).timeout(const Duration(seconds: 20));
+  late Future<List<Product>> _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20));
   final Future<List<Category>> _cats = Api.categories();
 
-  void _reload() => setState(() => _f = Api.products(widget.station.id, onlyAvailable: false));
+  void _reload() => setState(() => _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20)));
 
   Future<void> _edit([Product? p]) async {
     final cats = await _cats;
