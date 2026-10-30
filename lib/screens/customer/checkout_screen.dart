@@ -17,7 +17,8 @@ class CheckoutScreen extends StatefulWidget {
   final Station station;
   final Map<Product, int> cart;
   final Profile profile;
-  const CheckoutScreen({super.key, required this.station, required this.cart, required this.profile});
+  final String? refillRoutineId;
+  const CheckoutScreen({super.key, required this.station, required this.cart, required this.profile, this.refillRoutineId});
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
@@ -130,6 +131,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _place() async {
+    if (_busy) return;
     if (_deliveryFee == null || _quoting || _quoteError != null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a serviceable delivery location first.')));
       return;
@@ -159,6 +161,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         notes: _notes.text.trim(),
         payment: _payment,
       );
+      if (widget.refillRoutineId != null) {
+        try {
+          await Api.recordRefillOrder(widget.refillRoutineId!, id);
+        } catch (_) {
+          // The purchase succeeded; never retry checkout just because the
+          // routine schedule could not be updated. The routine can be adjusted later.
+        }
+      }
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => TrackingScreen(orderId: id, customerId: widget.profile.id)),
