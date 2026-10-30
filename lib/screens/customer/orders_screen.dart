@@ -5,6 +5,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'tracking_screen.dart';
+import 'reorder.dart';
 import '../network_states.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -49,8 +50,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           builder: (_) => TrackingScreen(orderId: o.id, customerId: widget.profile.id),
                         ),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          Row(children: [
                           (o.station?['photo_url'] as String?)?.isNotEmpty ?? false
                               ? Stack(
                                   clipBehavior: Clip.none,
@@ -100,6 +103,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             ),
                           ),
                           Text(peso(o.total), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                          ]),
+                          if (o.status == 'delivered' || o.status == 'cancelled') ...[
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: () => startReorder(context, o, widget.profile),
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Reorder'),
+                            ),
+                          ],
                         ],
                       ),
                     ),
