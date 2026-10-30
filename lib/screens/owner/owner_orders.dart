@@ -70,42 +70,132 @@ class _OwnerOrdersState extends State<OwnerOrders> {
   );
 
   Future<void> _assign(Order o) async {
-    final name = TextEditingController(text: o.riderName), phone = TextEditingController(text: o.riderPhone);
+    final name = TextEditingController(text: o.riderName);
+    final phone = TextEditingController(text: o.riderPhone);
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Rider for this order'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(labelText: 'Rider name'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final validName = name.text.trim().isNotEmpty;
+          final validPhone = RegExp(r'^(09\d{9}|639\d{9}|\+639\d{9})$')
+              .hasMatch(phone.text.replaceAll(RegExp(r'[\s-]'), ''));
+          final ready = validName && validPhone;
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.delivery_dining_rounded, size: 24),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Assign a rider',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Close',
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Order for ${o.customer?['full_name'] ?? 'Customer'}',
+                      style: const TextStyle(color: RF.muted, fontSize: 13),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: name,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: const InputDecoration(
+                        labelText: 'Rider name',
+                        hintText: 'Enter full name',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: phone,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: const InputDecoration(
+                        labelText: 'Mobile number',
+                        hintText: '09XX XXX XXXX',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: RF.muted, size: 17),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'We’ll create a private delivery link to share with your rider. Creating a new link disables the previous one.',
+                            style: TextStyle(color: RF.muted, fontSize: 12, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(dialogContext, false),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: FilledButton(
+                            onPressed: ready ? () => Navigator.pop(dialogContext, true) : null,
+                            child: Text(o.riderName == null ? 'Create link' : 'Update link'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextField(
-              controller: phone,
-              decoration: const InputDecoration(labelText: 'Rider mobile (09xx)'),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'A private delivery link is created. Send it to the rider; no account needed. Making a new link disables the old one.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Create link')),
-        ],
+          );
+        },
       ),
     );
-    if (ok != true || name.text.trim().isEmpty) return;
+    final riderName = name.text.trim();
+    final riderPhone = phone.text.replaceAll(RegExp(r'[\s-]'), '');
+    name.dispose();
+    phone.dispose();
+    if (ok != true || !mounted) return;
     try {
-      final token = await Api.assignRider(o.id, name.text, phone.text);
-      if (mounted) await shareRiderLink(context, Api.riderLink(token), name.text.trim());
+      final token = await Api.assignRider(o.id, riderName, riderPhone);
+      if (mounted) await shareRiderLink(context, Api.riderLink(token), riderName);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not assign rider: $e')),
+        );
+      }
     }
   }
 
