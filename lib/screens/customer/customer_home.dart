@@ -135,104 +135,138 @@ class _StationsMapState extends State<StationsMap> {
   @override
   Widget build(BuildContext context) => FutureBuilder<List<Station>>(
     future: _f,
-    builder: (context, snap) {
-      if (snap.hasError) return Center(child: Text('${snap.error}'));
-      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-      final stations = snap.data!;
-      final open = stations.where((s) => s.isOpen).length;
-      final first = (widget.profile.fullName ?? '').split(' ').first;
-      return RefreshIndicator(
-        onRefresh: () async => setState(() => _f = Api.stations()),
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 120),
-          children: [
-            PageHeader(
-              first.isEmpty ? 'Refilly' : 'Hi, $first',
-              subtitle: 'Fresh water, delivered fast',
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), boxShadow: RF.shadow),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.water_drop_rounded, color: RF.accent, size: 18),
-                    SizedBox(width: 4),
-                    Text('Refilly', style: TextStyle(fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              ),
-            ),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(RF.radius),
-                child: SizedBox(
-                  height: 260,
-                  child: Stack(
-                    children: [
-                      FlutterMap(
-                        options: const MapOptions(initialCenter: manila, initialZoom: 11.5),
+    builder: (context, snap) => StateSwitcher(
+      child: KeyedSubtree(
+        key: ValueKey(snap.hasData),
+        child: Builder(
+          builder: (context) {
+            if (snap.hasError) return Center(child: Text('${snap.error}'));
+            if (!snap.hasData) return const SkeletonList();
+            final stations = snap.data!;
+            final open = stations.where((s) => s.isOpen).length;
+            final first = (widget.profile.fullName ?? '').split(' ').first;
+            return RefreshIndicator(
+              onRefresh: () async => setState(() => _f = Api.stations()),
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 120),
+                children: [
+                  PageHeader(
+                    first.isEmpty ? 'Refilly' : 'Hi, $first',
+                    subtitle: 'Fresh water, delivered fast',
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), boxShadow: RF.shadow),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          osmTiles(),
-                          MarkerLayer(
-                            markers: [
-                              for (final s in stations)
-                                pin(LatLng(s.lat, s.lng), Icons.water_drop_rounded, s.isOpen ? RF.accent : RF.muted, onTap: () => _open(s)),
-                            ],
-                          ),
-                          osmAttribution(),
+                          Icon(Icons.water_drop_rounded, color: RF.accent, size: 18),
+                          SizedBox(width: 4),
+                          Text('Refilly', style: TextStyle(fontWeight: FontWeight.w800)),
                         ],
                       ),
-                      Positioned(
-                        left: 12,
-                        top: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), boxShadow: RF.shadow),
-                          child: Text('$open open near you', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
+                  ),
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(RF.radius),
+                      child: SizedBox(
+                        height: 260,
+                        child: Stack(
+                          children: [
+                            RepaintBoundary(
+                              child: FlutterMap(
+                                options: const MapOptions(initialCenter: manila, initialZoom: 11.5),
+                                children: [
+                                  osmTiles(),
+                                  MarkerLayer(
+                                    markers: [
+                                      for (final s in stations)
+                                        pin(
+                                          LatLng(s.lat, s.lng),
+                                          Icons.water_drop_rounded,
+                                          s.isOpen ? RF.accent : RF.muted,
+                                          onTap: () => _open(s),
+                                        ),
+                                    ],
+                                  ),
+                                  osmAttribution(),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              left: 12,
+                              top: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(100),
+                                  boxShadow: RF.shadow,
+                                ),
+                                child: Text('$open open near you', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SectionTitle('Stations'),
-            for (final s in stations)
-              AppCard(
-                onTap: () => _open(s),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(color: RF.accentSoft, borderRadius: BorderRadius.circular(16)),
-                      child: const Icon(Icons.water_drop_rounded, color: RF.accent),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(s.name, style: Theme.of(context).textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          const SizedBox(height: 2),
-                          Text(
-                            s.address ?? '',
-                            style: const TextStyle(color: RF.muted, fontSize: 13),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                  ),
+                  const SectionTitle('Stations'),
+                  if (stations.isEmpty)
+                    EmptyState(
+                      icon: Icons.location_off_rounded,
+                      title: 'No stations nearby',
+                      subtitle: 'We are adding refilling stations in your area. Pull down to refresh.',
+                      actionLabel: 'Refresh',
+                      onAction: () => setState(() => _f = Api.stations()),
+                    ),
+                  for (final (sIdx, s) in (stations).indexed)
+                    FadeSlideIn(
+                      index: sIdx,
+                      child: AppCard(
+                        onTap: () => _open(s),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(color: RF.accentSoft, borderRadius: BorderRadius.circular(16)),
+                              child: const Icon(Icons.water_drop_rounded, color: RF.accent),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    s.name,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    s.address ?? '',
+                                    style: const TextStyle(color: RF.muted, fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            StatusPill(s.isOpen ? 'open' : 'closed'),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    StatusPill(s.isOpen ? 'open' : 'closed'),
-                  ],
-                ),
+                ],
               ),
-          ],
+            );
+          },
         ),
-      );
-    },
+      ),
+    ),
   );
 }

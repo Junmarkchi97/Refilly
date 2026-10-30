@@ -117,19 +117,18 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FlutterMap(
-              options: MapOptions(initialCenter: _me ?? drop ?? stPt ?? manila, initialZoom: 14),
-              children: [
-                osmTiles(),
-                MarkerLayer(
-                  markers: [
-                    if (stPt != null) pin(stPt, Icons.store, Colors.blue),
-                    if (drop != null) pin(drop, Icons.home, Colors.red),
-                    if (_me != null) pin(_me!, Icons.delivery_dining, Colors.purple),
-                  ],
-                ),
-                osmAttribution(),
-              ],
+            child: RepaintBoundary(
+              child: FlutterMap(
+                options: MapOptions(initialCenter: _me ?? drop ?? stPt ?? manila, initialZoom: 14),
+                children: [
+                  osmTiles(),
+                  MarkerLayer(
+                    markers: [if (stPt != null) pin(stPt, Icons.store, Colors.blue), if (drop != null) pin(drop, Icons.home, Colors.red)],
+                  ),
+                  if (_me != null) GlidingMarker(point: _me!, builder: (p) => pin(p, Icons.delivery_dining, const Color(0xFF7B61FF))),
+                  osmAttribution(),
+                ],
+              ),
             ),
           ),
           Container(
@@ -170,11 +169,18 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
                         label: const Text('Directions'),
                       ),
                     if (status != 'out_for_delivery')
-                      FilledButton(onPressed: _busy ? null : () => _status('out_for_delivery'), child: const Text('Start delivery')),
+                      Pressable(
+                        child: FilledButton(
+                          onPressed: _busy ? null : () => _status('out_for_delivery'),
+                          child: const Text('Start delivery'),
+                        ),
+                      ),
                     if (status == 'out_for_delivery' && _gps == null)
                       OutlinedButton(onPressed: _share, child: const Text('Share live location')),
                     if (status == 'out_for_delivery')
-                      FilledButton(onPressed: _busy ? null : () => _status('delivered'), child: const Text('Mark delivered')),
+                      Pressable(
+                        child: FilledButton(onPressed: _busy ? null : () => _status('delivered'), child: const Text('Mark delivered')),
+                      ),
                   ],
                 ),
               ],

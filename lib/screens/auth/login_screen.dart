@@ -99,7 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               const SizedBox(height: 24),
-              FilledButton(onPressed: _busy ? null : _submit, child: Text(_signup ? 'Create account' : 'Log in')),
+              Pressable(
+                child: FilledButton(onPressed: _busy ? null : _submit, child: Text(_signup ? 'Create account' : 'Log in')),
+              ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => setState(() => _signup = !_signup),

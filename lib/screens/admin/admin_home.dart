@@ -69,40 +69,58 @@ class _AdminHomeState extends State<AdminHome> {
         Expanded(
           child: FutureBuilder<List<OwnerApplication>>(
             future: _f,
-            builder: (context, snap) {
-              if (snap.hasError) return Center(child: Text('${snap.error}'));
-              if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-              if (snap.data!.isEmpty) return const Center(child: Text('Nothing here'));
-              return ListView(
-                children: [
-                  for (final a in snap.data!)
-                    Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('${a.stationName} — ${a.businessName}', style: Theme.of(context).textTheme.titleMedium),
-                            Text('${a.address} · ${a.phone ?? ''}'),
-                            Text('Pin: ${a.lat.toStringAsFixed(5)}, ${a.lng.toStringAsFixed(5)}'),
-                            if (a.notes != null) Text('Notes: ${a.notes}'),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                TextButton(onPressed: () => _open(a.permitPath), child: const Text('View permit')),
-                                TextButton(onPressed: () => _open(a.photoPath), child: const Text('View photo')),
-                                if (a.status == 'pending') FilledButton(onPressed: () => _decide(a, true), child: const Text('Approve')),
-                                if (a.status == 'pending') OutlinedButton(onPressed: () => _decide(a, false), child: const Text('Reject')),
-                              ],
+            builder: (context, snap) => StateSwitcher(
+              child: KeyedSubtree(
+                key: ValueKey(snap.hasData),
+                child: Builder(
+                  builder: (context) {
+                    if (snap.hasError) return Center(child: Text('${snap.error}'));
+                    if (!snap.hasData) return const SkeletonList();
+                    if (snap.data!.isEmpty) {
+                      return EmptyState(
+                        icon: _status == 'pending' ? Icons.inbox_rounded : Icons.folder_off_rounded,
+                        title: _status == 'pending' ? 'All caught up' : 'Nothing here',
+                        subtitle: _status == 'pending' ? 'No owner applications waiting for review.' : 'No $_status applications yet.',
+                      );
+                    }
+                    return ListView(
+                      children: [
+                        for (final (aIdx, a) in (snap.data!).indexed)
+                          FadeSlideIn(
+                            index: aIdx,
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('${a.stationName} — ${a.businessName}', style: Theme.of(context).textTheme.titleMedium),
+                                    Text('${a.address} · ${a.phone ?? ''}'),
+                                    Text('Pin: ${a.lat.toStringAsFixed(5)}, ${a.lng.toStringAsFixed(5)}'),
+                                    if (a.notes != null) Text('Notes: ${a.notes}'),
+                                    Wrap(
+                                      spacing: 8,
+                                      children: [
+                                        TextButton(onPressed: () => _open(a.permitPath), child: const Text('View permit')),
+                                        TextButton(onPressed: () => _open(a.photoPath), child: const Text('View photo')),
+                                        if (a.status == 'pending')
+                                          FilledButton(onPressed: () => _decide(a, true), child: const Text('Approve')),
+                                        if (a.status == 'pending')
+                                          OutlinedButton(onPressed: () => _decide(a, false), child: const Text('Reject')),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
         ),
       ],

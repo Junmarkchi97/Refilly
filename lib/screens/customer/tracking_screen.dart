@@ -18,7 +18,7 @@ class TrackingScreen extends StatelessWidget {
     body: StreamBuilder<List<Order>>(
       stream: Api.watchOrders(customerId: customerId),
       builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snap.hasData) return const SkeletonList();
         final o = snap.data!.where((x) => x.id == orderId).firstOrNull;
         if (o == null) return const Center(child: Text('Order not found'));
         final station = o.station;
@@ -33,19 +33,22 @@ class TrackingScreen extends StatelessWidget {
                 builder: (context, rs) {
                   final r = rs.data;
                   final riderPt = r == null ? null : LatLng((r['lat'] as num).toDouble(), (r['lng'] as num).toDouble());
-                  return FlutterMap(
-                    options: MapOptions(initialCenter: riderPt ?? drop ?? stationPt ?? manila, initialZoom: 14),
-                    children: [
-                      osmTiles(),
-                      MarkerLayer(
-                        markers: [
-                          if (stationPt != null) pin(stationPt, Icons.store, Colors.blue),
-                          if (drop != null) pin(drop, Icons.home, Colors.red),
-                          if (riderPt != null) pin(riderPt, Icons.delivery_dining, Colors.purple),
-                        ],
-                      ),
-                      osmAttribution(),
-                    ],
+                  return RepaintBoundary(
+                    child: FlutterMap(
+                      options: MapOptions(initialCenter: riderPt ?? drop ?? stationPt ?? manila, initialZoom: 14),
+                      children: [
+                        osmTiles(),
+                        MarkerLayer(
+                          markers: [
+                            if (stationPt != null) pin(stationPt, Icons.store, Colors.blue),
+                            if (drop != null) pin(drop, Icons.home, Colors.red),
+                          ],
+                        ),
+                        if (riderPt != null)
+                          GlidingMarker(point: riderPt, builder: (p) => pin(p, Icons.delivery_dining, const Color(0xFF7B61FF))),
+                        osmAttribution(),
+                      ],
+                    ),
                   );
                 },
               ),

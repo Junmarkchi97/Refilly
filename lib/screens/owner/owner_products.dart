@@ -89,28 +89,47 @@ class _OwnerProductsState extends State<OwnerProducts> {
     ),
     body: FutureBuilder<List<Product>>(
       future: _f,
-      builder: (context, snap) {
-        if (snap.hasError) return Center(child: Text('${snap.error}'));
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-        return ListView(
-          padding: const EdgeInsets.only(bottom: 120),
-          children: [
-            for (final p in snap.data!)
-              ListTile(
-                title: Text(p.name),
-                subtitle: Text('${peso(p.price)} / ${p.unit}'),
-                onTap: () => _edit(p),
-                trailing: Switch(
-                  value: p.isAvailable,
-                  onChanged: (v) async {
-                    await sb.from('products').update({'is_available': v}).eq('id', p.id);
-                    _reload();
-                  },
-                ),
-              ),
-          ],
-        );
-      },
+      builder: (context, snap) => StateSwitcher(
+        child: KeyedSubtree(
+          key: ValueKey(snap.hasData),
+          child: Builder(
+            builder: (context) {
+              if (snap.hasError) return Center(child: Text('${snap.error}'));
+              if (!snap.hasData) return const SkeletonList();
+              if (snap.data!.isEmpty) {
+                return EmptyState(
+                  icon: Icons.inventory_2_rounded,
+                  title: 'No products yet',
+                  subtitle: 'Add your water refills, containers and essentials so customers can order.',
+                  actionLabel: 'Add product',
+                  onAction: () => _edit(),
+                );
+              }
+              return ListView(
+                padding: const EdgeInsets.only(bottom: 120),
+                children: [
+                  for (final (pIdx, p) in (snap.data!).indexed)
+                    FadeSlideIn(
+                      index: pIdx,
+                      child: ListTile(
+                        title: Text(p.name),
+                        subtitle: Text('${peso(p.price)} / ${p.unit}'),
+                        onTap: () => _edit(p),
+                        trailing: Switch(
+                          value: p.isAvailable,
+                          onChanged: (v) async {
+                            await sb.from('products').update({'is_available': v}).eq('id', p.id);
+                            _reload();
+                          },
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
     ),
   );
 }

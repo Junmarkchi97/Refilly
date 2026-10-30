@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 import '../config.dart';
 import '../models/models.dart';
 import '../theme.dart';
+import 'motion.dart';
+export 'motion.dart';
 import '../services/api.dart';
 
 const manila = LatLng(14.5995, 120.9842);
@@ -37,6 +39,7 @@ Marker pin(LatLng p, IconData icon, Color color, {VoidCallback? onTap}) => Marke
 /// Copy or share (SMS / Messenger share sheet) a rider delivery link.
 Future<void> shareRiderLink(BuildContext context, String link, String riderName) => showModalBottomSheet(
   context: context,
+  sheetAnimationStyle: Motion.sheet,
   builder: (c) => SafeArea(
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -90,14 +93,18 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: margin,
-    child: Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(color: color ?? RF.card, borderRadius: BorderRadius.circular(RF.radius), boxShadow: RF.shadow),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(RF.radius),
-          onTap: onTap,
-          child: Padding(padding: padding, child: child),
+    child: Pressable(
+      enabled: onTap != null,
+      scale: onTap == null ? 1 : .97,
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: BoxDecoration(color: color ?? RF.card, borderRadius: BorderRadius.circular(RF.radius), boxShadow: RF.shadow),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(RF.radius),
+            onTap: onTap,
+            child: Padding(padding: padding, child: child),
+          ),
         ),
       ),
     ),
@@ -192,7 +199,12 @@ class Ring extends StatelessWidget {
           child: CircularProgressIndicator(value: 1, strokeWidth: stroke, color: RF.line),
         ),
         SizedBox.expand(
-          child: CircularProgressIndicator(value: value.clamp(0, 1), strokeWidth: stroke, color: color, strokeCap: StrokeCap.round),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: value.clamp(0, 1).toDouble()),
+            duration: Motion.d(context, const Duration(milliseconds: 900)),
+            curve: Motion.curve,
+            builder: (_, v, _) => CircularProgressIndicator(value: v, strokeWidth: stroke, color: color, strokeCap: StrokeCap.round),
+          ),
         ),
         center,
       ],
@@ -237,7 +249,10 @@ class FloatingNav extends StatelessWidget {
         children: [
           for (var i = 0; i < items.length; i++)
             GestureDetector(
-              onTap: () => onTap(i),
+              onTap: () {
+                tapHaptic();
+                onTap(i);
+              },
               behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -280,6 +295,60 @@ class CircleIconButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(padding: const EdgeInsets.all(10), child: Icon(icon, size: 20)),
+      ),
+    ),
+  );
+}
+
+/// Cal AI-style empty state: soft icon badge, bold title, gray subtitle, optional black pill action.
+class EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title, subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  const EmptyState({super.key, required this.icon, required this.title, required this.subtitle, this.actionLabel, this.onAction});
+  @override
+  Widget build(BuildContext context) => Center(
+    child: SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(32, 40, 32, 120),
+      child: FadeSlideIn(
+        index: 0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: RF.shadow),
+              child: Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(color: RF.accentSoft, shape: BoxShape.circle),
+                  child: Icon(icon, size: 30, color: RF.accent),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: RF.muted, fontWeight: FontWeight.w500, height: 1.4),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 22),
+              Pressable(
+                child: FilledButton(
+                  onPressed: onAction,
+                  style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 28)),
+                  child: Text(actionLabel!),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     ),
   );

@@ -67,7 +67,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
     body: FutureBuilder<List<OwnerApplication>>(
       future: _mine,
       builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snap.hasData) return const SkeletonList();
         final pending = snap.data!.where((a) => a.status == 'pending').firstOrNull;
         final last = snap.data!.firstOrNull;
         if (pending != null) {
@@ -127,12 +127,14 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
             const Text('Tap the map to pin your station'),
             SizedBox(
               height: 240,
-              child: FlutterMap(
-                options: MapOptions(initialCenter: _pt, initialZoom: 12, onTap: (_, p) => setState(() => _pt = p)),
-                children: [
-                  osmTiles(),
-                  MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)]),
-                ],
+              child: RepaintBoundary(
+                child: FlutterMap(
+                  options: MapOptions(initialCenter: _pt, initialZoom: 12, onTap: (_, p) => setState(() => _pt = p)),
+                  children: [
+                    osmTiles(),
+                    MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)]),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),

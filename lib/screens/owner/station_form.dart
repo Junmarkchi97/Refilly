@@ -72,12 +72,14 @@ class _StationFormState extends State<StationForm> {
       const Text('Tap the map to set your station location'),
       SizedBox(
         height: 260,
-        child: FlutterMap(
-          options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
-          children: [
-            osmTiles(),
-            MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)]),
-          ],
+        child: RepaintBoundary(
+          child: FlutterMap(
+            options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
+            children: [
+              osmTiles(),
+              MarkerLayer(markers: [pin(_pt, Icons.store, Colors.blue)]),
+            ],
+          ),
         ),
       ),
       const SizedBox(height: 12),

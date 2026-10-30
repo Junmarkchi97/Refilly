@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -38,6 +39,10 @@ ThemeData refillyTheme() {
       );
   final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(100));
   return base.copyWith(
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {for (final p in TargetPlatform.values) p: const CupertinoPageTransitionsBuilder()},
+    ),
+    splashFactory: InkSparkle.splashFactory,
     textTheme: text,
     appBarTheme: AppBarTheme(
       backgroundColor: RF.bg,

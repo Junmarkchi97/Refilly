@@ -113,22 +113,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         SizedBox(
           height: 220,
-          child: FlutterMap(
-            mapController: _map,
-            options: MapOptions(
-              initialCenter: LatLng(widget.station.lat, widget.station.lng),
-              initialZoom: 14,
-              onTap: (_, p) => setState(() => _drop = p),
-            ),
-            children: [
-              osmTiles(),
-              MarkerLayer(
-                markers: [
-                  pin(LatLng(widget.station.lat, widget.station.lng), Icons.store, Colors.blue),
-                  if (_drop != null) pin(_drop!, Icons.location_pin, Colors.red),
-                ],
+          child: RepaintBoundary(
+            child: FlutterMap(
+              mapController: _map,
+              options: MapOptions(
+                initialCenter: LatLng(widget.station.lat, widget.station.lng),
+                initialZoom: 14,
+                onTap: (_, p) => setState(() => _drop = p),
               ),
-            ],
+              children: [
+                osmTiles(),
+                MarkerLayer(
+                  markers: [
+                    pin(LatLng(widget.station.lat, widget.station.lng), Icons.store, Colors.blue),
+                    if (_drop != null) pin(_drop!, Icons.location_pin, Colors.red),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -144,7 +146,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
         ),
-        FilledButton(onPressed: _busy ? null : _place, child: Text('Place order · ${peso(_total)}')),
+        Pressable(
+          child: FilledButton(onPressed: _busy ? null : _place, child: Text('Place order · ${peso(_total)}')),
+        ),
       ],
     ),
   );

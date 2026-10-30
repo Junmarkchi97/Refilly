@@ -18,21 +18,43 @@ class _OwnerOrdersState extends State<OwnerOrders> {
   @override
   Widget build(BuildContext context) => StreamBuilder<List<Order>>(
     stream: _stream,
-    builder: (context, snap) {
-      if (snap.hasError) return Center(child: Text('${snap.error}'));
-      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-      final list = snap.data!.where((o) => _showDone || !(o.status == 'delivered' || o.status == 'cancelled')).toList();
-      return Column(
-        children: [
-          SwitchListTile(title: const Text('Show delivered/cancelled'), value: _showDone, onChanged: (v) => setState(() => _showDone = v)),
-          Expanded(
-            child: list.isEmpty
-                ? const Center(child: Text('No orders'))
-                : ListView(padding: const EdgeInsets.only(bottom: 120), children: [for (final o in list) _tile(o)]),
-          ),
-        ],
-      );
-    },
+    builder: (context, snap) => StateSwitcher(
+      child: KeyedSubtree(
+        key: ValueKey(snap.hasData),
+        child: Builder(
+          builder: (context) {
+            if (snap.hasError) return Center(child: Text('${snap.error}'));
+            if (!snap.hasData) return const SkeletonList();
+            final list = snap.data!.where((o) => _showDone || !(o.status == 'delivered' || o.status == 'cancelled')).toList();
+            return Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Show delivered/cancelled'),
+                  value: _showDone,
+                  onChanged: (v) => setState(() => _showDone = v),
+                ),
+                Expanded(
+                  child: list.isEmpty
+                      ? EmptyState(
+                          icon: Icons.receipt_long_rounded,
+                          title: _showDone ? 'No orders yet' : 'No active orders',
+                          subtitle: _showDone
+                              ? 'New orders from customers appear here in real time.'
+                              : 'You are all caught up. Turn on the switch to see delivered and cancelled orders.',
+                          actionLabel: _showDone ? null : 'Show history',
+                          onAction: _showDone ? null : () => setState(() => _showDone = true),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.only(bottom: 120),
+                          children: [for (final (i, o) in list.indexed) FadeSlideIn(index: i, child: _tile(o))],
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
   );
 
   Future<void> _assign(Order o) async {
