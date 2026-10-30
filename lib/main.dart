@@ -70,7 +70,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
   }
 
   Future<void> _finish() async {
-    if (_saving) return;
+    if (_saving) { return; }
     setState(() => _saving = true);
     try {
       await _store.markComplete();
@@ -78,7 +78,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
       // A storage failure must never lock a customer out of sign-in.
       // They can still continue for this session.
     }
-    if (!mounted) return;
+    if (!mounted) { return; }
     setState(() {
       _saving = false;
       _finishedThisSession = true;
@@ -107,7 +107,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
             ),
           );
         }
-        if (snapshot.data == true) return const AuthGate();
+        if (snapshot.data == true) { return const AuthGate(); }
         return OnboardingScreen(onFinish: _finish, finishing: _saving);
       },
     );
