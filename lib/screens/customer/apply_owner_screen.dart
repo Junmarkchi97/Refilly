@@ -47,6 +47,10 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
   Future<_Doc?> _pick(List<String> ext) async {
     final f = (await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ext)).firstOrNull;
     if (f == null) return null;
+    if (f.size > 10 * 1024 * 1024) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Maximum file size is 10 MB')));
+      return null;
+    }
     return _Doc(f.name, await f.readAsBytes());
   }
 
