@@ -216,13 +216,13 @@ class _OwnerOrdersState extends State<OwnerOrders> {
         context: context,
         builder: (c) => AlertDialog(
           title: Text(confirm),
-          content: Text('${o.customer?['full_name'] ?? 'Customer'} · ${peso(o.total)}. The customer will be notified.'),
+          content: Text('${o.customer?['full_name'] ?? 'Customer'} · ${peso(o.total)}. The customer will be notified. This action cannot be undone.'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Keep order')),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Colors.redAccent, minimumSize: const Size(0, 44)),
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('Reject'),
+              child: Text(status == 'cancelled' && o.status != 'pending' ? 'Cancel order' : 'Reject order'),
             ),
           ],
         ),
