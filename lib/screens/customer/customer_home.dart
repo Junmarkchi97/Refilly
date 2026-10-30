@@ -144,7 +144,7 @@ class StationsMap extends StatefulWidget {
 }
 
 class _StationsMapState extends State<StationsMap> {
-  late Future<List<Station>> _f = Api.stations().timeout(const Duration(seconds: 20)).timeout(const Duration(seconds: 20));
+  late Future<List<Station>> _f = Api.stations().timeout(const Duration(seconds: 20));
   final _q = TextEditingController();
   final _map = MapController();
 
@@ -180,7 +180,7 @@ class _StationsMapState extends State<StationsMap> {
         bottomBar: widget.bottomBar,
         initial: .46,
         min: .22,
-        topLeft: MapButton(Icons.menu_rounded, onTap: widget.onMenu ?? () => setState(() => _f = Api.stations())),
+        topLeft: MapButton(Icons.menu_rounded, onTap: widget.onMenu ?? () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20)))),
         topRight: MapButton(Icons.my_location_rounded, label: 'Locate', onTap: _locate),
         map: FlutterMap(
           mapController: _map,
@@ -227,7 +227,7 @@ class _StationsMapState extends State<StationsMap> {
             ),
           ),
           const SizedBox(height: 6),
-          if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Text('Could not load stations'), const SizedBox(height: 8), FilledButton(onPressed: () => setState(() => _f = Api.stations()), child: const Text('Retry'))])),
+          if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20)))),
           if (!snap.hasData && !snap.hasError) const Column(children: [SlowLoadingHint(), SkeletonList(count: 3, height: 60)]),
           if (snap.hasData && shown.isEmpty)
             EmptyState(
@@ -235,7 +235,7 @@ class _StationsMapState extends State<StationsMap> {
               title: q.isEmpty ? 'No stations nearby' : 'No matches',
               subtitle: q.isEmpty ? 'We are adding refilling stations in your area.' : 'Try another station name or area.',
               actionLabel: 'Refresh',
-              onAction: () => setState(() => _f = Api.stations()),
+              onAction: () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20))),
             ),
           for (final (i, s) in shown.indexed)
             FadeSlideIn(
