@@ -1,89 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 
-/// Live order status + rider position (Supabase Realtime).
+/// Live order status + rider position (Supabase Realtime), Glide-style.
 class TrackingScreen extends StatelessWidget {
   final String orderId, customerId;
   const TrackingScreen({super.key, required this.orderId, required this.customerId});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Track order')),
-    body: StreamBuilder<List<Order>>(
-      stream: Api.watchOrders(customerId: customerId),
-      builder: (context, snap) {
-        if (!snap.hasData) return const SkeletonList();
-        final o = snap.data!.where((x) => x.id == orderId).firstOrNull;
-        if (o == null) return const Center(child: Text('Order not found'));
-        final station = o.station;
-        final stationPt = station == null ? null : LatLng((station['lat'] as num).toDouble(), (station['lng'] as num).toDouble());
-        final drop = o.deliveryLat == null ? null : LatLng(o.deliveryLat!, o.deliveryLng!);
-        final step = orderStatuses.indexOf(o.status);
-        return Column(
-          children: [
-            Expanded(
-              child: StreamBuilder<Map<String, dynamic>?>(
-                stream: o.status == 'out_for_delivery' ? Api.watchRider(o.id) : const Stream.empty(),
-                builder: (context, rs) {
-                  final r = rs.data;
-                  final riderPt = r == null ? null : LatLng((r['lat'] as num).toDouble(), (r['lng'] as num).toDouble());
-                  return RepaintBoundary(
-                    child: FlutterMap(
-                      options: MapOptions(initialCenter: riderPt ?? drop ?? stationPt ?? manila, initialZoom: 14),
-                      children: [
-                        osmTiles(),
-                        MarkerLayer(
-                          markers: [
-                            if (stationPt != null) pin(stationPt, Icons.store, Colors.blue),
-                            if (drop != null) pin(drop, Icons.home, Colors.red),
-                          ],
-                        ),
-                        if (riderPt != null)
-                          GlidingMarker(point: riderPt, builder: (p) => pin(p, Icons.delivery_dining, const Color(0xFF7B61FF))),
-                        osmAttribution(),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: RF.shadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(statusLabel(o.status), style: Theme.of(context).textTheme.headlineSmall),
-                  if (o.status != 'cancelled')
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(100),
-                        child: LinearProgressIndicator(value: (step + 1) / 5, minHeight: 8, color: RF.accent),
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Text('${o.station?['name'] ?? ''} · ${peso(o.total)} · ${o.paymentMethod.toUpperCase()}'),
-                  if (o.riderName != null) Text('Rider: ${o.riderName}${o.riderPhone != null ? ' · ${o.riderPhone}' : ''}'),
-                  for (final i in o.items) Text('${i.quantity} × ${i.productName}'),
-                  if (o.status == 'pending') TextButton(onPressed: () => Api.cancelOrder(o.id), child: const Text('Cancel order')),
-                ],
-              ),
-            ),
-          ],
+  Widget build(BuildContext context) => StreamBuilder<List<Order>>(
+    stream: Api.watchOrders(customerId: customerId),
+    builder: (context, snap) {
+      if (!snap.hasData) return const Scaffold(body: SkeletonList());
+      final o = snap.data!.where((x) => x.id == orderId).firstOrNull;
+      if (o == null) {
+        return Scaffold(
+          appBar: AppBar(),
+          body: const EmptyState(icon: Icons.search_off_rounded, title: 'Order not found', subtitle: 'It may have been removed.'),
         );
-      },
-    ),
+      }
+      final station = o.station;
+      final stationPt = station == null ? null : LatLng((station['lat'] as num).toDouble(), (station['lng'] as num).toDouble());
+      final drop = o.deliveryLat == null ? null : LatLng(o.deliveryLat!, o.deliveryLng!);
+      return StreamBuilder<Map<String, dynamic>?>(
+        stream: o.status == 'out_for_delivery' ? Api.watchRider(o.id) : const Stream.empty(),
+        builder: (context, rs) {
+          final r = rs.data;
+          final riderPt = r == null ? null : LatLng((r['lat'] as num).toDouble(), (r['lng'] as num).toDouble());
+          final eta = o.status == 'delivered' || o.status == 'cancelled' ? null : etaText(riderPt ?? stationPt, drop);
+          final title = switch (o.status) {
+            'pending' => 'Waiting for the station',
+            'accepted' || 'preparing' => 'Preparing your order',
+            'out_for_delivery' => eta == null ? 'Your rider is on the way' : 'Arriving in ${eta.replaceAll(' away', '')}',
+            'delivered' => 'Delivered',
+            _ => 'Order cancelled',
+          };
+          return MapSheetScaffold(
+            initial: .5,
+            min: .28,
+            topLeft: MapButton(Icons.arrow_back_rounded, onTap: () => Navigator.pop(context)),
+            topRight: MapButton(Icons.verified_user_rounded, label: 'Safety', onTap: () {}),
+            map: FlutterMap(
+              options: MapOptions(initialCenter: shiftUp(riderPt ?? drop ?? stationPt ?? manila), initialZoom: 14, initialCameraFit: fitAboveSheet([?riderPt, ?drop, ?stationPt])),
+              children: [
+                osmTiles(),
+                if (stationPt != null && drop != null)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(points: [riderPt ?? stationPt, drop], strokeWidth: 4, color: RF.ink),
+                    ],
+                  ),
+                MarkerLayer(
+                  markers: [if (stationPt != null) pin(stationPt, Icons.water_drop_rounded, RF.ink), if (drop != null) dot(drop)],
+                ),
+                if (riderPt != null) GlidingMarker(point: riderPt, builder: (p) => pin(p, Icons.delivery_dining_rounded, RF.accent)),
+                osmAttribution(),
+              ],
+            ),
+            sheet: (_) => [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
+                    StatusPill(o.status),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 2, 20, 14),
+                child: Text(
+                  '${o.station?['name'] ?? ''} · ${peso(o.total)} · ${o.paymentMethod.toUpperCase()}',
+                  style: const TextStyle(color: RF.muted),
+                ),
+              ),
+              if (o.riderName != null) ...[
+                RiderCard(
+                  name: o.riderName!,
+                  phone: o.riderPhone,
+                  eta: o.status == 'out_for_delivery' ? eta : 'Your rider',
+                  onCall: o.riderPhone == null ? null : () => launchUrl(Uri.parse('tel:${o.riderPhone}')),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (o.status != 'cancelled') StatusSteps(o.status),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: RouteBox(from: o.station?['name'] ?? 'Station', to: o.deliveryAddress),
+              ),
+              const SizedBox(height: 8),
+              for (final i in o.items) KeyValueRow('${i.quantity} × ${i.productName}', peso(i.unitPrice * i.quantity)),
+              KeyValueRow('Total', peso(o.total), bold: true),
+              if (o.status == 'pending')
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: OutlinedButton(onPressed: () => Api.cancelOrder(o.id), child: const Text('Cancel order')),
+                ),
+            ],
+          );
+        },
+      );
+    },
   );
 }

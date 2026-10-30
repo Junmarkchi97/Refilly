@@ -7,6 +7,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
+import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'apply_owner_screen.dart';
 import '../auth/verify_phone_screen.dart';
@@ -20,28 +21,29 @@ class CustomerHome extends StatefulWidget {
 
 class _CustomerHomeState extends State<CustomerHome> {
   int _tab = 0;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    extendBody: true,
-    body: SafeArea(
-      bottom: false,
-      child: switch (_tab) {
-        0 => StationsMap(profile: widget.profile),
-        1 => Column(
-          children: [
-            const PageHeader('Orders', subtitle: 'Track your deliveries live'),
-            Expanded(child: OrdersScreen(profile: widget.profile)),
-          ],
-        ),
-        _ => ProfileTab(profile: widget.profile),
-      },
-    ),
-    bottomNavigationBar: FloatingNav(
-      index: _tab,
-      onTap: (i) => setState(() => _tab = i),
-      items: const [(Icons.home_rounded, 'Home'), (Icons.receipt_long_rounded, 'Orders'), (Icons.person_rounded, 'Profile')],
-    ),
+  Widget get _nav => FloatingNav(
+    index: _tab,
+    onTap: (i) => setState(() => _tab = i),
+    items: const [(Icons.water_drop_rounded, 'Order'), (Icons.receipt_long_rounded, 'Orders'), (Icons.person_rounded, 'Account')],
   );
+  @override
+  Widget build(BuildContext context) {
+    if (_tab == 0) return StationsMap(profile: widget.profile, bottomBar: _nav);
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: _tab == 1
+            ? Column(
+                children: [
+                  const PageHeader('Orders', subtitle: 'Track your deliveries live'),
+                  Expanded(child: OrdersScreen(profile: widget.profile)),
+                ],
+              )
+            : ProfileTab(profile: widget.profile),
+      ),
+      bottomNavigationBar: _nav,
+    );
+  }
 }
 
 class ProfileTab extends StatelessWidget {
@@ -117,13 +119,16 @@ class ProfileTab extends StatelessWidget {
 
 class StationsMap extends StatefulWidget {
   final Profile profile;
-  const StationsMap({super.key, required this.profile});
+  final Widget? bottomBar;
+  const StationsMap({super.key, required this.profile, this.bottomBar});
   @override
   State<StationsMap> createState() => _StationsMapState();
 }
 
 class _StationsMapState extends State<StationsMap> {
   late Future<List<Station>> _f = Api.stations();
+  final _q = TextEditingController();
+  final _map = MapController();
 
   void _open(Station s) => Navigator.push(
     context,
@@ -132,141 +137,94 @@ class _StationsMapState extends State<StationsMap> {
     ),
   );
 
+  Future<void> _locate() async {
+    final p = await LocationService.current();
+    if (p != null) _map.move(LatLng(p.latitude, p.longitude), 14);
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder<List<Station>>(
     future: _f,
-    builder: (context, snap) => StateSwitcher(
-      child: KeyedSubtree(
-        key: ValueKey(snap.hasData),
-        child: Builder(
-          builder: (context) {
-            if (snap.hasError) return Center(child: Text('${snap.error}'));
-            if (!snap.hasData) return const SkeletonList();
-            final stations = snap.data!;
-            final open = stations.where((s) => s.isOpen).length;
-            final first = (widget.profile.fullName ?? '').split(' ').first;
-            return RefreshIndicator(
-              onRefresh: () async => setState(() => _f = Api.stations()),
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 120),
-                children: [
-                  PageHeader(
-                    first.isEmpty ? 'Refilly' : 'Hi, $first',
-                    subtitle: 'Fresh water, delivered fast',
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100), boxShadow: RF.shadow),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.water_drop_rounded, color: RF.accent, size: 18),
-                          SizedBox(width: 4),
-                          Text('Refilly', style: TextStyle(fontWeight: FontWeight.w800)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  AppCard(
-                    padding: EdgeInsets.zero,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(RF.radius),
-                      child: SizedBox(
-                        height: 260,
-                        child: Stack(
-                          children: [
-                            RepaintBoundary(
-                              child: FlutterMap(
-                                options: const MapOptions(initialCenter: manila, initialZoom: 11.5),
-                                children: [
-                                  osmTiles(),
-                                  MarkerLayer(
-                                    markers: [
-                                      for (final s in stations)
-                                        pin(
-                                          LatLng(s.lat, s.lng),
-                                          Icons.water_drop_rounded,
-                                          s.isOpen ? RF.accent : RF.muted,
-                                          onTap: () => _open(s),
-                                        ),
-                                    ],
-                                  ),
-                                  osmAttribution(),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              left: 12,
-                              top: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(100),
-                                  boxShadow: RF.shadow,
-                                ),
-                                child: Text('$open open near you', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SectionTitle('Stations'),
-                  if (stations.isEmpty)
-                    EmptyState(
-                      icon: Icons.location_off_rounded,
-                      title: 'No stations nearby',
-                      subtitle: 'We are adding refilling stations in your area. Pull down to refresh.',
-                      actionLabel: 'Refresh',
-                      onAction: () => setState(() => _f = Api.stations()),
-                    ),
-                  for (final (sIdx, s) in (stations).indexed)
-                    FadeSlideIn(
-                      index: sIdx,
-                      child: AppCard(
-                        onTap: () => _open(s),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(color: RF.accentSoft, borderRadius: BorderRadius.circular(16)),
-                              child: const Icon(Icons.water_drop_rounded, color: RF.accent),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s.name,
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    s.address ?? '',
-                                    style: const TextStyle(color: RF.muted, fontSize: 13),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            StatusPill(s.isOpen ? 'open' : 'closed'),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
+    builder: (context, snap) {
+      final stations = snap.data ?? const <Station>[];
+      final q = _q.text.trim().toLowerCase();
+      final shown = q.isEmpty
+          ? stations
+          : stations.where((s) => s.name.toLowerCase().contains(q) || (s.address ?? '').toLowerCase().contains(q)).toList();
+      return MapSheetScaffold(
+        bottomBar: widget.bottomBar,
+        initial: .46,
+        min: .22,
+        topLeft: MapButton(Icons.menu_rounded, onTap: () => setState(() => _f = Api.stations())),
+        topRight: MapButton(Icons.my_location_rounded, label: 'Locate', onTap: _locate),
+        map: FlutterMap(
+          mapController: _map,
+          options: const MapOptions(initialCenter: manila, initialZoom: 12),
+          children: [
+            osmTiles(),
+            MarkerLayer(
+              markers: [
+                for (final s in stations)
+                  pin(LatLng(s.lat, s.lng), Icons.water_drop_rounded, s.isOpen ? RF.ink : RF.muted, onTap: () => _open(s)),
+              ],
+            ),
+            osmAttribution(),
+          ],
         ),
-      ),
-    ),
+        sheet: (_) => [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Where to order?', style: Theme.of(context).textTheme.headlineSmall),
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _q,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Search stations or areas',
+                prefixIcon: const Icon(Icons.circle, size: 10, color: RF.ink),
+                suffixIcon: Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.schedule_rounded, size: 16),
+                      SizedBox(width: 4),
+                      Text('Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (snap.hasError) Padding(padding: const EdgeInsets.all(20), child: Text('${snap.error}')),
+          if (!snap.hasData && !snap.hasError) const SizedBox(height: 300, child: SkeletonList(count: 3, height: 60)),
+          if (snap.hasData && shown.isEmpty)
+            EmptyState(
+              icon: Icons.location_off_rounded,
+              title: q.isEmpty ? 'No stations nearby' : 'No matches',
+              subtitle: q.isEmpty ? 'We are adding refilling stations in your area.' : 'Try another station name or area.',
+              actionLabel: 'Refresh',
+              onAction: () => setState(() => _f = Api.stations()),
+            ),
+          for (final (i, s) in shown.indexed)
+            FadeSlideIn(
+              index: i,
+              child: PlaceRow(
+                icon: Icons.water_drop_rounded,
+                title: s.name,
+                subtitle: s.address,
+                trailing: StatusPill(s.isOpen ? 'open' : 'closed'),
+                onTap: () => _open(s),
+              ),
+            ),
+        ],
+      );
+    },
   );
 }

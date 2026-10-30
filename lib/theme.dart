@@ -5,15 +5,17 @@ import 'package:google_fonts/google_fonts.dart';
 /// Refilly design system: Cal AI-style monochrome (snow background, white cards,
 /// heavy black type, black pill buttons) with a single water-blue accent.
 class RF {
-  static const bg = Color(0xFFF7F7F8);
+  static const bg = Colors.white;
+  static const fill = Color(0xFFF3F3F5);
   static const card = Colors.white;
-  static const ink = Color(0xFF0C0A0C);
-  static const muted = Color(0xFF8A8589);
-  static const line = Color(0xFFECEBEE);
-  static const accent = Color(0xFF2E9BFF);
-  static const accentSoft = Color(0xFFE6F3FF);
-  static const radius = 22.0;
-  static final shadow = [BoxShadow(color: Colors.black.withValues(alpha: .05), blurRadius: 24, offset: const Offset(0, 8))];
+  static const ink = Color(0xFF000000);
+  static const muted = Color(0xFF6B6B70);
+  static const line = Color(0xFFE8E8EC);
+  static const accent = Color(0xFF1A66F0);
+  static const accentSoft = Color(0xFFE8F0FE);
+  static const radius = 14.0;
+  static const sheetRadius = 26.0;
+  static final shadow = [BoxShadow(color: Colors.black.withValues(alpha: .08), blurRadius: 18, offset: const Offset(0, 4))];
 }
 
 ThemeData refillyTheme() {
@@ -37,7 +39,7 @@ ThemeData refillyTheme() {
         titleLarge: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -.3, color: RF.ink),
         titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: RF.ink),
       );
-  final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(100));
+  final pill = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
   return base.copyWith(
     pageTransitionsTheme: PageTransitionsTheme(
       builders: {for (final p in TargetPlatform.values) p: const CupertinoPageTransitionsBuilder()},
@@ -55,17 +57,19 @@ ThemeData refillyTheme() {
     ),
     cardTheme: CardThemeData(
       color: RF.card,
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: .25),
+      elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(RF.radius)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RF.radius),
+        side: const BorderSide(color: RF.line),
+      ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: RF.ink,
         foregroundColor: Colors.white,
         disabledBackgroundColor: RF.line,
-        minimumSize: const Size(64, 54),
+        minimumSize: const Size(64, 56),
         shape: pill,
         textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
       ),
@@ -88,10 +92,10 @@ ThemeData refillyTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: RF.fill,
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       labelStyle: const TextStyle(color: RF.muted),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: RF.line),
@@ -102,10 +106,10 @@ ThemeData refillyTheme() {
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: Colors.white,
+      backgroundColor: RF.fill,
       selectedColor: RF.ink,
-      side: const BorderSide(color: RF.line),
-      shape: pill,
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, color: RF.ink),
       secondaryLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
       checkmarkColor: Colors.white,
@@ -140,7 +144,7 @@ ThemeData refillyTheme() {
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: Colors.white,
       showDragHandle: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(RF.sheetRadius))),
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: Colors.white,

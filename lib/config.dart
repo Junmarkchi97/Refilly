@@ -3,6 +3,7 @@
 class AppConfig {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
   static const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const userAgent = 'ph.refilly.app';
 
