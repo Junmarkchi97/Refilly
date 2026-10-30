@@ -145,6 +145,22 @@ A missing production configuration intentionally **fails the deployment** rather
 
 **Typical development flow:** Sign up as a customer → apply to operate a water refilling station → admin approves → owner publishes products → customer orders or reorders → owner assigns a rider → rider fulfills the order.
 
+## Automatic web deployment (GitHub Pages)
+
+Every push to `main` now triggers [Deploy Flutter web to GitHub Pages](.github/workflows/deploy-pages.yml). It installs dependencies, runs `flutter analyze` and `flutter test`, builds a production Flutter web bundle, and publishes **only if all steps pass**. It can also be run manually using **Actions → Deploy Flutter web to GitHub Pages → Run workflow**.
+
+**One-time setup is required before automatic deployment can succeed:**
+
+1. Open **[Refilly → Settings → Secrets and variables → Actions](https://github.com/Junmarkchi97/Refilly/settings/secrets/actions)**.
+2. Under **Variables**, create `SUPABASE_URL` with your Supabase **Project URL** (for example `https://PROJECT_REF.supabase.co`). Use a repository variable—not a secret—for this non-sensitive URL.
+3. Under **Secrets**, create `SUPABASE_ANON_KEY` with the project's **publishable/anon key**, suitable for a browser application. **Never use a Supabase service-role or secret key**: Flutter web embeds the configured value in its public JavaScript.
+4. Open **[Settings → Pages](https://github.com/Junmarkchi97/Refilly/settings/pages)** and select **Build and deployment → Source → GitHub Actions**.
+5. Run the workflow once from the Actions tab, or push the next commit to `main`. Confirm both **Validate and build Flutter web** and **Publish website** succeed.
+
+**Expected GitHub Pages URL:** https://junmarkchi97.github.io/Refilly/ — note the `/Refilly/` suffix. A separate site at `https://junmarkchi97.github.io/` is **not** updated by this repository's deployment workflow. Changing the root website requires configuring its actual hosting source.
+
+**Important:** Web deployments and Supabase database migrations are separate operations; this workflow does **not** automatically apply migrations. Deployment builds use a `/Refilly/` base path, disable Flutter's legacy PWA service worker to reduce stale cached releases, and set the production app URL for private rider links. Existing browser caches may still require a refresh after the first switch.
+
 ## Data model and security
 
 The schema includes `profiles`, `owner_applications`, `stations`, `categories`, `products`, `orders`, `order_items`, `station_reviews`, `user_notifications`, `order_rider_links`, `rider_locations`, and `app_config`.
