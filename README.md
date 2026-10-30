@@ -96,6 +96,23 @@ It is **not** intended to be a general-purpose delivery, food-ordering, or couri
 - **Map and location:** `flutter_map`, OpenStreetMap tiles, `geolocator`
 - **Other:** `fl_chart` sales reporting and an address-search/geocoding integration
 
+## Automatic web deployment
+
+Every push to `main` starts [Deploy Flutter web to GitHub Pages](.github/workflows/deploy-pages.yml). The workflow runs `flutter analyze` and `flutter test`, builds the production site with the `/Refilly/` base path, and publishes the result to:
+
+**https://junmarkchi97.github.io/Refilly/**
+
+**One-time GitHub setup required:**
+
+1. In **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source.
+2. In **Settings → Secrets and variables → Actions**, create the **repository variable** `SUPABASE_URL` containing your Supabase project HTTPS URL.
+3. Create the **repository secret** `SUPABASE_ANON_KEY` containing your **publishable/anon** key (never your Supabase `service_role` key).
+4. In the Actions tab, rerun the deployment workflow (or push another commit).
+
+A missing production configuration intentionally **fails the deployment** rather than publishing a broken app. GitHub Pages serves a publicly downloadable Flutter web build, so the publishable key is included in the client application; database access must continue to be protected by Supabase Row Level Security. Never use a service-role key in the browser.
+
+**Note:** The build workflow publishes only the Flutter website. Supabase database migrations and native mobile app-store releases remain separate deployments. If iOS Safari shows an older PWA, refresh the site or remove and re-add the home-screen shortcut.
+
 ## Run locally
 
 1. [Install Flutter](https://docs.flutter.dev/get-started/install) (3.35+).
