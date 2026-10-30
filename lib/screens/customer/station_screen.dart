@@ -21,6 +21,7 @@ class _StationScreenState extends State<StationScreen> {
 
   Future<(List<Product>, List<Category>)> _load() async => (await Api.products(widget.station.id), await Api.categories());
   final Map<Product, int> _cart = {};
+  late final Future<List<Map<String, dynamic>>> _reviews = Api.stationReviews(widget.station.id);
   String? _cat;
 
   double get _total => _cart.entries.fold(0, (t, e) => t + e.key.price * e.value);
@@ -124,6 +125,26 @@ class _StationScreenState extends State<StationScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                 child: Text(st.description!, style: const TextStyle(color: RF.muted)),
               ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Text('Delivers within ${st.deliveryRadiusKm.toStringAsFixed(1)} km · Delivery fee ${st.deliveryFee == 0 ? 'Free' : peso(st.deliveryFee)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _reviews,
+              builder: (context, reviewsSnap) {
+                if (!reviewsSnap.hasData || reviewsSnap.data!.isEmpty) return const SizedBox.shrink();
+                final reviews = reviewsSnap.data!;
+                final avg = reviews.fold<double>(0, (total, item) => total + ((item['rating'] as num?)?.toDouble() ?? 0)) / reviews.length;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('★ ${avg.toStringAsFixed(1)} · ${reviews.length} recent reviews', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    for (final r in reviews.take(3)) if ((r['comment']?.toString() ?? '').trim().isNotEmpty)
+                      Padding(padding: const EdgeInsets.only(top: 4), child: Text('★ ${r['rating']} — ${r['comment']}', maxLines: 2, overflow: TextOverflow.ellipsis)),
+                  ]),
+                );
+              },
+            ),
             const SizedBox(height: 10),
             if (snap.hasError) const Padding(padding: EdgeInsets.all(20), child: Text('Could not load products. Reopen the station to retry.')),
             if (data == null && !snap.hasError) const SizedBox(height: 320, child: SkeletonList(count: 4, height: 70)),
