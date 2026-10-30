@@ -81,6 +81,20 @@ It is **not** intended to be a general-purpose delivery, food-ordering, or couri
 - **Riders:** Open a private delivery link without creating an account, update delivery status, and optionally share foreground location.
 - **Admins:** Review business documents and approve or reject station-owner applications.
 
+## My Essentials and Refill Routine
+
+Refilly's home screen starts with **My Essentials**, where customers can manage the everyday products they buy repeatedly:
+
+1. After a **delivered** order, open Orders or Tracking and select **Save to My Essentials**.
+2. Pick a refill frequency: **weekly (7 days), every 2 weeks (14 days), monthly (30 days), or custom (1–365 days)**.
+3. View estimated refill-due dates and open the private in-app notifications inbox for reminders.
+4. Choose **Refill now** to check availability, current prices and active orders, then **review the cart and check out manually**.
+5. **Snooze 3 days**, **Skip this time**, change the frequency, or remove a saved routine at any time.
+
+The routine does **not** automatically order products, collect payment, or track physical household inventory. The app claims due-date reminders only when a customer loads My Essentials; there is **no push notification or background scheduler** yet. Routine reminders are deduplicated in PostgreSQL by routine and due date; the Flutter checkout also disables duplicate taps and checks for matching active refill orders. A server-wide atomic order-idempotency guarantee is not part of this MVP.
+
+**Required database migration:** `supabase/migrations/20261031050000_refill_routines.sql`. Apply it in environments that have not yet received the change. This migration creates a customer-private `refill_routines` table and, if needed, the RLS-protected notification inbox. It uses guarded RPCs rather than exposing write privileges to client applications.
+
 ## Current availability vs. roadmap
 
 | Capability | Status |
@@ -88,6 +102,7 @@ It is **not** intended to be a general-purpose delivery, food-ordering, or couri
 | Water refilling stations and water products | ✅ Implemented in app code |
 | Cash on Delivery checkout | ✅ Implemented in app code |
 | Reorder from completed/cancelled orders | ✅ Implemented in app code |
+| My Essentials / Refill Routine (in-app reminders) | ✅ Implemented in app code and connected Refilly database |
 | Station coverage checks and delivery fees | ✅ Implemented in app code; database migrations required |
 | Owner dashboard and order management | ✅ Implemented in app code |
 | Order updates and in-app notification inbox | ✅ Implemented in app code |
