@@ -19,7 +19,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void _refresh() => setState(() => _items = _load());
 
   Future<void> _markRead(Map<String, dynamic> item) async {
-    if (item['is_read'] == true) return;
+    if (item['is_read'] == true) { return; }
     try {
       await sb.from('user_notifications').update({'is_read': true}).eq('id', item['id']);
       if (mounted) _refresh();
@@ -46,9 +46,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             FilledButton(onPressed: _refresh, child: const Text('Retry')),
           ],
         ));
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData) { return const Center(child: CircularProgressIndicator()); }
         final entries = snapshot.data!;
-        if (entries.isEmpty) return const Center(child: Text('No notifications yet'));
+        if (entries.isEmpty) { return const Center(child: Text('No notifications yet')); }
         return RefreshIndicator(
           onRefresh: () async { _refresh(); await _items; },
           child: ListView.builder(
