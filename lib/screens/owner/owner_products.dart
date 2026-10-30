@@ -121,6 +121,11 @@ class _OwnerProductsState extends State<OwnerProducts> {
       ),
     );
     if (saved != true) return;
+    final validPrice = double.tryParse(price.text.trim());
+    if (name.text.trim().isEmpty || unit.text.trim().isEmpty || validPrice == null || !validPrice.isFinite || validPrice <= 0) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a product name, unit, and a valid price greater than zero.')));
+      return;
+    }
     try {
       if (newBytes != null) {
         final mime = switch (newExt) {
@@ -130,7 +135,6 @@ class _OwnerProductsState extends State<OwnerProducts> {
         };
         imageUrl = await Api.uploadProductImage(widget.station.id, newBytes!, newExt == 'jpeg' ? 'jpg' : newExt, mime);
       }
-      if (p?.imageUrl != null && p!.imageUrl != imageUrl) await Api.deleteProductImage(p.imageUrl!);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Photo upload failed: $e')));
       return;
@@ -141,7 +145,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
       'category_id': cat,
       'name': name.text.trim(),
       'unit': unit.text.trim(),
-      'price': double.tryParse(price.text) ?? 0,
+      'price': validPrice,
     };
     try {
       if (p == null) {
@@ -149,7 +153,8 @@ class _OwnerProductsState extends State<OwnerProducts> {
       } else {
         await sb.from('products').update(data).eq('id', p.id);
       }
-      _reload();
+      if (p?.imageUrl != null && p!.imageUrl != imageUrl) await Api.deleteProductImage(p.imageUrl!);
+      if (mounted) _reload();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
@@ -169,7 +174,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
           key: ValueKey(snap.hasData),
           child: Builder(
             builder: (context) {
-              if (snap.hasError) return Center(child: Text('${snap.error}'));
+              if (snap.hasError) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Could not load products'), const SizedBox(height: 12), FilledButton(onPressed: _reload, child: const Text('Retry'))]));
               if (!snap.hasData) return const SkeletonList();
               if (snap.data!.isEmpty) {
                 return EmptyState(
