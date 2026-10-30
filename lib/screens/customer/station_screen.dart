@@ -18,7 +18,7 @@ class StationScreen extends StatefulWidget {
 }
 
 class _StationScreenState extends State<StationScreen> {
-  late Future<(List<Product>, List<Category>)> _f = _load();
+  late Future<(List<Product>, List<Category>)> _f = _load().timeout(const Duration(seconds: 20));
 
   Future<(List<Product>, List<Category>)> _load() async => (await Api.products(widget.station.id), await Api.categories());
 
@@ -51,7 +51,7 @@ class _StationScreenState extends State<StationScreen> {
     final pt = LatLng(st.lat, st.lng);
     final count = _cart.values.fold(0, (a, b) => a + b);
     return FutureBuilder(
-      future: _f.timeout(const Duration(seconds: 20)),
+      future: _f,
       builder: (context, snap) {
         final data = snap.data;
         final products = data?.$1 ?? const <Product>[];
