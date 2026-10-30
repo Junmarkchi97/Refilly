@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/brand/refilly_icon.svg" alt="Refilly blue R delivery-inspired logo with a transparent outer background" width="112" height="112" />
+  <img src="assets/brand/refilly_app_icon.png" alt="Refilly blue R logo" width="112" height="112" />
 
   # Refilly
 
