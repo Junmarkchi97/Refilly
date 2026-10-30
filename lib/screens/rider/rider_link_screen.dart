@@ -39,7 +39,6 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
       final o = await Api.riderOrder(widget.token);
       if (!mounted) return;
       if (!mounted) return;
-      if (!mounted) return;
       setState(() {
         _o = o;
         _error = null;
