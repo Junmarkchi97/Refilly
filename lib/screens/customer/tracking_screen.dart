@@ -34,6 +34,8 @@ class TrackingScreen extends StatelessWidget {
         builder: (context, rs) {
           final r = rs.data;
           final riderPt = r == null ? null : LatLng((r['lat'] as num).toDouble(), (r['lng'] as num).toDouble());
+          final lastLocation = DateTime.tryParse(r?['updated_at']?.toString() ?? '');
+          final locationAge = lastLocation == null ? null : DateTime.now().difference(lastLocation).inMinutes;
           final eta = o.status == 'delivered' || o.status == 'cancelled' ? null : etaText(riderPt ?? stationPt, drop);
           final title = switch (o.status) {
             'pending' => 'Waiting for the station',
@@ -85,6 +87,14 @@ class TrackingScreen extends StatelessWidget {
                   style: const TextStyle(color: RF.muted),
                 ),
               ),
+              if (o.status == 'out_for_delivery')
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    riderPt == null ? 'Waiting for rider location sharing' : locationAge == null ? 'Rider location received' : locationAge >= 3 ? 'Rider location may be outdated · updated $locationAge min ago' : 'Rider location updated recently',
+                    style: TextStyle(color: locationAge != null && locationAge >= 3 ? Colors.orange.shade900 : RF.muted),
+                  ),
+                ),
               if (o.riderName != null) ...[
                 RiderCard(
                   name: o.riderName!,
