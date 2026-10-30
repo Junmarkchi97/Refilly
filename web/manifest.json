@@ -1,11 +1,11 @@
 {
-    "name": "refilly",
-    "short_name": "refilly",
+    "name": "Refilly — Local delivery",
+    "short_name": "Refilly",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0968EE",
+    "theme_color": "#0968EE",
+    "description": "Discover and order from local businesses.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
