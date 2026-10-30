@@ -68,7 +68,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/brand/refilly_icon.svg
+    - assets/brand/refilly_app_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
