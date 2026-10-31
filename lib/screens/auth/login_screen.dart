@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/api.dart';
+import '../../services/social_auth.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import '../brand.dart';
@@ -52,6 +54,37 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  Future<void> _socialSignIn(OAuthProvider provider) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await SocialAuth.signIn(provider);
+      // For mobile, the browser returns through the registered deep link.
+      // On the web Supabase redirects and AuthGate observes the new session.
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Sign-in could not start. Please try again. ($error)'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _socialButton({
+    required String label,
+    required Widget icon,
+    required VoidCallback? onPressed,
+  }) => SizedBox(
+    height: 52,
+    child: OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: icon,
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -121,7 +154,32 @@ class _LoginScreenState extends State<LoginScreen> {
               Pressable(
                 child: FilledButton(onPressed: _busy ? null : _submit, child: Text(_signup ? 'Create account' : 'Log in')),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+              const Row(children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: Text('or continue with', style: TextStyle(color: RF.muted, fontSize: 12)),
+                ),
+                Expanded(child: Divider()),
+              ]),
+              const SizedBox(height: 14),
+              _socialButton(
+                label: 'Continue with Google',
+                icon: const Text('G', style: TextStyle(
+                  color: Color(0xFF4285F4), fontWeight: FontWeight.w900, fontSize: 22,
+                )),
+                onPressed: _busy ? null : () => _socialSignIn(OAuthProvider.google),
+              ),
+              if (SocialAuth.appleAvailable) ...[
+                const SizedBox(height: 10),
+                _socialButton(
+                  label: 'Continue with Apple',
+                  icon: const Icon(Icons.apple_rounded, size: 23),
+                  onPressed: _busy ? null : () => _socialSignIn(OAuthProvider.apple),
+                ),
+              ],
+              const SizedBox(height: 10),
               TextButton(
                 onPressed: _busy ? null : () => setState(() => _signup = !_signup),
                 child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up'),
