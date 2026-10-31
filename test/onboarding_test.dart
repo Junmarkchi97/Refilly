@@ -71,4 +71,22 @@ void main() {
     ));
     expect(tester.widget<TextButton>(find.widgetWithText(TextButton, 'Skip')).onPressed, isNull);
   });
+
+  testWidgets('reduced motion keeps the tour readable and navigation immediate', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
+      home: OnboardingScreen(onFinish: () async {}),
+    ));
+    await tester.pump();
+    expect(find.byType(TweenAnimationBuilder<double>), findsNothing);
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Back'), findsOneWidget);
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get started'), findsOneWidget);
+  });
 }
