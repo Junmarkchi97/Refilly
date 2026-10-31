@@ -109,14 +109,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: [
                       const RefillyMark(size: 38),
                       const SizedBox(width: 10),
-                      Text(
+                      Expanded(child: Text(
                         'Refilly',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.8,
                         ),
-                      ),
-                      const Spacer(),
+                      )),
                       if (!isLast)
                         TextButton(
                           onPressed: widget.finishing ? null : widget.onFinish,
@@ -207,7 +208,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(isLast ? 'Create account' : 'Next'),
+                                    Flexible(child: Text(isLast ? 'Create account' : 'Next', textAlign: TextAlign.center)),
                                     const SizedBox(width: 10),
                                     const Icon(Icons.arrow_forward_rounded, size: 20),
                                   ],
@@ -350,7 +351,9 @@ class _OnboardingArtwork extends StatelessWidget {
                 child: SizedBox(
                   width: 420,
                   height: 300,
-                  child: _RoutineScene(index: index, progress: progress),
+                  child: MediaQuery.withNoTextScaling(
+                    child: _RoutineScene(index: index, progress: progress),
+                  ),
                 ),
               ),
             ),
