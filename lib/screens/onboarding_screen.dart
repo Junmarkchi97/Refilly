@@ -28,19 +28,19 @@ class _OnboardingSlide {
 
 const _slides = <_OnboardingSlide>[
   _OnboardingSlide(
-    'EXPLORE WHAT\'S NEARBY',
-    'Your neighborhood,\none tap away.',
-    'Discover trusted nearby businesses, starting with local water refilling stations.',
+    'YOUR EVERYDAY ESSENTIALS',
+    'Your essentials.\nReady for a refill.',
+    'Start with water. Save a delivered order to My Essentials so your next refill is easier.',
   ),
   _OnboardingSlide(
-    'MADE FOR EVERYDAY ORDERS',
-    'Order in a few\nsimple taps.',
-    'Choose what you need, pin your exact delivery address, and review the total before ordering.',
+    'A ROUTINE THAT FITS YOU',
+    'Set the rhythm.\nWe’ll keep track.',
+    'Choose weekly, every two weeks, or a custom interval. See what’s due when you open Refilly.',
   ),
   _OnboardingSlide(
-    'KNOW WHAT\'S NEXT',
-    'From local shops\nto your doorstep.',
-    'Follow order updates and track your rider when live location sharing is available.',
+    'YOU’RE ALWAYS IN CONTROL',
+    'Due for a refill?\nYou’re already ready.',
+    'Open a prefilled cart, review it, and place your order. Need more time? Snooze or skip.',
   ),
 ];
 
@@ -100,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
+            constraints: const BoxConstraints(maxWidth: 520, maxHeight: 820),
             child: Column(
               children: [
                 Padding(
@@ -207,7 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(isLast ? 'Get started' : 'Next'),
+                                    Text(isLast ? 'Create account' : 'Next'),
                                     const SizedBox(width: 10),
                                     const Icon(Icons.arrow_forward_rounded, size: 20),
                                   ],
@@ -323,376 +323,200 @@ class _SlideContent extends StatelessWidget {
   );
 }
 
+
+/// Illustrative preview only: never creates a routine or submits an order.
 class _OnboardingArtwork extends StatelessWidget {
   const _OnboardingArtwork({required this.index, required this.active});
-
+  final int index;
   final bool active;
 
-  final int index;
-
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      final height = constraints.maxHeight;
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFEAF3FF), Color(0xFFF8FAFF)],
+  Widget build(BuildContext context) {
+    final still = !active || MediaQuery.of(context).disableAnimations;
+    Widget scene(double progress) => Semantics(
+      label: [
+        'Demo: a delivered water order is saved to My Essentials.',
+        'Demo: a weekly refill interval is selected.',
+        'Demo: a due refill opens a cart for review. No order is placed.',
+      ][index],
+      child: ExcludeSemantics(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: ColoredBox(
+            color: const Color(0xFFF0F5FF),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: 420,
+                  height: 300,
+                  child: _RoutineScene(index: index, progress: progress),
+                ),
+              ),
             ),
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -height * .33,
-                right: -width * .2,
-                child: Container(
-                  width: width * .85,
-                  height: width * .85,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFD9E9FF),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -height * .44,
-                left: -width * .20,
-                child: Container(
-                  width: width,
-                  height: width,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .62),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              if (index == 0)
-                _DiscoverArtwork(width: width, height: height, active: active)
-              else if (index == 1)
-                _CheckoutArtwork(width: width, height: height, active: active)
-              else
-                _TrackingArtwork(width: width, height: height, active: active),
-            ],
-          ),
         ),
-      );
-    },
-  );
+      ),
+    );
+    if (still) { return scene(1); }
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 2400),
+      builder: (context, value, _) => scene(value),
+    );
+  }
 }
 
-class _ArtworkCard extends StatelessWidget {
-  const _ArtworkCard({required this.child, this.padding = const EdgeInsets.all(14)});
+class _RoutineScene extends StatelessWidget {
+  const _RoutineScene({required this.index, required this.progress});
+  final int index;
+  final double progress;
 
-  final Widget child;
-  final EdgeInsets padding;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: padding,
+  Widget card(Widget child) => Container(
+    padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(19),
-      border: Border.all(color: const Color(0xFFDCE7F9)),
-      boxShadow: [
-        BoxShadow(
-          color: RF.accent.withValues(alpha: .10),
-          blurRadius: 18,
-          offset: const Offset(0, 9),
-        ),
-      ],
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: const Color(0xFFE0E9FB)),
+      boxShadow: const [BoxShadow(color: Color(0x140B5DDB), blurRadius: 24, offset: Offset(0, 10))],
     ),
     child: child,
   );
-}
 
-class _ArtworkLabel extends StatelessWidget {
-  const _ArtworkLabel(this.title, this.subtitle, this.icon);
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
+  Widget pill(String label, IconData icon, {bool blue = false}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      color: blue ? RF.accent : const Color(0xFFEAF3FF),
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 17, color: blue ? Colors.white : RF.accent),
+      const SizedBox(width: 8),
+      Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+          color: blue ? Colors.white : RF.accent)),
+    ]),
+  );
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Container(
-        height: 40,
-        width: 40,
-        decoration: BoxDecoration(
-          color: RF.accentSoft,
-          borderRadius: BorderRadius.circular(13),
+  Widget build(BuildContext context) {
+    final settled = progress > .55;
+    final rise = Curves.easeOutCubic.transform((progress / .55).clamp(0.0, 1.0));
+    return Stack(
+      children: [
+        Positioned(
+          left: index == 0 ? 18 : 110, top: -50,
+          child: Container(width: 270, height: 270,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFDCEAFF))),
         ),
-        child: Icon(icon, color: RF.accent, size: 22),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: RF.muted),
+        if (index == 0) ...[
+          Positioned(
+            left: 34, top: 18 + 18 * (1 - rise),
+            child: Transform.rotate(
+              angle: -.08 * (1 - rise),
+              child: const SizedBox(width: 135, height: 220,
+                child: CustomPaint(painter: _WaterJugPainter())),
             ),
-          ],
-        ),
-      ),
-      const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: RF.muted),
-    ],
-  );
-}
-
-class _DiscoverArtwork extends StatelessWidget {
-  const _DiscoverArtwork({required this.width, required this.height, required this.active});
-
-  final bool active;
-
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned(
-        top: height * .12,
-        left: width * .12,
-        right: width * .12,
-        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
-          child: Row(
-            children: [
-              const Icon(Icons.search_rounded, color: RF.accent),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Find your local favorites',
-                  style: TextStyle(color: RF.muted, fontSize: 13),
-                ),
-              ),
-              Container(
-                width: 28,
-                height: 28,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: RF.accent,
-                ),
-                child: const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
-              ),
-            ],
           ),
-        )),
-      ),
-      Positioned(
-        top: height * .38,
-        left: width * .16,
-        right: width * .16,
-        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
-          child: _ArtworkLabel(
-            'Water refill stations',
-            'Discover nearby shops',
-            Icons.water_drop_outlined,
+          Positioned(
+            left: 172, right: 22, top: 57,
+            child: card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Water refill', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              const Text('Your regular order', style: TextStyle(color: RF.muted, fontSize: 12)),
+              const SizedBox(height: 20),
+              pill(settled ? 'Saved' : 'Delivered', settled ? Icons.bookmark_added_rounded : Icons.check_circle_outline),
+            ])),
           ),
-        )),
-      ),
-      Positioned(
-        bottom: height * .10,
-        left: width * .27,
-        right: width * .12,
-        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 11),
-          child: Row(
-            children: [
-              Icon(Icons.auto_awesome_rounded, color: RF.accent, size: 19),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'More categories to come',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
+          Positioned(
+            bottom: 25, left: 79,
+            child: Opacity(opacity: rise,
+              child: pill('My Essentials', Icons.favorite_rounded, blue: true)),
           ),
-        )),
-      ),
-    ],
-  );
-}
-
-class _CheckoutArtwork extends StatelessWidget {
-  const _CheckoutArtwork({required this.width, required this.height, required this.active});
-
-  final bool active;
-
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned(
-        top: height * .11,
-        left: width * .16,
-        right: width * .16,
-        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Your order', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 14),
-              const Row(
-                children: [
-                  Icon(Icons.shopping_bag_outlined, color: RF.accent, size: 21),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Refill essentials',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  Text('2 items', style: TextStyle(color: RF.muted, fontSize: 12)),
+        ] else if (index == 1) ...[
+          Positioned(left: 32, right: 32, top: 28,
+            child: card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Your refill rhythm', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              const Text('Water refill · Repeat reminder', style: TextStyle(color: RF.muted, fontSize: 13)),
+              const SizedBox(height: 23),
+              Row(children: [
+                for (final day in ['M', 'T', 'W', 'T', 'F', 'S', 'S']) ...[
+                  Expanded(child: Container(
+                    height: 37, alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: day == 'M' && settled ? RF.accent : const Color(0xFFF1F5FC),
+                      borderRadius: BorderRadius.circular(10)),
+                    child: Text(day, style: TextStyle(fontWeight: FontWeight.w700,
+                      color: day == 'M' && settled ? Colors.white : RF.muted)))),
+                  if (day != 'S') const SizedBox(width: 5),
                 ],
-              ),
-              const SizedBox(height: 13),
-              Container(height: 1, color: RF.line),
-              const SizedBox(height: 13),
-              const Row(
-                children: [
-                  Icon(Icons.location_on_outlined, color: RF.accent, size: 20),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Your chosen drop-off',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  Icon(Icons.check_circle_rounded, color: Color(0xFF21AA79), size: 18),
-                ],
-              ),
-            ],
-          ),
-        )),
-      ),
-      Positioned(
-        bottom: height * .13,
-        left: width * .23,
-        right: width * .13,
-        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: RF.accent,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: const Icon(Icons.done_all_rounded, color: Colors.white, size: 19),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Review. Confirm. Done.',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
-          ),
-        )),
-      ),
-    ],
-  );
+              ]),
+              const SizedBox(height: 23),
+              pill(settled ? 'Every week' : 'Choose an interval', Icons.event_repeat_rounded, blue: settled),
+            ]))),
+          Positioned(bottom: 15, right: 34,
+            child: Opacity(opacity: rise, child: pill('Weekly · Biweekly · Custom', Icons.tune_rounded))),
+        ] else ...[
+          Positioned(left: 35, right: 35, top: 30 - 12 * rise,
+            child: card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const Icon(Icons.water_drop_rounded, size: 32, color: RF.accent),
+                const SizedBox(width: 12),
+                const Expanded(child: Text('Water refill', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
+                Container(width: 9, height: 9, decoration: const BoxDecoration(color: Color(0xFFE8890C), shape: BoxShape.circle)),
+              ]),
+              const SizedBox(height: 17),
+              Text(settled ? 'Your cart is ready to review' : 'Your next refill is due',
+                style: const TextStyle(color: RF.muted, fontSize: 14)),
+              const SizedBox(height: 20),
+              pill(settled ? 'Review cart' : 'Refill now',
+                settled ? Icons.shopping_bag_outlined : Icons.refresh_rounded, blue: true),
+              const SizedBox(height: 17),
+              const Text('Snooze     ·     Skip this refill',
+                style: TextStyle(color: RF.muted, fontSize: 12)),
+            ]))),
+          Positioned(bottom: 13, left: 92,
+            child: Opacity(opacity: rise, child: pill('You confirm every order', Icons.check_circle_outline))),
+        ],
+      ],
+    );
+  }
 }
 
-class _TrackingArtwork extends StatelessWidget {
-  const _TrackingArtwork({required this.width, required this.height, required this.active});
+/// Crisp native vector artwork scales with every device density.
+class _WaterJugPainter extends CustomPainter {
+  const _WaterJugPainter();
 
-  final bool active;
-
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      Positioned.fill(
-        child: CustomPaint(
-          painter: _TrackingRoutePainter(),
-        ),
-      ),
-      Positioned(
-        top: height * .14,
-        left: width * .12,
-        child: Container(
-          padding: const EdgeInsets.all(11),
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-          child: const Icon(Icons.storefront_rounded, color: RF.accent, size: 26),
-        ),
-      ),
-      Positioned(
-        top: height * .32,
-        right: width * .17,
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: RF.accent),
-          child: const Icon(Icons.local_shipping_rounded, color: Colors.white, size: 27),
-        ),
-      ),
-      Positioned(
-        bottom: height * .17,
-        left: width * .18,
-        right: width * .18,
-        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
-          child: _ArtworkLabel(
-            'Out for delivery',
-            'Follow your order status',
-            Icons.route_rounded,
-          ),
-        )),
-      ),
-    ],
-  );
-}
-
-class _TrackingRoutePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width * .22, size.height * .28)
-      ..cubicTo(
-        size.width * .38,
-        size.height * .08,
-        size.width * .64,
-        size.height * .54,
-        size.width * .75,
-        size.height * .46,
-      );
-
-    final paint = Paint()
-      ..color = RF.accent.withValues(alpha: .40)
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    for (final metric in path.computeMetrics()) {
-      for (double distance = 0; distance < metric.length; distance += 14) {
-        canvas.drawPath(
-          metric.extractPath(distance, distance + 6),
-          paint,
-        );
-      }
+    canvas.save();
+    canvas.scale(size.width / 135, size.height / 220);
+    final body = RRect.fromRectAndRadius(const Rect.fromLTWH(14, 48, 108, 153), const Radius.circular(30));
+    canvas.drawShadow(Path()..addRRect(body), const Color(0x550748BD), 12, false);
+    canvas.drawRRect(body, Paint()..shader = const LinearGradient(
+      begin: Alignment.topLeft, end: Alignment.bottomRight,
+      colors: [Color(0xFF8EC8FF), Color(0xFF1778F3), Color(0xFF0755D9)],
+    ).createShader(const Rect.fromLTWH(14, 48, 108, 153)));
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(43, 23, 50, 40), const Radius.circular(9)),
+      Paint()..color = const Color(0xFF469EF6));
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(39, 13, 58, 22), const Radius.circular(7)),
+      Paint()..color = const Color(0xFF0755C8));
+    for (final y in [83.0, 159.0, 179.0]) {
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(20, y, 96, 6), const Radius.circular(3)),
+        Paint()..color = const Color(0x3355B4FF));
     }
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(25, 65, 10, 81), const Radius.circular(5)),
+      Paint()..color = const Color(0x559EDBFF));
+    canvas.drawCircle(const Offset(68, 122), 27, Paint()..color = Colors.white);
+    final drop = Path()..moveTo(68, 103)..cubicTo(60, 114, 55, 119, 57, 126)
+      ..cubicTo(60, 139, 79, 139, 80, 126)..cubicTo(81, 119, 75, 111, 68, 103)..close();
+    canvas.drawPath(drop, Paint()..color = RF.accent);
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _TrackingRoutePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WaterJugPainter oldDelegate) => false;
 }
-
 
 /// A finite, staggered entrance: settles fully and respects accessibility settings.
 class _Entrance extends StatelessWidget {

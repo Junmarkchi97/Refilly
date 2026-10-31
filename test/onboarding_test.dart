@@ -32,10 +32,10 @@ void main() {
 
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Create account'), findsOneWidget);
     expect(find.text('Skip'), findsNothing);
 
-    await tester.tap(find.text('Get started'));
+    await tester.tap(find.text('Create account'));
     await tester.pump();
     expect(finishes, 1);
   });
@@ -87,6 +87,28 @@ void main() {
     expect(find.text('Back'), findsOneWidget);
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
-    expect(find.text('Get started'), findsOneWidget);
+    expect(find.text('Create account'), findsOneWidget);
+  });
+
+  testWidgets('refill tour fits a small screen with larger text', (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.5)),
+        child: child!,
+      ),
+      home: OnboardingScreen(onFinish: () async {}),
+    ));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    for (var page = 0; page < 2; page++) {
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+    expect(find.text('Create account'), findsOneWidget);
   });
 }

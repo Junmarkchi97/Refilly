@@ -6,7 +6,8 @@ import '../widgets.dart';
 import '../brand.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.initialSignup = false});
+  final bool initialSignup;
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -14,7 +15,23 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController(), _pass = TextEditingController();
   final _name = TextEditingController(), _phone = TextEditingController();
-  bool _signup = false, _busy = false;
+  late bool _signup;
+  bool _busy = false, _showPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _signup = widget.initialSignup;
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _pass.dispose();
+    _name.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     setState(() => _busy = true);
@@ -48,13 +65,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const Center(child: RefillyMark(size: 104)),
               const SizedBox(height: 24),
               Text(
-                _signup ? 'Create your\naccount' : 'Your local favorites.\nDelivered.',
+                _signup ? 'Create your\naccount' : 'Your essentials.\nOne less thing to remember.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Discover nearby businesses, place an order, and track your delivery.',
+                'Save your essentials, track when refills are due, and reorder with less effort.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: RF.muted, fontWeight: FontWeight.w500),
               ),
@@ -74,14 +91,22 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
               TextField(
                 controller: _email,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email', floatingLabelBehavior: FloatingLabelBehavior.always),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _pass,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  suffixIcon: IconButton(
+                    tooltip: _showPassword ? 'Hide password' : 'Show password',
+                    onPressed: () => setState(() => _showPassword = !_showPassword),
+                    icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                  ),
+                ),
+                obscureText: !_showPassword,
               ),
               if (_signup)
                 const Padding(
@@ -97,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => setState(() => _signup = !_signup),
+                onPressed: _busy ? null : () => setState(() => _signup = !_signup),
                 child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up'),
               ),
             ],

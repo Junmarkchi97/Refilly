@@ -88,7 +88,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
   @override
   Widget build(BuildContext context) {
     if (sb.auth.currentSession != null || _finishedThisSession) {
-      return const AuthGate();
+      return AuthGate(initialSignup: _finishedThisSession);
     }
     return FutureBuilder<bool>(
       future: _isComplete,
@@ -123,12 +123,13 @@ String? riderTokenFromUrl() {
 }
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+  const AuthGate({super.key, this.initialSignup = false});
+  final bool initialSignup;
   @override
   Widget build(BuildContext context) => StreamBuilder<AuthState>(
     stream: sb.auth.onAuthStateChange,
     builder: (context, _) {
-      if (sb.auth.currentSession == null) return const LoginScreen();
+      if (sb.auth.currentSession == null) return LoginScreen(initialSignup: initialSignup);
       return FutureBuilder<Profile?>(
         key: ValueKey(sb.auth.currentUser?.id),
         future: Api.me(),
