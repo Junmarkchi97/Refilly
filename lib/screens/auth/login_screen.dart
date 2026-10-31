@@ -4,6 +4,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import '../brand.dart';
+import '../onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.initialSignup = false});
@@ -124,6 +125,19 @@ class _LoginScreenState extends State<LoginScreen> {
               TextButton(
                 onPressed: _busy ? null : () => setState(() => _signup = !_signup),
                 child: Text(_signup ? 'Have an account? Log in' : 'New here? Sign up'),
+              ),
+              TextButton(
+                onPressed: _busy ? null : () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (tourContext) => OnboardingScreen(
+                      onFinish: () async {
+                        Navigator.of(tourContext).pop();
+                        if (mounted) { setState(() => _signup = true); }
+                      },
+                    ),
+                  ),
+                ),
+                child: const Text('See how Refilly works'),
               ),
             ],
           ),
