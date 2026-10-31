@@ -18,7 +18,7 @@ class SocialAuth {
     if (!isWeb) return mobileRedirect;
     // Preserve the hosted app's base path, but never feed an OAuth token,
     // fragment, or query string back into the next login redirect.
-    return browserUrl.replace(query: '', fragment: '').toString();
+    return '${browserUrl.origin}${browserUrl.path}';
   }
 
   static Future<bool> signIn(OAuthProvider provider) async {
