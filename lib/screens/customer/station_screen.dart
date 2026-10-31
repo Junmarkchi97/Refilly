@@ -63,10 +63,12 @@ class _StationScreenState extends State<StationScreen> {
   Widget build(BuildContext context) {
     final st = widget.station;
     final pt = LatLng(st.lat, st.lng);
-    final count = _cart.values.fold(0, (a, b) => a + b);
     return FutureBuilder(
       future: _f,
       builder: (context, snap) {
+        // The catalog future restores reorder quantities before it completes.
+        // Derive the count here so that completion rebuilds it with the total.
+        final count = _cart.values.fold(0, (a, b) => a + b);
         final data = snap.data;
         final products = data?.$1 ?? const <Product>[];
         final cats = data?.$2 ?? const <Category>[];
