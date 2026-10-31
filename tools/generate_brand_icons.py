@@ -1,27 +1,22 @@
 #!/usr/bin/env python3
-"""Generate app launcher icons from assets/brand/refilly_icon.svg.
+"""Generate app launcher icons from the approved assets/brand/refilly_app_icon.png.
 
-Requires: pip install cairosvg pillow
-Run after editing the vector. Apple icons are flattened to opaque RGB.
+Requires: pip install pillow
+Run after replacing the source PNG. Apple icons are flattened to opaque RGB.
 """
 from __future__ import annotations
 
-from io import BytesIO
 from pathlib import Path
-import re
 
-import cairosvg
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "assets/brand/refilly_icon.svg"
-SOURCE_BYTES = SOURCE.read_bytes()
+SOURCE = ROOT / "assets/brand/refilly_app_icon.png"
 BLUE = (9, 104, 238)
 
 
 def render(size: int, *, background: bool = True) -> Image.Image:
-    data = cairosvg.svg2png(bytestring=SOURCE_BYTES, output_width=size, output_height=size)
-    image = Image.open(BytesIO(data)).convert("RGBA")
+    image = Image.open(SOURCE).convert("RGBA").resize((size, size), Image.Resampling.LANCZOS)
     if background:
         # iOS marketing icon must have no alpha; same opaque background on
         # every platform prevents white-corner artifacts after OS masking.

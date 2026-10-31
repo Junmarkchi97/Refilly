@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 /// Approved Refilly delivery-R icon, reused across web and mobile.
 class RefillyMark extends StatelessWidget {
@@ -11,8 +10,8 @@ class RefillyMark extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     label: 'Refilly logo',
     image: true,
-    child: SvgPicture.asset(
-      'assets/brand/refilly_icon.svg',
+    child: Image.asset(
+      'assets/brand/refilly_app_icon.png',
       width: size,
       height: size,
       excludeFromSemantics: true,

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "assets/brand/refilly_icon.svg"
+      - "assets/brand/refilly_app_icon.png"
       - "tools/generate_brand_icons.py"
       - ".github/workflows/sync-brand-icons.yml"
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
           ref: main
           persist-credentials: true
       - name: Install icon renderer
-        run: python -m pip install --disable-pip-version-check Pillow cairosvg
+        run: python -m pip install --disable-pip-version-check Pillow
       - name: Render all launcher icons
         run: python tools/generate_brand_icons.py
       - name: Save refreshed Android, iOS and web icons
