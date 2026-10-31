@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 10),
                 _socialButton(
                   label: 'Continue with Apple',
-                  icon: const Icon(Icons.apple_rounded, size: 23),
+                  icon: const Icon(Icons.apple, size: 23),
                   onPressed: _busy ? null : () => _socialSignIn(OAuthProvider.apple),
                 ),
               ],
