@@ -134,9 +134,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPageChanged: (value) {
                       if (mounted) { setState(() => _index = value); }
                     },
-                    itemBuilder: (context, index) => _SlideContent(
-                      index: index,
-                      data: _slides[index],
+                    itemBuilder: (context, index) => AnimatedBuilder(
+                      animation: _controller,
+                      child: _SlideContent(
+                        key: ValueKey('slide-$index-${_index == index}'),
+                        index: index,
+                        data: _slides[index],
+                        active: _index == index,
+                      ),
+                      builder: (context, child) {
+                        if (MediaQuery.of(context).disableAnimations) {
+                          return child!;
+                        }
+                        final page = _controller.hasClients && _controller.position.haveDimensions
+                            ? _controller.page ?? 0
+                            : 0.0;
+                        final distance = (page - index).clamp(-1.0, 1.0);
+                        return Transform.translate(
+                          offset: Offset(distance * 32, 0),
+                          child: Opacity(
+                            opacity: (1 - distance.abs() * .35).clamp(0.0, 1.0),
+                            child: child,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -216,7 +237,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 class _SlideContent extends StatelessWidget {
-  const _SlideContent({required this.index, required this.data});
+  const _SlideContent({super.key, required this.index, required this.data, required this.active});
+
+  final bool active;
 
   final int index;
   final _OnboardingSlide data;
@@ -238,10 +261,16 @@ class _SlideContent extends StatelessWidget {
               SizedBox(
                 height: artworkHeight,
                 width: double.infinity,
-                child: _OnboardingArtwork(index: index),
+                child: _Entrance(
+                  active: active,
+                  child: _OnboardingArtwork(index: index, active: active),
+                ),
               ),
               SizedBox(height: compact ? 22 : 34),
-              Text(
+              _Entrance(
+                active: active,
+                start: .12,
+                child: Text(
                 data.eyebrow,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
@@ -251,8 +280,12 @@ class _SlideContent extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              ),
               const SizedBox(height: 12),
-              Text(
+              _Entrance(
+                active: active,
+                start: .22,
+                child: Text(
                 data.title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -263,8 +296,12 @@ class _SlideContent extends StatelessWidget {
                   height: 1.12,
                 ),
               ),
+              ),
               const SizedBox(height: 14),
-              ConstrainedBox(
+              _Entrance(
+                active: active,
+                start: .34,
+                child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 340),
                 child: Text(
                   data.description,
@@ -276,6 +313,7 @@ class _SlideContent extends StatelessWidget {
                   ),
                 ),
               ),
+              ),
               SizedBox(height: compact ? 12 : 20),
             ],
           ),
@@ -286,7 +324,9 @@ class _SlideContent extends StatelessWidget {
 }
 
 class _OnboardingArtwork extends StatelessWidget {
-  const _OnboardingArtwork({required this.index});
+  const _OnboardingArtwork({required this.index, required this.active});
+
+  final bool active;
 
   final int index;
 
@@ -332,11 +372,11 @@ class _OnboardingArtwork extends StatelessWidget {
                 ),
               ),
               if (index == 0)
-                _DiscoverArtwork(width: width, height: height)
+                _DiscoverArtwork(width: width, height: height, active: active)
               else if (index == 1)
-                _CheckoutArtwork(width: width, height: height)
+                _CheckoutArtwork(width: width, height: height, active: active)
               else
-                _TrackingArtwork(width: width, height: height),
+                _TrackingArtwork(width: width, height: height, active: active),
             ],
           ),
         ),
@@ -411,7 +451,9 @@ class _ArtworkLabel extends StatelessWidget {
 }
 
 class _DiscoverArtwork extends StatelessWidget {
-  const _DiscoverArtwork({required this.width, required this.height});
+  const _DiscoverArtwork({required this.width, required this.height, required this.active});
+
+  final bool active;
 
   final double width;
   final double height;
@@ -423,7 +465,7 @@ class _DiscoverArtwork extends StatelessWidget {
         top: height * .12,
         left: width * .12,
         right: width * .12,
-        child: _ArtworkCard(
+        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
           child: Row(
             children: [
               const Icon(Icons.search_rounded, color: RF.accent),
@@ -445,25 +487,25 @@ class _DiscoverArtwork extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        )),
       ),
       Positioned(
         top: height * .38,
         left: width * .16,
         right: width * .16,
-        child: const _ArtworkCard(
+        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
           child: _ArtworkLabel(
             'Water refill stations',
             'Discover nearby shops',
             Icons.water_drop_outlined,
           ),
-        ),
+        )),
       ),
       Positioned(
         bottom: height * .10,
         left: width * .27,
         right: width * .12,
-        child: const _ArtworkCard(
+        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
           padding: EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           child: Row(
             children: [
@@ -477,14 +519,16 @@ class _DiscoverArtwork extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        )),
       ),
     ],
   );
 }
 
 class _CheckoutArtwork extends StatelessWidget {
-  const _CheckoutArtwork({required this.width, required this.height});
+  const _CheckoutArtwork({required this.width, required this.height, required this.active});
+
+  final bool active;
 
   final double width;
   final double height;
@@ -496,7 +540,7 @@ class _CheckoutArtwork extends StatelessWidget {
         top: height * .11,
         left: width * .16,
         right: width * .16,
-        child: _ArtworkCard(
+        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -533,13 +577,13 @@ class _CheckoutArtwork extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        )),
       ),
       Positioned(
         bottom: height * .13,
         left: width * .23,
         right: width * .13,
-        child: _ArtworkCard(
+        child: _Entrance(active: active, start: .18, child: _ArtworkCard(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
           child: Row(
             children: [
@@ -560,14 +604,16 @@ class _CheckoutArtwork extends StatelessWidget {
               ),
             ],
           ),
-        ),
+        )),
       ),
     ],
   );
 }
 
 class _TrackingArtwork extends StatelessWidget {
-  const _TrackingArtwork({required this.width, required this.height});
+  const _TrackingArtwork({required this.width, required this.height, required this.active});
+
+  final bool active;
 
   final double width;
   final double height;
@@ -602,13 +648,13 @@ class _TrackingArtwork extends StatelessWidget {
         bottom: height * .17,
         left: width * .18,
         right: width * .18,
-        child: const _ArtworkCard(
+        child: _Entrance(active: active, start: .38, child: const _ArtworkCard(
           child: _ArtworkLabel(
             'Out for delivery',
             'Follow your order status',
             Icons.route_rounded,
           ),
-        ),
+        )),
       ),
     ],
   );
@@ -645,4 +691,41 @@ class _TrackingRoutePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TrackingRoutePainter oldDelegate) => false;
+}
+
+
+/// A finite, staggered entrance: settles fully and respects accessibility settings.
+class _Entrance extends StatelessWidget {
+  const _Entrance({required this.child, required this.active, this.start = 0});
+
+  final Widget child;
+  final bool active;
+  final double start;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!active || MediaQuery.of(context).disableAnimations) {
+      return child;
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 1100),
+      child: child,
+      builder: (context, value, child) {
+        final progress = ((value - start) / (1 - start)).clamp(0.0, 1.0);
+        final eased = Curves.easeOutCubic.transform(progress);
+        final spring = Curves.easeOutBack.transform(progress);
+        return Opacity(
+          opacity: eased,
+          child: Transform.translate(
+            offset: Offset(0, 24 * (1 - spring)),
+            child: Transform.scale(
+              scale: .96 + .04 * spring,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
