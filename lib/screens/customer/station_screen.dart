@@ -115,125 +115,136 @@ class _StationScreenState extends State<StationScreen> {
         final riceOnly = inCategory.isNotEmpty && water.isEmpty;
         final selected = (_selected != null && shown.contains(_selected)) ? _selected : (shown.where(_cart.containsKey).firstOrNull ?? shown.firstOrNull);
 
+        final topInset = MediaQuery.paddingOf(context).top;
+        const heroBody = 188.0;
+        final heroHeight = topInset + heroBody;
+
         return Scaffold(
           body: Ambient(
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                    child: Row(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: heroHeight,
+                  child: StationHero(photoUrl: st.photoUrl, label: st.name, height: heroHeight),
+                ),
+                Positioned(
+                  top: topInset + 4,
+                  left: 20,
+                  right: 20,
+                  child: Row(
+                    children: [
+                      FloatIconButton(Icons.arrow_back_ios_new_rounded, tooltip: 'Back', onTap: () => Navigator.maybePop(context)),
+                      const Spacer(),
+                      if (!st.isOpen) const Tag('Closed', background: Colors.white, foreground: RF.muted),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: heroHeight - 28,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(RF.sheetRadius)),
+                      boxShadow: [BoxShadow(color: const Color(0xFF32220F).withValues(alpha: .05), blurRadius: 30, offset: const Offset(0, -10))],
+                    ),
+                    child: Column(
                       children: [
-                        FloatIconButton(Icons.arrow_back_ios_new_rounded, tooltip: 'Back', onTap: () => Navigator.maybePop(context)),
-                        const Spacer(),
-                        if (!st.isOpen) const Tag('Closed', background: Colors.white, foreground: RF.muted),
+                        Expanded(
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+                            children: [
+                              Text(
+                                riceOnly ? 'Choose your rice' : 'Choose a refill',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 2),
+                              _stationLine(st),
+                              const SizedBox(height: 12),
+                              if (usedCats.length > 1) ...[
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: ChoiceChip(label: const Text('All'), selected: _cat == null, onSelected: (_) => setState(() => _cat = null)),
+                                      ),
+                                      for (final c in usedCats)
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: ChoiceChip(label: Text(c.name), selected: _cat == c.id, onSelected: (_) => setState(() => _cat = c.id)),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                              if (showModes) ...[
+                                PillToggle(
+                                  options: const ['Refill only', 'With new container'],
+                                  index: _newContainer ? 1 : 0,
+                                  onChanged: (i) => setState(() => _newContainer = i == 1),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(2, 8, 2, 10),
+                                  child: Text(
+                                    _newContainer
+                                        ? 'You keep a new container. The price includes the container and the water.'
+                                        : 'You hand over your own empty container. The price is for the water only.',
+                                    style: const TextStyle(color: Color(0xFF3F3B37), fontSize: 13, height: 1.35),
+                                  ),
+                                ),
+                              ] else if (riceOnly)
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(2, 0, 2, 10),
+                                  child: Text(
+                                    'Sealed whole sacks. Choose the size and how many.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Color(0xFF3F3B37), fontSize: 13),
+                                  ),
+                                ),
+                              if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: _retry),
+                              if (data == null && !snap.hasError) const SizedBox(height: 260, child: SkeletonList(count: 3, height: 80)),
+                              if (data != null && products.isEmpty)
+                                const EmptyState(
+                                  icon: Icons.inventory_2_outlined,
+                                  title: 'No products yet',
+                                  subtitle: "This supplier hasn't added items.\nCheck back soon.",
+                                )
+                              else if (data != null && shown.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 24),
+                                  child: Text(
+                                    showModes && !hasBothModes
+                                        ? (_newContainer
+                                            ? 'This supplier only offers refills of your own container.'
+                                            : 'This supplier only sells water with a new container.')
+                                        : 'Nothing in this category yet.',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: RF.muted),
+                                  ),
+                                ),
+                              for (final (i, p) in shown.indexed)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: FadeSlideIn(index: i, child: _productCard(p, p == selected)),
+                                ),
+                            ],
+                          ),
+                        ),
+                        _dock(st, selected),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  StationOrb(photoUrl: st.photoUrl, label: st.name, size: 124),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(RF.sheetRadius)),
-                        boxShadow: [BoxShadow(color: const Color(0xFF32220F).withValues(alpha: .05), blurRadius: 30, offset: const Offset(0, -10))],
-                      ),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: ListView(
-                              padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
-                              children: [
-                                Text(
-                                  riceOnly ? 'Choose your rice' : 'Choose a refill',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.headlineSmall,
-                                ),
-                                const SizedBox(height: 2),
-                                _stationLine(st),
-                                const SizedBox(height: 12),
-                                if (usedCats.length > 1) ...[
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: ChoiceChip(label: const Text('All'), selected: _cat == null, onSelected: (_) => setState(() => _cat = null)),
-                                        ),
-                                        for (final c in usedCats)
-                                          Padding(
-                                            padding: const EdgeInsets.only(right: 8),
-                                            child: ChoiceChip(label: Text(c.name), selected: _cat == c.id, onSelected: (_) => setState(() => _cat = c.id)),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                ],
-                                if (showModes) ...[
-                                  PillToggle(
-                                    options: const ['Refill only', 'With new container'],
-                                    index: _newContainer ? 1 : 0,
-                                    onChanged: (i) => setState(() => _newContainer = i == 1),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(2, 8, 2, 10),
-                                    child: Text(
-                                      _newContainer
-                                          ? 'You keep a new container. The price includes the container and the water.'
-                                          : 'You hand over your own empty container. The price is for the water only.',
-                                      style: const TextStyle(color: Color(0xFF3F3B37), fontSize: 13, height: 1.35),
-                                    ),
-                                  ),
-                                ] else if (riceOnly)
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(2, 0, 2, 10),
-                                    child: Text(
-                                      'Sealed whole sacks. Choose the size and how many.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Color(0xFF3F3B37), fontSize: 13),
-                                    ),
-                                  ),
-                                if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: _retry),
-                                if (data == null && !snap.hasError) const SizedBox(height: 260, child: SkeletonList(count: 3, height: 80)),
-                                if (data != null && products.isEmpty)
-                                  const EmptyState(
-                                    icon: Icons.inventory_2_outlined,
-                                    title: 'No products yet',
-                                    subtitle: "This supplier hasn't added items.\nCheck back soon.",
-                                  )
-                                else if (data != null && shown.isEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 24),
-                                    child: Text(
-                                      showModes && !hasBothModes
-                                          ? (_newContainer
-                                              ? 'This supplier only offers refills of your own container.'
-                                              : 'This supplier only sells water with a new container.')
-                                          : 'Nothing in this category yet.',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(color: RF.muted),
-                                    ),
-                                  ),
-                                for (final (i, p) in shown.indexed)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: FadeSlideIn(index: i, child: _productCard(p, p == selected)),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          _dock(st, selected),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );

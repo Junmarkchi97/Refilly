@@ -50,43 +50,54 @@ class StationAvatar extends StatelessWidget {
   );
 }
 
-/// Large circular station photo with a soft grounding shadow (choose-a-refill hero).
-class StationOrb extends StatelessWidget {
+/// Full-width store photo for the choose-a-refill hero.
+class StationHero extends StatelessWidget {
   final String? photoUrl;
   final String label;
-  final double size;
-  const StationOrb({super.key, this.photoUrl, required this.label, this.size = 124});
+  final double height;
+  const StationHero({super.key, this.photoUrl, required this.label, this.height = 200});
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: label,
-    image: true,
-    child: SizedBox(
-      width: size,
-      height: size + 10,
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Positioned(
-            bottom: 0,
-            left: size * .15,
-            right: size * .15,
-            child: Container(
-              height: 14,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                boxShadow: [BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .16), blurRadius: 12)],
+  Widget build(BuildContext context) {
+    final fallback = ColoredBox(
+      color: RF.fill,
+      child: Center(child: Icon(Icons.water_drop_rounded, color: RF.accent, size: height * .22)),
+    );
+    final url = photoUrl;
+    return Semantics(
+      label: label,
+      image: true,
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: url == null || url.isEmpty
+            ? fallback
+            : Image.network(
+                url,
+                width: double.infinity,
+                height: height,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                cacheWidth: (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context)).round().clamp(320, 1600),
+                frameBuilder: (context, child, frame, sync) => sync
+                    ? child
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (frame == null) Shimmer(child: ColoredBox(color: RF.fill)),
+                          AnimatedOpacity(
+                            opacity: frame == null ? 0 : 1,
+                            duration: const Duration(milliseconds: 260),
+                            curve: Curves.easeOut,
+                            child: child,
+                          ),
+                        ],
+                      ),
+                errorBuilder: (_, _, _) => fallback,
               ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: RF.shadow),
-            child: StationAvatar(photoUrl, size: size),
-          ),
-        ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Map marker that shows the station photo (falls back to an icon pin).
