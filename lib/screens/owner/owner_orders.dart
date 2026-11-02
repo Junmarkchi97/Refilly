@@ -5,6 +5,7 @@ import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import '../network_states.dart';
+import 'cash_confetti.dart';
 
 class OwnerOrders extends StatefulWidget {
   final Station station;
@@ -252,7 +253,10 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     if (confirmed != true) return;
     try {
       await sb.rpc('confirm_cod_collection', params: {'p_order': order.id});
-      if (mounted) showAppNotice(context, 'Cash payment marked as collected', kind: AppNotice.success);
+      if (mounted) {
+        celebrateCashCollected(context);
+        showAppNotice(context, 'Cash payment marked as collected', kind: AppNotice.success);
+      }
     } catch (e) {
       if (mounted) showFailureNotice(context, e, failed: 'Could not confirm the payment.');
     }
