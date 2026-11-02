@@ -28,7 +28,7 @@ class _OwnerHomeState extends State<OwnerHome> {
   int _tab = 0;
   VoidCallback? _addProduct;
   StreamSubscription<List<Order>>? _ordersSub;
-  final Set<String> _seenOrderIds = {};
+  final Map<String, String> _seenOrderStatus = {};
   bool _ordersPrimed = false;
   bool _unread = false;
   String? _watchedStationId;
@@ -54,16 +54,25 @@ class _OwnerHomeState extends State<OwnerHome> {
     if (_watchedStationId == stationId) return;
     _watchedStationId = stationId;
     _ordersPrimed = false;
-    _seenOrderIds.clear();
+    _seenOrderStatus.clear();
     _ordersSub?.cancel();
     _ordersSub = Api.watchOrders(stationId: stationId).listen((orders) {
-      final result = noticeNewOrders(seen: _seenOrderIds, primed: _ordersPrimed, orders: orders);
+      final result = noticeOrderChanges(seen: _seenOrderStatus, primed: _ordersPrimed, orders: orders);
       _ordersPrimed = result.primed;
-      if (!mounted || result.arrived.isEmpty) return;
-      final message = newOrderMessage(result.arrived);
+      if (!mounted || (result.arrived.isEmpty && result.cancelled.isEmpty)) return;
+      final parts = <String>[
+        if (result.arrived.isNotEmpty) newOrderMessage(result.arrived),
+        if (result.cancelled.isNotEmpty) cancelledOrderMessage(result.cancelled),
+      ];
+      final message = parts.join(' ');
+      final title = result.cancelled.isEmpty
+          ? 'New order'
+          : result.arrived.isEmpty
+              ? 'Order cancelled'
+              : 'Order update';
       setState(() => _unread = true);
       showAppNotice(context, message, kind: AppNotice.info);
-      showPhoneAlert('New order', message);
+      showPhoneAlert(title, message);
     }, onError: (_) {});
   }
 
