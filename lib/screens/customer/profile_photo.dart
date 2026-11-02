@@ -5,6 +5,7 @@ import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../network_states.dart';
+import '../widgets.dart';
 
 /// Round profile photo, or the first letter of the name when none is set.
 class ProfileAvatar extends StatelessWidget {
@@ -87,6 +88,12 @@ class _EditableProfilePhotoState extends State<EditableProfilePhoto> {
     );
     if (!mounted || action == null) return;
     if (action == 'remove') {
+      final ok = await confirmRemove(
+        context,
+        title: 'Remove profile photo?',
+        message: 'Your account will show your initial until you add a new photo.',
+      );
+      if (!ok || !mounted) return;
       await _run(Api.removeProfilePhoto, success: 'Profile photo removed');
       return;
     }

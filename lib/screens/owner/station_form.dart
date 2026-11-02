@@ -55,9 +55,16 @@ class _StationFormState extends State<StationForm> {
   }
 
   Future<void> _removePhoto() async {
+    final ok = await confirmRemove(
+      context,
+      title: 'Remove station photo?',
+      message: 'Customers will see the default mark until you upload a new photo.',
+    );
+    if (!ok || !mounted) return;
     setState(() => _busy = true);
     try {
       await _setPhoto(null);
+      if (mounted) showAppNotice(context, 'Station photo removed', kind: AppNotice.success);
     } catch (e) {
       if (mounted) showFailureNotice(context, e, failed: 'Could not remove the photo.');
     } finally {

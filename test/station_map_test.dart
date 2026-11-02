@@ -94,5 +94,14 @@ void main() {
     expect(avatar.contains(icon.center), isTrue);
     expect(icon.center.dx, greaterThan(avatar.center.dx));
     expect(icon.center.dy, greaterThan(avatar.center.dy));
+
+    await tester.tap(find.byTooltip('Remove photo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove station photo?'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.byType(StationAvatar), findsWidgets);
+    expect(find.text('Remove station photo?'), findsNothing);
   });
 }

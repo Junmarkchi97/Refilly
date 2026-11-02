@@ -167,6 +167,31 @@ Future<void> shareRiderLink(BuildContext context, String link, String riderName)
   ),
 );
 
+/// Asks before a destructive remove. Returns true only when the user confirms.
+Future<bool> confirmRemove(
+  BuildContext context, {
+  required String title,
+  required String message,
+  String confirmLabel = 'Remove',
+}) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD14343)),
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+  return confirmed == true;
+}
+
 /// Asks before signing out. [onConfirmed] runs after the user agrees and
 /// before the session ends, so a covering route (the side menu) can close first.
 Future<void> confirmLogout(BuildContext context, {VoidCallback? onConfirmed}) async {

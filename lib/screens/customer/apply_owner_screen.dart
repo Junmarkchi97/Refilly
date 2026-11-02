@@ -280,7 +280,15 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
                       final d = await _pick(['pdf', 'jpg', 'jpeg', 'png', 'webp']);
                       if (d != null) setState(() => _permit = d);
                     },
-                    onRemove: () => setState(() => _permit = null),
+                    onRemove: () async {
+                      final ok = await confirmRemove(
+                        context,
+                        title: 'Remove this document?',
+                        message: 'You will need to upload the permit again before submitting.',
+                      );
+                      if (!ok || !mounted) return;
+                      setState(() => _permit = null);
+                    },
                   ),
                   UploadCard(
                     icon: Icons.add_a_photo_rounded,
@@ -292,7 +300,15 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
                       final d = await _pick(['jpg', 'jpeg', 'png', 'webp']);
                       if (d != null) setState(() => _photo = d);
                     },
-                    onRemove: () => setState(() => _photo = null),
+                    onRemove: () async {
+                      final ok = await confirmRemove(
+                        context,
+                        title: 'Remove this photo?',
+                        message: 'You will need to upload a station photo again before submitting.',
+                      );
+                      if (!ok || !mounted) return;
+                      setState(() => _photo = null);
+                    },
                   ),
                 ],
               ),

@@ -82,10 +82,18 @@ class _OwnerProductsState extends State<OwnerProducts> {
             unit: unit,
             price: price,
             onPickPhoto: () => pick(setD),
-            onRemovePhoto: () => setD(() {
-              newBytes = null;
-              imageUrl = null;
-            }),
+            onRemovePhoto: () async {
+              final ok = await confirmRemove(
+                context,
+                title: 'Remove product photo?',
+                message: 'This clears the photo from the form. Save the product to apply the change.',
+              );
+              if (!ok) return;
+              setD(() {
+                newBytes = null;
+                imageUrl = null;
+              });
+            },
             onCancel: () => Navigator.pop(ctx, false),
             onSave: () {
               final amount = double.tryParse(price.text.trim());
