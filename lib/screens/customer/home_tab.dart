@@ -17,6 +17,18 @@ import 'tracking_screen.dart';
 
 const _active = ['pending', 'accepted', 'preparing', 'out_for_delivery'];
 
+/// Which hero to show above the categories on Home.
+///
+/// Waiting for the first orders snapshot must not flash the empty "Order now"
+/// card when the customer already has an active delivery.
+enum HomeOrdersHero { loading, empty, upcoming }
+
+HomeOrdersHero homeOrdersHero(AsyncSnapshot<List<Order>> snap) {
+  if (!snap.hasData) return HomeOrdersHero.loading;
+  final upcoming = snap.data!.where((o) => _active.contains(o.status));
+  return upcoming.isEmpty ? HomeOrdersHero.empty : HomeOrdersHero.upcoming;
+}
+
 class HomeTab extends StatefulWidget {
   final Profile profile;
   final VoidCallback onEssentials, onOrders;
@@ -81,6 +93,7 @@ class _HomeTabState extends State<HomeTab> {
       final orders = orderSnap.data ?? const <Order>[];
       final upcoming = orders.where((o) => _active.contains(o.status)).toList();
       final lastOrderAddress = orders.where((o) => o.deliveryAddress.isNotEmpty).firstOrNull;
+      final hero = homeOrdersHero(orderSnap);
       return RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
@@ -97,18 +110,23 @@ class _HomeTabState extends State<HomeTab> {
             const SizedBox(height: 22),
             FadeSlideIn(
               index: 0,
-              child: upcoming.isEmpty
-                  ? _startOrderCard()
-                  : Column(
-                      children: [
-                        for (final order in upcoming.take(4))
-                          Padding(padding: const EdgeInsets.only(bottom: 10), child: _upcomingCard(order)),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(onPressed: _openStations, child: const Text('Place another order')),
-                        ),
-                      ],
+              child: switch (hero) {
+                HomeOrdersHero.loading => const SizedBox(
+                  height: 72,
+                  child: SkeletonList(count: 1, height: 72),
+                ),
+                HomeOrdersHero.empty => _startOrderCard(),
+                HomeOrdersHero.upcoming => Column(
+                  children: [
+                    for (final order in upcoming.take(4))
+                      Padding(padding: const EdgeInsets.only(bottom: 10), child: _upcomingCard(order)),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(onPressed: _openStations, child: const Text('Place another order')),
                     ),
+                  ],
+                ),
+              },
             ),
             const SizedBox(height: 14),
             FadeSlideIn(index: 1, child: _categories()),
