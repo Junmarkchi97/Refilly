@@ -22,6 +22,13 @@ class _OwnerHomeState extends State<OwnerHome> {
   late Future<List<Station>> _f = _load().timeout(const Duration(seconds: 20));
   String? _selectedStationId;
   int _tab = 0;
+  VoidCallback? _addProduct;
+
+  void _bindAddProduct(VoidCallback? action) {
+    // The new products page mounts before the previous one disposes.
+    // Ignoring the clear keeps that dispose from wiping the new action.
+    if (action != null) _addProduct = action;
+  }
 
   Future<List<Station>> _load() async {
     final rows = await sb.from('stations').select().eq('owner_id', widget.profile.id).order('name');
@@ -51,7 +58,7 @@ class _OwnerHomeState extends State<OwnerHome> {
       final s = stations.where((item) => item.id == _selectedStationId).firstOrNull ?? stations.first;
       final pages = [
         OwnerOrders(key: ValueKey('orders-${s.id}'), station: s),
-        OwnerProducts(key: ValueKey('products-${s.id}'), station: s),
+        OwnerProducts(key: ValueKey('products-${s.id}'), station: s, bindAdd: _bindAddProduct),
         SalesScreen(key: ValueKey('sales-${s.id}'), station: s),
         StationForm(key: ValueKey('station-${s.id}'), ownerId: widget.profile.id, station: s, onSaved: _reload),
       ];
@@ -72,13 +79,29 @@ class _OwnerHomeState extends State<OwnerHome> {
             ],
           ),
           actions: [
-             if (stations.length > 1) PopupMenuButton<String>(
-               tooltip: 'Select water station',
-               icon: const Icon(Icons.storefront_rounded),
-               onSelected: (id) => setState(() { _selectedStationId = id; _tab = 0; }),
-               itemBuilder: (_) => [for (final st in stations) PopupMenuItem(value: st.id, child: Text(st.name))],
-             ),
-             IconButton(tooltip: 'Order notifications', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_outlined)), logoutButton(), const SizedBox(width: 8)],
+            if (stations.length > 1)
+              PopupMenuButton<String>(
+                tooltip: 'Select water station',
+                icon: const Icon(Icons.storefront_rounded),
+                onSelected: (id) => setState(() {
+                  _selectedStationId = id;
+                  _tab = 0;
+                }),
+                itemBuilder: (_) => [for (final st in stations) PopupMenuItem(value: st.id, child: Text(st.name))],
+              ),
+            if (_tab == 1)
+              Tooltip(
+                message: 'Add product',
+                child: CircleIconButton(Icons.add_rounded, onTap: () => _addProduct?.call()),
+              ),
+            IconButton(
+              tooltip: 'Order notifications',
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+              icon: const Icon(Icons.notifications_outlined),
+            ),
+            logoutButton(),
+            const SizedBox(width: 8),
+          ],
         ),
         body: wide
             ? Row(
