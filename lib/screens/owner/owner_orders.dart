@@ -140,6 +140,10 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     try {
       await Api.setStatus(o.id, status);
       tapHaptic();
+      if (status == 'delivered' && mounted) {
+        celebrateOrderDelivered(context);
+        showAppNotice(context, 'Order marked as delivered', kind: AppNotice.success);
+      }
     } catch (e) {
       if (mounted) {
         showFailureNotice(context, e, failed: 'Could not update this order.');
