@@ -249,9 +249,15 @@ class GradientFrame extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(radius),
+            // Non-positioned content sizes the card. Make it full-width so
+            // short children (Lobby / Doorstep) stay centered instead of
+            // sitting in the top-left under the stroke overlay.
             child: Stack(
               children: [
-                Padding(padding: padding, child: child),
+                Padding(
+                  padding: padding,
+                  child: SizedBox(width: double.infinity, child: child),
+                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(

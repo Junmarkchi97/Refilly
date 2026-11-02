@@ -575,8 +575,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _handoffChoice(bool doorstep, IconData icon, String label) => SelectCard(
     selected: _doorstep == doorstep,
     onTap: () => setState(() => _doorstep = doorstep),
-    padding: const EdgeInsets.symmetric(vertical: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
     child: Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 20),
         const SizedBox(height: 3),
