@@ -375,11 +375,20 @@ class CircleIconButton extends StatelessWidget {
 
 /// Cal AI-style empty state: soft icon badge, bold title, gray subtitle, optional black pill action.
 class EmptyState extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? artwork;
   final String title, subtitle;
   final String? actionLabel;
   final VoidCallback? onAction;
-  const EmptyState({super.key, required this.icon, required this.title, required this.subtitle, this.actionLabel, this.onAction});
+  const EmptyState({
+    super.key,
+    this.icon,
+    this.artwork,
+    required this.title,
+    required this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  }) : assert(icon != null || artwork != null, 'EmptyState needs an icon or artwork');
   @override
   Widget build(BuildContext context) => Center(
     child: SingleChildScrollView(
@@ -389,19 +398,20 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: RF.shadow),
-              child: Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(color: RF.accentSoft, shape: BoxShape.circle),
-                  child: Icon(icon, size: 30, color: RF.accent),
+            artwork ??
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: RF.shadow),
+                  child: Center(
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(color: RF.accentSoft, shape: BoxShape.circle),
+                      child: Icon(icon!, size: 30, color: RF.accent),
+                    ),
+                  ),
                 ),
-              ),
-            ),
             const SizedBox(height: 20),
             Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 6),

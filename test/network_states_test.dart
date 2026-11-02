@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:refilly/screens/brand.dart';
 import 'package:refilly/screens/network_states.dart';
 import 'package:refilly/screens/widgets.dart';
+import 'package:refilly/theme.dart';
 
 void main() {
   test('identifies missing internet', () {
@@ -44,6 +46,24 @@ void main() {
     expect(find.text('Try refreshing the list.'), findsOneWidget);
     await tester.tap(find.text('Refresh'));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('essentials empty state uses the Refilly sticker', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: refillyTheme(),
+      home: const Scaffold(
+        backgroundColor: RF.bg,
+        body: EmptyState(
+          artwork: RefillySticker(),
+          title: 'No usuals yet',
+          subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(RefillySticker), findsOneWidget);
+    expect(find.byIcon(Icons.repeat_rounded), findsNothing);
+    expect(find.text('No usuals yet'), findsOneWidget);
   });
 
   testWidgets('slow connection hint appears after delay', (tester) async {
