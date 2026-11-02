@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import '../config.dart';
 import '../theme.dart';
 import 'motion.dart';
+import 'design.dart';
 export 'motion.dart';
 export 'design.dart';
 import '../services/api.dart';
@@ -724,14 +725,33 @@ class KeyValueRow extends StatelessWidget {
 class StatusSteps extends StatelessWidget {
   final String status;
   final EdgeInsets padding;
-  const StatusSteps(this.status, {super.key, this.padding = const EdgeInsets.symmetric(horizontal: 20)});
+  final DateTime? placedAt, updatedAt;
+  const StatusSteps(
+    this.status, {
+    super.key,
+    this.padding = const EdgeInsets.symmetric(horizontal: 20),
+    this.placedAt,
+    this.updatedAt,
+  });
   static const _steps = [
-    ('pending', 'Waiting for supplier acceptance', 'The station will confirm shortly'),
-    ('accepted', 'Confirmed', 'Your delivery is locked in'),
-    ('preparing', 'Preparing', 'Getting your items ready'),
-    ('out_for_delivery', 'Out for delivery', 'Your rider is on the way'),
-    ('delivered', 'Delivered', 'Handed over at your address'),
+    ('pending', 'Order placed', 'Waiting for the supplier to accept', Icons.receipt_long_rounded),
+    ('accepted', 'Confirmed', 'The supplier accepted your order', Icons.thumb_up_alt_rounded),
+    ('preparing', 'Preparing', 'Your items are being filled and packed', Icons.water_drop_rounded),
+    ('out_for_delivery', 'Out for delivery', 'Your rider is on the way', Icons.delivery_dining_rounded),
+    ('delivered', 'Delivered', 'Handed over at your address', Icons.home_rounded),
   ];
+
+  static String _time(DateTime t) {
+    final now = DateTime.now();
+    final day = DateUtils.isSameDay(t, now)
+        ? 'Today'
+        : DateUtils.isSameDay(t, now.subtract(const Duration(days: 1)))
+            ? 'Yesterday'
+            : shortDate(t);
+    final h = t.hour % 12 == 0 ? 12 : t.hour % 12;
+    return '$day ${'$h:${t.minute.toString().padLeft(2, '0')}'} ${t.hour < 12 ? 'AM' : 'PM'}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final cur = _steps.indexWhere((s) => s.$1 == status);
@@ -741,80 +761,174 @@ class StatusSteps extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < _steps.length; i++)
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Column(
-                    children: [
-                      AnimatedContainer(
-                        duration: Motion.d(context, Motion.medium),
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: i < cur || allDone ? RF.ink : i == cur ? RF.accent : Colors.white,
-                          border: Border.all(
-                            color: i < cur || allDone ? RF.ink : i == cur ? RF.accent : const Color(0xFFDDD6CE),
-                            width: 2,
-                          ),
-                          boxShadow: i == cur && !allDone
-                              ? [BoxShadow(color: RF.accent.withValues(alpha: .18), spreadRadius: 5)]
-                              : null,
-                        ),
-                        child: i < cur || allDone
-                            ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
-                            : i == cur
-                                ? Center(
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                    ),
-                                  )
-                                : null,
-                      ),
-                      if (i < _steps.length - 1)
-                        Expanded(
-                          child: AnimatedContainer(
-                            duration: Motion.d(context, Motion.medium),
-                            width: 2,
-                            color: i < cur ? RF.ink : const Color(0xFFE6E0D8),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _steps[i].$2,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              letterSpacing: -.2,
-                              color: i <= cur ? RF.ink : RF.muted,
-                            ),
-                          ),
-                          Text(
-                            i < cur || allDone ? 'Done' : _steps[i].$3,
-                            style: TextStyle(color: i == cur && !allDone ? RF.accentInk : RF.muted, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            _StepRow(
+              icon: _steps[i].$4,
+              title: _steps[i].$2,
+              subtitle: i == 0 && cur > 0 ? 'Sent to the supplier' : _steps[i].$3,
+              state: i < cur || allDone
+                  ? _StepState.done
+                  : i == cur
+                      ? _StepState.current
+                      : _StepState.upcoming,
+              time: i == 0 && placedAt != null
+                  ? _time(placedAt!)
+                  : i == cur && i > 0 && updatedAt != null
+                      ? _time(updatedAt!)
+                      : null,
+              last: i == _steps.length - 1,
+              lineDone: i < cur,
             ),
         ],
       ),
     );
   }
+}
+
+enum _StepState { done, current, upcoming }
+
+class _StepRow extends StatelessWidget {
+  const _StepRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.state,
+    required this.time,
+    required this.last,
+    required this.lineDone,
+  });
+  final IconData icon;
+  final String title, subtitle;
+  final String? time;
+  final _StepState state;
+  final bool last, lineDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = state == _StepState.done;
+    final current = state == _StepState.current;
+    final Widget node = switch (state) {
+      _StepState.done => Container(
+        width: 30,
+        height: 30,
+        decoration: const BoxDecoration(color: RF.ink, shape: BoxShape.circle),
+        child: const Icon(Icons.check_rounded, size: 17, color: Colors.white),
+      ),
+      _StepState.current => Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: RF.accent,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: RF.accent.withValues(alpha: .2), spreadRadius: 5)],
+        ),
+        child: Icon(icon, size: 16, color: Colors.white),
+      ),
+      _StepState.upcoming => const SizedBox(width: 30, height: 30, child: CustomPaint(painter: _DashedRing())),
+    };
+    return Semantics(
+      label: '$title. ${done ? 'Done' : current ? 'In progress' : 'Upcoming'}.',
+      excludeSemantics: true,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              children: [
+                AnimatedSwitcher(duration: Motion.d(context, Motion.medium), child: KeyedSubtree(key: ValueKey(state), child: node)),
+                if (!last)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: CustomPaint(painter: _StepLine(solid: lineDone), child: const SizedBox(width: 2)),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(top: 4, bottom: last ? 0 : 18),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              letterSpacing: -.2,
+                              color: done || current ? RF.ink : RF.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            subtitle,
+                            style: TextStyle(color: current ? RF.accentInk : RF.muted, fontSize: 13, height: 1.3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (time != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 2),
+                        child: Text(time!, style: const TextStyle(color: RF.muted, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRing extends CustomPainter {
+  const _DashedRing();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFCFC7BD)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6;
+    final rect = Offset.zero & size;
+    const dashes = 14;
+    const sweep = 2 * 3.141592653589793 / dashes;
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(rect.deflate(1), i * sweep, sweep * .55, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRing oldDelegate) => false;
+}
+
+class _StepLine extends CustomPainter {
+  const _StepLine({required this.solid});
+  final bool solid;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = solid ? RF.ink : const Color(0xFFDDD6CE)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    final x = size.width / 2;
+    if (solid) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      return;
+    }
+    for (double y = 0; y < size.height; y += 7) {
+      canvas.drawLine(Offset(x, y), Offset(x, (y + 3).clamp(0, size.height)), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StepLine oldDelegate) => oldDelegate.solid != solid;
 }
 
 /// Driver card: avatar, name, plate-style subline, call button.

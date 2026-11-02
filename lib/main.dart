@@ -69,9 +69,14 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
     _isComplete = _store.isComplete();
   }
 
-  Future<void> _finish() async {
+  bool _signupNext = true;
+
+  Future<void> _finish({bool signup = true}) async {
     if (_saving) { return; }
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _signupNext = signup;
+    });
     try {
       await _store.markComplete();
     } catch (_) {
@@ -88,7 +93,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
   @override
   Widget build(BuildContext context) {
     if (sb.auth.currentSession != null || _finishedThisSession) {
-      return AuthGate(initialSignup: _finishedThisSession);
+      return AuthGate(initialSignup: _finishedThisSession && _signupNext);
     }
     return FutureBuilder<bool>(
       future: _isComplete,
@@ -108,7 +113,7 @@ class _FirstLaunchGateState extends State<FirstLaunchGate> {
           );
         }
         if (snapshot.data == true) { return const AuthGate(); }
-        return OnboardingScreen(onFinish: _finish, finishing: _saving);
+        return OnboardingScreen(onFinish: _finish, onSignIn: () => _finish(signup: false), finishing: _saving);
       },
     );
   }

@@ -177,6 +177,11 @@ class _Progress extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Order #RF-${o.id.substring(0, 6).toUpperCase()}',
+                style: const TextStyle(color: RF.muted, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: .3),
+              ),
+              const SizedBox(height: 2),
               Row(
                 children: [
                   Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
@@ -186,7 +191,7 @@ class _Progress extends StatelessWidget {
               const SizedBox(height: 2),
               Text(subtitle, style: const TextStyle(color: RF.muted, fontSize: 14)),
               const SizedBox(height: 14),
-              if (o.status != 'cancelled') StatusSteps(o.status, padding: EdgeInsets.zero),
+              if (o.status != 'cancelled') StatusSteps(o.status, padding: EdgeInsets.zero, placedAt: o.createdAt, updatedAt: o.updatedAt),
             ],
           ),
         ),

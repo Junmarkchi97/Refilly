@@ -192,6 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.of(tourContext).pop();
                         if (mounted) { setState(() => _signup = true); }
                       },
+                      onSignIn: () async {
+                        Navigator.of(tourContext).pop();
+                        if (mounted) { setState(() => _signup = false); }
+                      },
                     ),
                   ),
                 ),

@@ -72,6 +72,7 @@ class Order {
   final double? deliveryLat, deliveryLng;
   final double total, deliveryFee;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   final List<OrderItem> items;
   final Map<String, dynamic>? customer, station;
   Order.fromMap(Map<String, dynamic> m)
@@ -91,6 +92,7 @@ class Order {
       total = _d(m['total']),
       deliveryFee = _d(m['delivery_fee']),
       createdAt = DateTime.parse(m['created_at']).toLocal(),
+      updatedAt = DateTime.tryParse(m['updated_at']?.toString() ?? '')?.toLocal(),
       items = ((m['order_items'] as List?) ?? []).map((e) => OrderItem.fromMap(e)).toList(),
       customer = m['customer'],
       station = m['station'];

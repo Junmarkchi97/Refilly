@@ -72,6 +72,7 @@ flutter:
     - assets/brand/refilly_app_icon.png
     - assets/brand/refilly_icon.svg
     - assets/products/
+    - assets/welcome/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
