@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
+import '../widgets.dart';
 import '../admin/admin_home.dart';
 import '../auth/verify_phone_screen.dart';
 import '../owner/owner_home.dart';
@@ -161,8 +162,8 @@ class _AppDrawer extends StatelessWidget {
                 const Spacer(),
                 const Divider(height: 1, color: RF.line),
                 _Item(Icons.logout_rounded, 'Log out', () {
-                  close();
-                  sb.auth.signOut();
+                  final nav = Navigator.of(context);
+                  confirmLogout(context, onConfirmed: nav.pop);
                 }, color: Colors.redAccent),
                 const SizedBox(height: 8),
               ],

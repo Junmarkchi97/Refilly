@@ -186,7 +186,7 @@ class ProfileTab extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: OutlinedButton.icon(
-            onPressed: () => sb.auth.signOut(),
+            onPressed: () => confirmLogout(context),
             icon: const Icon(Icons.logout_rounded),
             label: const Text('Log out'),
           ),

@@ -117,7 +117,35 @@ Future<void> shareRiderLink(BuildContext context, String link, String riderName)
   ),
 );
 
-Widget logoutButton() => CircleIconButton(Icons.logout_rounded, onTap: () => sb.auth.signOut());
+/// Asks before signing out. [onConfirmed] runs after the user agrees and
+/// before the session ends, so a covering route (the side menu) can close first.
+Future<void> confirmLogout(BuildContext context, {VoidCallback? onConfirmed}) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (_) => const LogoutConfirmDialog(),
+  );
+  if (confirmed != true) return;
+  onConfirmed?.call();
+  await sb.auth.signOut();
+}
+
+class LogoutConfirmDialog extends StatelessWidget {
+  const LogoutConfirmDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Log out?'),
+    content: const Text('You will need to sign in again to place an order.'),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+      FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+    ],
+  );
+}
+
+Widget logoutButton() => Builder(
+  builder: (context) => CircleIconButton(Icons.logout_rounded, onTap: () => confirmLogout(context)),
+);
 
 Color statusColor(String s) => switch (s) {
   'pending' => RF.usualInk,
