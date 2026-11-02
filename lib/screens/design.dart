@@ -251,7 +251,10 @@ class _CardStrokePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final bounds = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(bounds.deflate(stroke / 2), Radius.circular((radius - stroke / 2).clamp(0, radius)));
+    final rrect = RRect.fromRectAndRadius(
+      bounds.deflate(stroke / 2),
+      Radius.circular((radius - stroke / 2).clamp(0, radius).toDouble()),
+    );
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
