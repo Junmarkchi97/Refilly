@@ -132,12 +132,7 @@ class _StationScreenState extends State<StationScreen> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  ProductOrb(
-                    name: selected?.name ?? (riceOnly ? 'Rice' : 'Purified water'),
-                    unit: selected?.unit,
-                    imageUrl: selected?.imageUrl,
-                    size: 124,
-                  ),
+                  StationOrb(photoUrl: st.photoUrl, label: st.name, size: 124),
                   const SizedBox(height: 12),
                   Expanded(
                     child: Container(

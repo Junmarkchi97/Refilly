@@ -50,6 +50,45 @@ class StationAvatar extends StatelessWidget {
   );
 }
 
+/// Large circular station photo with a soft grounding shadow (choose-a-refill hero).
+class StationOrb extends StatelessWidget {
+  final String? photoUrl;
+  final String label;
+  final double size;
+  const StationOrb({super.key, this.photoUrl, required this.label, this.size = 124});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: label,
+    image: true,
+    child: SizedBox(
+      width: size,
+      height: size + 10,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            bottom: 0,
+            left: size * .15,
+            right: size * .15,
+            child: Container(
+              height: 14,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+                boxShadow: [BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .16), blurRadius: 12)],
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: RF.shadow),
+            child: StationAvatar(photoUrl, size: size),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Map marker that shows the station photo (falls back to an icon pin).
 Marker photoPin(LatLng p, String? url, {bool dim = false, VoidCallback? onTap}) => (url == null || url.isEmpty)
     ? pin(p, Icons.water_drop_rounded, dim ? RF.muted : RF.ink, onTap: onTap)
