@@ -83,6 +83,9 @@ class FadeSlideIn extends StatelessWidget {
 }
 
 /// Cross-fades between loading / empty / content.
+///
+/// Aligns to the top so loading skeletons and hints are not vertically
+/// centered (and clipped) under an AppBar during the switch.
 class StateSwitcher extends StatelessWidget {
   final Widget child;
   const StateSwitcher({super.key, required this.child});
@@ -91,6 +94,13 @@ class StateSwitcher extends StatelessWidget {
     duration: Motion.d(context, Motion.medium),
     switchInCurve: Motion.curve,
     switchOutCurve: Curves.easeInCubic,
+    layoutBuilder: (currentChild, previousChildren) => Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        ...previousChildren,
+        ?currentChild,
+      ],
+    ),
     child: child,
   );
 }
@@ -139,7 +149,8 @@ class SkeletonList extends StatelessWidget {
   Widget build(BuildContext context) => Shimmer(
     child: ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 8),
+      // Keep clear of the AppBar — a flush spinner/skeleton reads as cut off.
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
       itemCount: count,
       itemBuilder: (_, i) => Container(
         height: height,

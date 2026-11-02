@@ -30,7 +30,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
         child: Builder(
           builder: (context) {
             if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _retry);
-            if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+            if (!snap.hasData) return const SkeletonList();
             final list = snap.data!.where((o) => _showDone || !(o.status == 'delivered' || o.status == 'cancelled')).toList();
             return Column(
               children: [

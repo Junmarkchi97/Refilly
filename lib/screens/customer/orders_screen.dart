@@ -30,7 +30,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         child: Builder(
           builder: (context) {
             if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _retry);
-            if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+            if (!snap.hasData) return const SkeletonList();
             if (snap.data!.isEmpty) {
               return const EmptyState(
                 icon: Icons.receipt_long_rounded,

@@ -194,7 +194,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
           child: Builder(
             builder: (context) {
               if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
-              if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+              if (!snap.hasData) return const SkeletonList();
               if (snap.data!.isEmpty) {
                 return const EmptyState(
                   icon: Icons.inventory_2_rounded,

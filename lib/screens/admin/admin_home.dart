@@ -94,7 +94,7 @@ class _AdminHomeState extends State<AdminHome> {
                 child: Builder(
                   builder: (context) {
                     if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
-                    if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+                    if (!snap.hasData) return const SkeletonList();
                     if (snap.data!.isEmpty) {
                       return EmptyState(
                         icon: _status == 'pending' ? Icons.inbox_rounded : Icons.folder_off_rounded,

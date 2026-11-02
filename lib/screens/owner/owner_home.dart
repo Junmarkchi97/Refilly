@@ -124,6 +124,7 @@ class _OwnerHomeState extends State<OwnerHome> {
           surfaceTintColor: Colors.transparent,
           toolbarHeight: 72,
           title: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(items[_tab].$2, style: Theme.of(context).textTheme.headlineSmall),
