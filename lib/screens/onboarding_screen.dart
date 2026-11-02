@@ -354,7 +354,7 @@ class _WelcomePage extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, _actionsHeight),
                 child: const _PageText(
                   brand: true,
-                  title: 'Water and rice,\ndelivered home.',
+                  title: 'Your essentials,\ndelivered home.',
                   body: 'Order from trusted neighborhood stations and keep your household essentials stocked.',
                 ),
               ),
