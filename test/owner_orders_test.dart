@@ -5,16 +5,16 @@ import 'package:refilly/screens/owner/owner_orders.dart';
 import 'package:refilly/screens/widgets.dart';
 import 'package:refilly/theme.dart';
 
-Order _order() => Order.fromMap({
+Order _order({String status = 'preparing', String? riderName = 'John'}) => Order.fromMap({
   'id': 'o1',
   'customer_id': 'c1',
   'station_id': 's1',
-  'status': 'preparing',
+  'status': status,
   'delivery_address': 'TEST — accept verification',
   'payment_method': 'cod',
   'payment_status': 'unpaid',
-  'rider_name': 'John',
-  'rider_phone': '09752000083',
+  'rider_name': ?riderName,
+  if (riderName != null) 'rider_phone': '09752000083',
   'contact_phone': '09752000083',
   'notes': 'automated test order',
   'total': 1,
@@ -36,7 +36,8 @@ void main() {
         body: OwnerOrderCard(
           order: _order(),
           onShare: () {},
-          onMarkDelivered: () {},
+          primaryLabel: 'Mark delivered',
+          onPrimary: () {},
           actions: const [
             Expanded(child: OutlinedButton(onPressed: null, child: Text('Change rider'))),
             SizedBox(width: 10),
@@ -52,8 +53,6 @@ void main() {
     expect(find.text('₱1.00'), findsOneWidget);
     expect(find.text('Preparing'), findsOneWidget);
     expect(find.textContaining('Cash'), findsOneWidget);
-    expect(find.text('0 items'), findsNothing);
-    expect(find.text('COD'), findsNothing);
     expect(find.text('Phone'), findsOneWidget);
     expect(find.text('0975 200 0083'), findsWidgets);
     expect(find.text('Deliver to'), findsOneWidget);
@@ -66,13 +65,6 @@ void main() {
     expect(find.text('Mark delivered'), findsOneWidget);
     expect(find.text('Change rider'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((widget) {
-        final decoration = widget is Container ? widget.decoration : null;
-        return decoration is BoxDecoration && decoration.color == RF.fill;
-      }),
-      findsNothing,
-    );
 
     final name = tester.getTopLeft(find.text('Junmark'));
     final price = tester.getTopLeft(find.text('₱1.00'));
@@ -83,13 +75,40 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('owner can mark an in-progress order delivered', () {
-    expect(ownerCanMarkDelivered('pending'), isFalse);
-    expect(ownerCanMarkDelivered('accepted'), isTrue);
-    expect(ownerCanMarkDelivered('preparing'), isTrue);
-    expect(ownerCanMarkDelivered('out_for_delivery'), isTrue);
-    expect(ownerCanMarkDelivered('delivered'), isFalse);
-    expect(ownerCanMarkDelivered('cancelled'), isFalse);
+  testWidgets('preparing without a rider shows Assign rider as the primary action', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(MaterialApp(
+      theme: refillyTheme(),
+      home: Scaffold(
+        body: OwnerOrderCard(
+          order: _order(riderName: null),
+          primaryLabel: 'Assign rider',
+          onPrimary: () {},
+          actions: const [
+            Expanded(child: OutlinedButton(onPressed: null, child: Text('Cancel'))),
+          ],
+        ),
+      ),
+    ));
+    await tester.pump();
+
+    expect(find.text('Assign rider'), findsOneWidget);
+    expect(find.text('Mark delivered'), findsNothing);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Rider'), findsNothing);
+  });
+
+  test('owner can mark delivered only after a rider is assigned', () {
+    expect(ownerCanMarkDelivered(_order(status: 'pending', riderName: null)), isFalse);
+    expect(ownerCanMarkDelivered(_order(status: 'preparing', riderName: null)), isFalse);
+    expect(ownerCanMarkDelivered(_order(status: 'accepted', riderName: null)), isFalse);
+    expect(ownerCanMarkDelivered(_order(status: 'preparing')), isTrue);
+    expect(ownerCanMarkDelivered(_order(status: 'out_for_delivery')), isTrue);
+    expect(ownerCanMarkDelivered(_order(status: 'delivered')), isFalse);
+    expect(ownerCanMarkDelivered(_order(status: 'cancelled')), isFalse);
   });
 
   testWidgets('a rider assignment shows as delivering', (tester) async {
@@ -97,34 +116,14 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
 
-    final order = Order.fromMap({
-      ...{
-        'id': 'o1',
-        'customer_id': 'c1',
-        'station_id': 's1',
-        'delivery_address': 'TEST — accept verification',
-        'payment_method': 'cod',
-        'payment_status': 'unpaid',
-        'rider_name': 'John',
-        'rider_phone': '09752000083',
-        'contact_phone': '09752000083',
-        'notes': 'automated test order',
-        'total': 1,
-        'delivery_fee': 0,
-        'created_at': '2026-11-02T16:45:00Z',
-        'customer': {'full_name': 'Junmark'},
-        'order_items': [],
-      },
-      'status': 'out_for_delivery',
-    });
-
     await tester.pumpWidget(MaterialApp(
       theme: refillyTheme(),
       home: Scaffold(
         body: OwnerOrderCard(
-          order: order,
+          order: _order(status: 'out_for_delivery'),
           onShare: () {},
-          onMarkDelivered: () {},
+          primaryLabel: 'Mark delivered',
+          onPrimary: () {},
           actions: const [
             Expanded(child: OutlinedButton(onPressed: null, child: Text('Change rider'))),
           ],

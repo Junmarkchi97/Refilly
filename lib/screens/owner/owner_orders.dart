@@ -211,6 +211,22 @@ class _OwnerOrdersState extends State<OwnerOrders> {
 
   final Set<String> _busy = {};
 
+  /// Accept moves the order straight into preparing (accepted → preparing).
+  Future<void> _accept(Order o) async {
+    setState(() => _busy.add(o.id));
+    try {
+      await Api.setStatus(o.id, 'accepted');
+      await Api.setStatus(o.id, 'preparing');
+      tapHaptic();
+    } catch (e) {
+      if (mounted) {
+        showFailureNotice(context, e, failed: 'Could not accept this order.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy.remove(o.id));
+    }
+  }
+
   Future<void> _act(Order o, String status, {String? confirm}) async {
     if (confirm != null) {
       final ok = await showDialog<bool>(
@@ -295,27 +311,43 @@ class _OwnerOrdersState extends State<OwnerOrders> {
   Widget _tile(Order o) {
     final busy = _busy.contains(o.id);
     final open = o.status != 'delivered' && o.status != 'cancelled';
+    final hasRider = orderHasRider(o);
+    final needsRider = (o.status == 'accepted' || o.status == 'preparing' || o.status == 'out_for_delivery') && !hasRider;
+    final String? primaryLabel;
+    final VoidCallback? onPrimary;
+    if (needsRider) {
+      primaryLabel = 'Assign rider';
+      onPrimary = () => _assign(o);
+    } else if (ownerCanMarkDelivered(o)) {
+      primaryLabel = 'Mark delivered';
+      onPrimary = () => _act(o, 'delivered');
+    } else {
+      primaryLabel = null;
+      onPrimary = null;
+    }
     return OwnerOrderCard(
       order: o,
       busy: busy,
-      onShare: open && o.riderName != null ? () => _shareExisting(o) : null,
+      onShare: open && hasRider ? () => _shareExisting(o) : null,
       onConfirmCash: o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid' ? () => _confirmCod(o) : null,
-      onMarkDelivered: ownerCanMarkDelivered(o.status) ? () => _act(o, 'delivered') : null,
+      primaryLabel: primaryLabel,
+      onPrimary: onPrimary,
       actions: [
         if (o.status == 'pending') ...[
           _btn('Reject', () => _act(o, 'cancelled', confirm: 'Reject this order?'), primary: false, danger: true, busy: busy),
           const SizedBox(width: 10),
-          _btn('Accept', () => _act(o, 'accepted'), busy: busy),
+          _btn('Accept', () => _accept(o), busy: busy),
         ],
         if (o.status == 'accepted' || o.status == 'preparing') ...[
-          _btn(o.riderName == null ? 'Assign rider' : 'Change rider', () => _assign(o), primary: false),
-          const SizedBox(width: 10),
-          if (o.status == 'accepted') _btn('Preparing', () => _act(o, 'preparing'), busy: busy),
+          if (hasRider) ...[
+            _btn('Change rider', () => _assign(o), primary: false),
+            if (o.status == 'preparing') const SizedBox(width: 10),
+          ],
           if (o.status == 'preparing')
             _btn('Cancel', () => _act(o, 'cancelled', confirm: 'Cancel this order?'), primary: false, danger: true, busy: busy),
         ],
-        if (o.status == 'out_for_delivery')
-          _btn(o.riderName == null ? 'Assign rider' : 'Change rider', () => _assign(o), primary: false),
+        if (o.status == 'out_for_delivery' && hasRider)
+          _btn('Change rider', () => _assign(o), primary: false),
       ],
     );
   }
@@ -326,7 +358,8 @@ class OwnerOrderCard extends StatelessWidget {
   final bool busy;
   final VoidCallback? onShare;
   final VoidCallback? onConfirmCash;
-  final VoidCallback? onMarkDelivered;
+  final VoidCallback? onPrimary;
+  final String? primaryLabel;
   final List<Widget> actions;
   const OwnerOrderCard({
     super.key,
@@ -335,7 +368,8 @@ class OwnerOrderCard extends StatelessWidget {
     this.busy = false,
     this.onShare,
     this.onConfirmCash,
-    this.onMarkDelivered,
+    this.onPrimary,
+    this.primaryLabel,
   });
 
   @override
@@ -477,7 +511,7 @@ class OwnerOrderCard extends StatelessWidget {
                 ),
               ),
             ],
-            if (onMarkDelivered != null) ...[
+            if (onPrimary != null && primaryLabel != null) ...[
               const SizedBox(height: 12),
               Pressable(
                 enabled: !busy,
@@ -488,14 +522,14 @@ class OwnerOrderCard extends StatelessWidget {
                       minimumSize: const Size.fromHeight(48),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: busy ? () {} : onMarkDelivered,
+                    onPressed: busy ? () {} : onPrimary,
                     child: busy
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                           )
-                        : const Text('Mark delivered'),
+                        : Text(primaryLabel!),
                   ),
                 ),
               ),
@@ -535,9 +569,13 @@ String _paymentLabel(String method) => switch (method) {
   _ => method,
 };
 
-/// Accepted, preparing, and out-for-delivery orders can be closed by the owner.
-bool ownerCanMarkDelivered(String status) =>
-    status == 'accepted' || status == 'preparing' || status == 'out_for_delivery';
+bool orderHasRider(Order order) => order.riderName != null && order.riderName!.trim().isNotEmpty;
+
+/// Owner can mark delivered only after a rider is assigned and the order is in progress.
+bool ownerCanMarkDelivered(Order order) {
+  if (!orderHasRider(order)) return false;
+  return order.status == 'accepted' || order.status == 'preparing' || order.status == 'out_for_delivery';
+}
 
 String? _prettyPhone(String? raw) {
   final trimmed = raw?.trim();
