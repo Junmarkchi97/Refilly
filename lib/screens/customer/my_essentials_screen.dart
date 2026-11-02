@@ -4,7 +4,6 @@ import '../../models/models.dart';
 import '../../models/refill_routine.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
-import '../brand.dart';
 import '../network_states.dart';
 import '../widgets.dart';
 import 'reorder.dart';
@@ -199,7 +198,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
             if (items.isEmpty) ...[
               const SizedBox(height: 30),
               const EmptyState(
-                artwork: RefillySticker(),
+                artwork: EssentialsSticker(),
                 title: 'No usuals yet',
                 subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
               ),

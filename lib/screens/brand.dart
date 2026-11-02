@@ -1,7 +1,4 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 /// Official four-color Google "G", drawn so it stays sharp at any size.
 class GoogleMark extends StatelessWidget {
@@ -138,61 +135,4 @@ class RefillyMark extends StatelessWidget {
       fit: BoxFit.contain,
     ),
   );
-}
-
-/// Die-cut sticker of the Refilly mark. The white border follows the icon's
-/// rounded square so it reads as a sticker, not another app icon tile.
-class RefillySticker extends StatelessWidget {
-  const RefillySticker({super.key, this.size = 112});
-
-  final double size;
-
-  static const _radiusRatio = 232 / 1024;
-
-  @override
-  Widget build(BuildContext context) {
-    const border = 8.0;
-    final inner = size - border * 2;
-    final innerRadius = inner * _radiusRatio;
-    final outerRadius = innerRadius + border;
-    return SizedBox(
-      width: size + 36,
-      height: size + 28,
-      child: Center(
-        child: Transform.rotate(
-          angle: -7 * math.pi / 180,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(outerRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1A4B7A).withValues(alpha: .16),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: const Color(0xFF0968EE).withValues(alpha: .10),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(border),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(innerRadius),
-                child: SvgPicture.asset(
-                  'assets/brand/refilly_icon.svg',
-                  width: inner,
-                  height: inner,
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

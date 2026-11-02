@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:refilly/screens/brand.dart';
 import 'package:refilly/screens/network_states.dart';
 import 'package:refilly/screens/widgets.dart';
 import 'package:refilly/theme.dart';
@@ -48,20 +47,20 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('essentials empty state uses the Refilly sticker', (tester) async {
+  testWidgets('essentials empty state uses the jug sticker', (tester) async {
     await tester.pumpWidget(MaterialApp(
       theme: refillyTheme(),
       home: const Scaffold(
         backgroundColor: RF.bg,
         body: EmptyState(
-          artwork: RefillySticker(),
+          artwork: EssentialsSticker(),
           title: 'No usuals yet',
           subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
         ),
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.byType(RefillySticker), findsOneWidget);
+    expect(find.byType(EssentialsSticker), findsOneWidget);
     expect(find.byIcon(Icons.repeat_rounded), findsNothing);
     expect(find.text('No usuals yet'), findsOneWidget);
   });
