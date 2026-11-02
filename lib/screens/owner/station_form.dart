@@ -163,15 +163,19 @@ class _StationFormState extends State<StationForm> {
       const SizedBox(height: 12),
       SwitchListTile(title: const Text('Open for orders'), value: _open, onChanged: (v) => setState(() => _open = v)),
       const Text('Tap the map to set your station location'),
-      SizedBox(
-        height: 260,
-        child: RepaintBoundary(
-          child: FlutterMap(
-            options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
-            children: [
-              osmTiles(),
-              MarkerLayer(markers: [photoPin(_pt, _photo)]),
-            ],
+      const SizedBox(height: 8),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          height: (MediaQuery.sizeOf(context).height * 0.5).clamp(360, 560),
+          child: RepaintBoundary(
+            child: FlutterMap(
+              options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
+              children: [
+                osmTiles(),
+                MarkerLayer(markers: [photoPin(_pt, _photo)]),
+              ],
+            ),
           ),
         ),
       ),
