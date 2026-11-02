@@ -72,10 +72,7 @@ class _StationScreenState extends State<StationScreen> {
   double get _total => _cart.entries.fold(0, (t, e) => t + e.key.price * e.value);
   int get _count => _cart.values.fold(0, (a, b) => a + b);
 
-  void _select(Product p) => setState(() {
-    _selected = p;
-    _cart[p] = (_cart[p] ?? 0) == 0 ? 1 : _cart[p]!;
-  });
+  void _select(Product p) => setState(() => _selected = p);
 
   void _setQty(Product p, int qty) => setState(() {
     _selected = p;
@@ -303,10 +300,8 @@ class _StationScreenState extends State<StationScreen> {
             children: [
               if (usual) ...[const Tag('Usual'), const SizedBox(height: 4)],
               Text(peso(p.price).replaceAll('.00', ''), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: -.4)),
-              Text(
-                qty > 0 ? 'In cart × $qty' : isRiceProduct(p.name, unit: p.unit) ? 'Whole sack' : isNewContainerProduct(p) ? 'Incl. container' : 'Water only',
-                style: TextStyle(color: qty > 0 ? RF.accentInk : RF.muted, fontSize: 12, fontWeight: qty > 0 ? FontWeight.w700 : FontWeight.w400),
-              ),
+              const SizedBox(height: 8),
+              QtyStepper(value: qty, max: 50, label: title, onChanged: (v) => _setQty(p, v)),
             ],
           ),
         ],
@@ -315,35 +310,19 @@ class _StationScreenState extends State<StationScreen> {
   }
 
   Widget _dock(Station st, Product? selected) {
-    final qty = selected == null ? 0 : (_cart[selected] ?? 0);
-    final others = _count - qty;
+    final kinds = _cart.length;
     return Container(
       color: Colors.white,
       padding: EdgeInsets.fromLTRB(16, 6, 16, bottomInset(context, 14)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (selected != null)
+          if (selected != null && _cart.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Quantity', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                        Text(
-                          '$qty × ${peso(selected.price).replaceAll('.00', '')}${others > 0 ? ' · $others other item${others == 1 ? '' : 's'} in cart' : ''}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: RF.muted, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                  QtyStepper(value: qty, max: 50, label: selected.name, onChanged: (v) => _setQty(selected, v)),
-                ],
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '$_count item${_count == 1 ? '' : 's'} · $kinds product${kinds == 1 ? '' : 's'}',
+                style: const TextStyle(color: RF.muted, fontSize: 13, fontWeight: FontWeight.w600),
               ),
             ),
           SizedBox(
@@ -355,8 +334,8 @@ class _StationScreenState extends State<StationScreen> {
                 child: !st.isOpen
                     ? const Text('Supplier closed')
                     : _cart.isEmpty
-                        ? const Text('Choose a quantity')
-                        : AnimatedCount(value: _total, format: (v) => 'Add to cart · ${peso(v)}'),
+                        ? const Text('Add a quantity to order')
+                        : AnimatedCount(value: _total, format: (v) => 'Checkout · ${peso(v)}'),
               ),
             ),
           ),

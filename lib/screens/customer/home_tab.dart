@@ -71,7 +71,7 @@ class _HomeTabState extends State<HomeTab> {
     stream: _orders,
     builder: (context, orderSnap) {
       final orders = orderSnap.data ?? const <Order>[];
-      final upcoming = orders.where((o) => _active.contains(o.status)).firstOrNull;
+      final upcoming = orders.where((o) => _active.contains(o.status)).toList();
       final lastAddress = orders.where((o) => o.deliveryAddress.isNotEmpty).firstOrNull;
       return RefreshIndicator(
         onRefresh: _refresh,
@@ -87,7 +87,21 @@ class _HomeTabState extends State<HomeTab> {
               style: TextStyle(fontSize: 22, height: 1.2, letterSpacing: -.6, fontWeight: FontWeight.w500, color: Color(0xFF2A2724)),
             ),
             const SizedBox(height: 22),
-            FadeSlideIn(index: 0, child: upcoming == null ? _startOrderCard() : _upcomingCard(upcoming)),
+            FadeSlideIn(
+              index: 0,
+              child: upcoming.isEmpty
+                  ? _startOrderCard()
+                  : Column(
+                      children: [
+                        for (final order in upcoming.take(4))
+                          Padding(padding: const EdgeInsets.only(bottom: 10), child: _upcomingCard(order)),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(onPressed: _openStations, child: const Text('Place another order')),
+                        ),
+                      ],
+                    ),
+            ),
             const SizedBox(height: 14),
             FadeSlideIn(index: 1, child: _categories()),
             SectionHeader('Your essentials', action: 'See all', onAction: widget.onEssentials),
