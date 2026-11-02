@@ -79,7 +79,7 @@ void main() {
 
     await tester.tap(find.byType(DropdownButtonFormField<SavedRider>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('John · 09752000083').last);
+    await tester.tap(find.text('John').last);
     await tester.pumpAndSettle();
 
     final fields = tester.widgetList<TextField>(find.byType(TextField)).toList();

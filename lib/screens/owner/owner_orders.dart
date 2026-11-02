@@ -517,13 +517,48 @@ class _AssignRiderDialogState extends State<AssignRiderDialog> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                       hint: const Text('Choose a saved rider'),
+                      dropdownColor: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      elevation: 6,
+                      menuMaxHeight: 320,
+                      itemHeight: 64,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: RF.muted),
+                      selectedItemBuilder: (_) => [
+                        for (final rider in riders)
+                          Text(
+                            '${rider.name} · ${rider.phone}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                      ],
                       items: [
                         for (final rider in riders)
                           DropdownMenuItem(
                             value: rider,
-                            child: Text(
-                              '${rider.name} · ${rider.phone}',
-                              overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: RF.accentSoft,
+                                  child: Text(
+                                    rider.name.isEmpty ? '?' : rider.name[0].toUpperCase(),
+                                    style: const TextStyle(color: RF.accentInk, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(rider.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                                      Text(rider.phone, style: const TextStyle(color: RF.muted, fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                if (rider.normalizedPhone == _selectedPhone)
+                                  const Icon(Icons.check_rounded, color: RF.accent, size: 20),
+                              ],
                             ),
                           ),
                       ],
