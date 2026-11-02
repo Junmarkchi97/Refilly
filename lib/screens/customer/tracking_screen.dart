@@ -175,7 +175,7 @@ class _Progress extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(16, 4, 16, bottomInset(context, 24)),
       children: [
         SoftCard(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
