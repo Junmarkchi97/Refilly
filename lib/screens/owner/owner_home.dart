@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
+import 'new_order_alert.dart';
+import 'phone_alert.dart';
 import 'station_form.dart';
 import 'owner_orders.dart';
 import 'owner_products.dart';
@@ -23,6 +27,45 @@ class _OwnerHomeState extends State<OwnerHome> {
   String? _selectedStationId;
   int _tab = 0;
   VoidCallback? _addProduct;
+  StreamSubscription<List<Order>>? _ordersSub;
+  final Set<String> _seenOrderIds = {};
+  bool _ordersPrimed = false;
+  bool _unread = false;
+  String? _watchedStationId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnread();
+  }
+
+  @override
+  void dispose() {
+    _ordersSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadUnread() async {
+    final unread = await Api.hasUnreadNotifications().catchError((_) => false);
+    if (mounted) setState(() => _unread = unread);
+  }
+
+  void _watchStation(String stationId) {
+    if (_watchedStationId == stationId) return;
+    _watchedStationId = stationId;
+    _ordersPrimed = false;
+    _seenOrderIds.clear();
+    _ordersSub?.cancel();
+    _ordersSub = Api.watchOrders(stationId: stationId).listen((orders) {
+      final result = noticeNewOrders(seen: _seenOrderIds, primed: _ordersPrimed, orders: orders);
+      _ordersPrimed = result.primed;
+      if (!mounted || result.arrived.isEmpty) return;
+      final message = newOrderMessage(result.arrived);
+      setState(() => _unread = true);
+      showAppNotice(context, message, kind: AppNotice.info);
+      showPhoneAlert('New order', message);
+    }, onError: (_) {});
+  }
 
   void _bindAddProduct(VoidCallback? action) {
     // The new products page mounts before the previous one disposes.
@@ -56,6 +99,7 @@ class _OwnerHomeState extends State<OwnerHome> {
         );
       }
       final s = stations.where((item) => item.id == _selectedStationId).firstOrNull ?? stations.first;
+      _watchStation(s.id);
       final pages = [
         OwnerOrders(key: ValueKey('orders-${s.id}'), station: s),
         OwnerProducts(key: ValueKey('products-${s.id}'), station: s, bindAdd: _bindAddProduct),
@@ -98,8 +142,16 @@ class _OwnerHomeState extends State<OwnerHome> {
               ),
             IconButton(
               tooltip: 'Order notifications',
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
-              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                if (mounted) _loadUnread();
+              },
+              icon: Badge(
+                isLabelVisible: _unread,
+                smallSize: 8,
+                backgroundColor: RF.accent,
+                child: Icon(_unread ? Icons.notifications_active_rounded : Icons.notifications_outlined),
+              ),
             ),
             logoutButton(),
             const SizedBox(width: 8),
