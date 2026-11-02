@@ -1,5 +1,7 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:refilly/screens/owner/sales_screen.dart';
 import 'package:refilly/screens/widgets.dart';
 import 'package:refilly/services/sales_pdf.dart';
 import 'package:refilly/services/sales_report.dart';
@@ -60,5 +62,29 @@ void main() {
     final shadow = (decorated.decoration as BoxDecoration).boxShadow!.single;
     expect(shadow.color, const Color(0xFF171717).withValues(alpha: .06));
     expect(shadow.color, isNot(const Color(0xFF1A4B7A).withValues(alpha: .08)));
+  });
+
+  testWidgets('daily revenue draws a line chart with axis labels', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    final days = [
+      for (var i = 0; i < 30; i++)
+        SalesDay(
+          date: DateTime(2026, 11, 1).add(Duration(days: i)),
+          orders: i == 28 ? 4 : 0,
+          revenue: i == 28 ? 380 : i == 29 ? 125 : 0,
+        ),
+    ];
+    await tester.pumpWidget(MaterialApp(
+      theme: refillyTheme(),
+      home: Scaffold(body: Padding(padding: const EdgeInsets.all(16), child: DailyRevenueChart(days: days))),
+    ));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Daily revenue'), findsOneWidget);
+    expect(find.byType(LineChart), findsOneWidget);
+    expect(find.byType(BarChart), findsNothing);
+    expect(find.text('11/1'), findsOneWidget);
   });
 }

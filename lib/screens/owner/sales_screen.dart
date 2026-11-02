@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -172,7 +173,6 @@ class _SalesScreenState extends State<SalesScreen> {
                   dayRows: d.days,
                   productRows: d.top,
                 );
-                final series = [for (final day in report.days) day.revenue];
                 final best = report.bestDay;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +185,15 @@ class _SalesScreenState extends State<SalesScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                AnimatedCount(value: report.revenue, format: peso, style: Theme.of(context).textTheme.headlineLarge),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: AnimatedCount(
+                                    value: report.revenue,
+                                    format: peso,
+                                    style: Theme.of(context).textTheme.headlineMedium,
+                                  ),
+                                ),
                                 const Text(
                                   'Revenue',
                                   style: TextStyle(color: RF.muted, fontWeight: FontWeight.w600),
@@ -241,43 +249,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       ),
                     ),
                     AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Daily revenue', style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 180,
-                            child: BarChart(
-                              BarChartData(
-                                borderData: FlBorderData(show: false),
-                                gridData: const FlGridData(show: false),
-                                titlesData: const FlTitlesData(
-                                  topTitles: AxisTitles(),
-                                  rightTitles: AxisTitles(),
-                                  leftTitles: AxisTitles(),
-                                  bottomTitles: AxisTitles(),
-                                ),
-                                barGroups: [
-                                  for (var i = 0; i < series.length; i++)
-                                    BarChartGroupData(
-                                      x: i + 1,
-                                      barRods: [
-                                        BarChartRodData(
-                                          toY: series[i],
-                                          width: series.length > 10 ? 6 : 18,
-                                          color: i == series.length - 1 ? RF.accent : RF.ink,
-                                          borderRadius: BorderRadius.circular(8),
-                                          backDrawRodData: BackgroundBarChartRodData(show: true, toY: best == 0 ? 1 : best, color: RF.bg),
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: DailyRevenueChart(days: report.days),
                     ),
                     const SectionTitle('Top products'),
                     if (d.top.isEmpty)
@@ -315,6 +287,133 @@ class _SalesScreenState extends State<SalesScreen> {
       ),
     ],
   );
+}
+
+class DailyRevenueChart extends StatelessWidget {
+  final List<SalesDay> days;
+  const DailyRevenueChart({super.key, required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    if (days.isEmpty) {
+      return Text('Daily revenue', style: Theme.of(context).textTheme.titleMedium);
+    }
+    final peak = days.fold<double>(0, (best, day) => math.max(best, day.revenue));
+    final step = _chartStep(peak <= 0 ? 4 : peak);
+    final maxY = math.max(step * 2, (peak / step).ceil() * step + step);
+    final xInterval = days.length <= 7 ? 1.0 : days.length <= 14 ? 2.0 : 5.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Daily revenue', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 220,
+          child: LineChart(
+            LineChartData(
+              minX: 0,
+              maxX: math.max(0, days.length - 1).toDouble(),
+              minY: 0,
+              maxY: maxY,
+              clipData: const FlClipData.all(),
+              borderData: FlBorderData(show: false),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: step,
+                getDrawingHorizontalLine: (_) => const FlLine(color: Color(0xFFE6E6E8), strokeWidth: 1),
+              ),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 36,
+                    interval: step,
+                    getTitlesWidget: (value, _) => Text(
+                      _axisMoney(value),
+                      style: const TextStyle(color: RF.muted, fontSize: 11),
+                    ),
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    interval: xInterval,
+                    getTitlesWidget: (value, _) {
+                      final index = value.round();
+                      if ((value - index).abs() > 0.01 || index < 0 || index >= days.length) {
+                        return const SizedBox.shrink();
+                      }
+                      final date = days[index].date;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text('${date.month}/${date.day}', style: const TextStyle(color: RF.muted, fontSize: 10)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  tooltipBorderRadius: BorderRadius.circular(10),
+                  fitInsideHorizontally: true,
+                  fitInsideVertically: true,
+                  getTooltipColor: (_) => RF.ink,
+                  getTooltipItems: (spots) => spots.map((spot) {
+                    final index = spot.x.round();
+                    if (index < 0 || index >= days.length) return null;
+                    final day = days[index];
+                    return LineTooltipItem(
+                      '${day.date.month}/${day.date.day}\n${peso(day.revenue)}',
+                      const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12, height: 1.3),
+                    );
+                  }).toList(),
+                ),
+              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: [for (var i = 0; i < days.length; i++) FlSpot(i.toDouble(), days[i].revenue)],
+                  isCurved: false,
+                  color: RF.ink,
+                  barWidth: 2.4,
+                  dotData: FlDotData(
+                    show: true,
+                    checkToShowDot: (spot, _) => spot.y > 0,
+                    getDotPainter: (spot, _, _, _) => FlDotCirclePainter(
+                      radius: 4,
+                      color: RF.ink,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    ),
+                  ),
+                  belowBarData: BarAreaData(show: true, color: RF.ink.withValues(alpha: .08)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+double _chartStep(double peak) {
+  final raw = math.max(peak / 4, 1);
+  final magnitude = math.pow(10, (math.log(raw) / math.ln10).floor()).toDouble();
+  final fraction = raw / magnitude;
+  final nice = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+  return nice * magnitude;
+}
+
+String _axisMoney(double value) {
+  if (value >= 1000) {
+    final thousands = value / 1000;
+    return '${thousands.toStringAsFixed(thousands >= 10 ? 0 : 1)}k';
+  }
+  return value.round().toString();
 }
 
 class _PeriodSwitch extends StatelessWidget {

@@ -67,6 +67,8 @@ class _OwnerHomeState extends State<OwnerHome> {
       return Scaffold(
         extendBody: !wide,
         appBar: AppBar(
+          backgroundColor: RF.bg,
+          surfaceTintColor: Colors.transparent,
           toolbarHeight: 72,
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
