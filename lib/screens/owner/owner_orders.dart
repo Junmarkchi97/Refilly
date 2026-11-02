@@ -139,6 +139,14 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     setState(() => _busy.add(o.id));
     try {
       await Api.setStatus(o.id, status);
+      // Marking delivered means COD cash was collected with the handoff.
+      if (status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid') {
+        try {
+          await sb.rpc('confirm_cod_collection', params: {'p_order': o.id});
+        } catch (_) {
+          /* Newer owner_set_order_status may already mark COD paid. */
+        }
+      }
       tapHaptic();
       if (status == 'delivered' && mounted) {
         celebrateOrderDelivered(context);
@@ -150,25 +158,6 @@ class _OwnerOrdersState extends State<OwnerOrders> {
       }
     } finally {
       if (mounted) setState(() => _busy.remove(o.id));
-    }
-  }
-
-  Future<void> _confirmCod(Order order) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('Confirm cash received?'),
-      content: Text('Confirm you collected ${peso(order.total)} for this delivery. This cannot be undone here.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cash collected'))],
-    ));
-    if (confirmed != true) return;
-    try {
-      await sb.rpc('confirm_cod_collection', params: {'p_order': order.id});
-      if (mounted) {
-        celebrateCashCollected(context);
-        showAppNotice(context, 'Cash payment marked as collected', kind: AppNotice.success);
-      }
-    } catch (e) {
-      if (mounted) showFailureNotice(context, e, failed: 'Could not confirm the payment.');
     }
   }
 
@@ -223,7 +212,6 @@ class _OwnerOrdersState extends State<OwnerOrders> {
       order: o,
       busy: busy,
       onShare: open && hasRider ? () => _shareExisting(o) : null,
-      onConfirmCash: o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid' ? () => _confirmCod(o) : null,
       primaryLabel: primaryLabel,
       onPrimary: onPrimary,
       actions: [
@@ -251,7 +239,6 @@ class OwnerOrderCard extends StatelessWidget {
   final Order order;
   final bool busy;
   final VoidCallback? onShare;
-  final VoidCallback? onConfirmCash;
   final VoidCallback? onPrimary;
   final String? primaryLabel;
   final List<Widget> actions;
@@ -261,7 +248,6 @@ class OwnerOrderCard extends StatelessWidget {
     required this.actions,
     this.busy = false,
     this.onShare,
-    this.onConfirmCash,
     this.onPrimary,
     this.primaryLabel,
   });
@@ -391,17 +377,6 @@ class OwnerOrderCard extends StatelessWidget {
                         child: const Text('Share link'),
                       ),
                   ],
-                ),
-              ),
-            ],
-            if (onConfirmCash != null) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  onPressed: onConfirmCash,
-                  child: const Text('Confirm cash collected'),
                 ),
               ),
             ],

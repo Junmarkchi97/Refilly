@@ -12,19 +12,6 @@ const _partyColors = <Color>[
   Color(0xFFE8B931),
 ];
 
-/// Mostly gold circles so the burst reads as falling coins / cash.
-const _moneyColors = <Color>[
-  Color(0xFFE8B931),
-  Color(0xFFF6C445),
-  Color(0xFFD4A017),
-  Color(0xFFF59E0B),
-  Color(0xFFFFE08A),
-  Color(0xFFC9971A),
-  Color(0xFFF2B93B),
-  Color(0xFFE8B931),
-  Color(0xFF2EAD6F),
-];
-
 /// Colorful paper confetti when the owner marks an order delivered.
 void celebrateOrderDelivered(BuildContext context) {
   Confetti.launch(
@@ -57,45 +44,6 @@ void celebrateOrderDelivered(BuildContext context) {
       x: 0.5,
       y: 0.7,
       colors: _partyColors,
-    ),
-  );
-}
-
-/// Coin / money burst after cash on delivery is confirmed collected.
-void celebrateCashCollected(BuildContext context) {
-  // Almost all circles = coins; a few squares as peso bills.
-  ConfettiParticle piece(int index) => index % 5 == 0 ? Square() : Circle();
-
-  Confetti.launch(
-    context,
-    particleBuilder: piece,
-    options: const ConfettiOptions(
-      particleCount: 140,
-      spread: 360,
-      startVelocity: 40,
-      gravity: 0.55,
-      decay: 0.91,
-      scalar: 1.25,
-      particleDuration: Duration(milliseconds: 2400),
-      x: 0.5,
-      y: 0.42,
-      colors: _moneyColors,
-    ),
-  );
-  Confetti.launch(
-    context,
-    particleBuilder: piece,
-    options: const ConfettiOptions(
-      particleCount: 90,
-      angle: 90,
-      spread: 80,
-      startVelocity: 58,
-      gravity: 0.75,
-      scalar: 1.15,
-      particleDuration: Duration(milliseconds: 2200),
-      x: 0.5,
-      y: 0.78,
-      colors: _moneyColors,
     ),
   );
 }
