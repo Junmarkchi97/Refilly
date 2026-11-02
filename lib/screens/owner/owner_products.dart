@@ -179,59 +179,42 @@ class _OwnerProductsState extends State<OwnerProducts> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => _edit(),
-              icon: const Icon(Icons.add),
-              label: const Text('Add product'),
-            ),
+    body: FutureBuilder<List<Product>>(
+      future: _f,
+      builder: (context, snap) => StateSwitcher(
+        child: KeyedSubtree(
+          key: ValueKey(snap.hasData),
+          child: Builder(
+            builder: (context) {
+              if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
+              if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+              if (snap.data!.isEmpty) {
+                return const EmptyState(
+                  icon: Icons.inventory_2_rounded,
+                  title: 'No products yet',
+                  subtitle: 'Tap + to add water refills, containers, and essentials.',
+                );
+              }
+              return ListView(
+                padding: EdgeInsets.only(top: 8, bottom: bottomInset(context, 120)),
+                children: [
+                  for (final (pIdx, p) in (snap.data!).indexed)
+                    FadeSlideIn(
+                      index: pIdx,
+                      child: OwnerProductCard(
+                        product: p,
+                        busy: _busy.contains(p.id),
+                        onEdit: () => _edit(p),
+                        onRemove: () => _remove(p),
+                        onAvailable: (v) => _setAvailable(p, v),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
-        Expanded(
-          child: FutureBuilder<List<Product>>(
-            future: _f,
-            builder: (context, snap) => StateSwitcher(
-              child: KeyedSubtree(
-                key: ValueKey(snap.hasData),
-                child: Builder(
-                  builder: (context) {
-                    if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
-                    if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
-                    if (snap.data!.isEmpty) {
-                      return const EmptyState(
-                        icon: Icons.inventory_2_rounded,
-                        title: 'No products yet',
-                        subtitle: 'Add your water refills, containers and essentials so customers can order.',
-                      );
-                    }
-                    return ListView(
-                      padding: EdgeInsets.only(bottom: bottomInset(context, 120)),
-                      children: [
-                        for (final (pIdx, p) in (snap.data!).indexed)
-                          FadeSlideIn(
-                            index: pIdx,
-                            child: OwnerProductCard(
-                              product: p,
-                              busy: _busy.contains(p.id),
-                              onEdit: () => _edit(p),
-                              onRemove: () => _remove(p),
-                              onAvailable: (v) => _setAvailable(p, v),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     ),
   );
 }
