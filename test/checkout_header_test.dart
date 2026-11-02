@@ -44,5 +44,15 @@ void main() {
     expect(title.dy, lessThan(80));
     final close = tester.getCenter(find.byIcon(Icons.close_rounded));
     expect((close.dy - tester.getCenter(find.text('Confirm delivery')).dy).abs(), lessThan(24));
+
+    final button = tester.getSize(find.widgetWithText(FilledButton, 'Pin your address to continue'));
+    expect(button.height, lessThan(50));
+  });
+
+  test('a pin outside the station area uses a readable sentence', () {
+    expect(
+      deliveryAreaMessage(Exception('outside station delivery area')),
+      'This address is outside the station delivery area.',
+    );
   });
 }

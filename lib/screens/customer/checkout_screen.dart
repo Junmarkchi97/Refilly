@@ -157,10 +157,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (e) {
       if (!mounted || sequence != _quoteSequence) return;
       setState(() {
-        _quoteError = describeFailure(
-          e,
-          failed: 'This pin is outside the delivery area, or the quote could not be loaded.',
-        ).message;
+        _quoteError = deliveryAreaMessage(e);
         _quoting = false;
       });
     }
@@ -527,15 +524,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       ),
       Padding(
-        padding: const EdgeInsets.fromLTRB(2, 6, 2, 8),
-        child: Text(
-          _quoteError ??
-              (_quoting
-                  ? 'Checking that this supplier delivers here…'
-                  : _drop == null
-                      ? 'Tap the map to pin your exact drop-off.'
-                      : 'Drop-off pinned. Tap the map again to move it.'),
-          style: TextStyle(color: _quoteError != null ? const Color(0xFFB3261E) : RF.muted, fontSize: 13),
+        padding: const EdgeInsets.only(top: 8, bottom: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              _quoteError != null ? Icons.error_outline_rounded : Icons.info_outline_rounded,
+              size: 16,
+              color: _quoteError != null ? const Color(0xFFB3261E) : RF.muted,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                _quoteError ??
+                    (_quoting
+                        ? 'Checking that this supplier delivers here…'
+                        : _drop == null
+                            ? 'Tap the map to pin your exact drop-off.'
+                            : 'Drop-off pinned. Tap the map again to move it.'),
+                style: TextStyle(color: _quoteError != null ? const Color(0xFFB3261E) : RF.muted, fontSize: 13, height: 1.3),
+              ),
+            ),
+          ],
         ),
       ),
     ],
@@ -555,7 +565,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   );
 
   Widget _dock(int itemCount) => Container(
-    padding: EdgeInsets.fromLTRB(16, 10, 16, bottomInset(context, 14)),
+    padding: EdgeInsets.fromLTRB(16, 6, 16, bottomInset(context, 8)),
     decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFEFEAE4)))),
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -563,42 +573,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 28,
+              height: 28,
               alignment: Alignment.center,
               decoration: const BoxDecoration(color: RF.goodSoft, shape: BoxShape.circle),
-              child: const Text('₱', style: TextStyle(color: RF.good, fontWeight: FontWeight.w800)),
+              child: const Text('₱', style: TextStyle(color: RF.good, fontWeight: FontWeight.w800, fontSize: 13)),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Cash on Delivery', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text('Pay the rider when it arrives', style: TextStyle(color: RF.muted, fontSize: 12)),
-                ],
-              ),
+              child: Text('Cash on delivery · pay the rider', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _fee('Items ($itemCount)', peso(_total)),
         _fee(
           'Delivery fee',
           _quoting ? 'Checking…' : _deliveryFee == null ? 'Pin your address' : _deliveryFee == 0 ? 'Free' : peso(_deliveryFee!),
         ),
-        const Divider(height: 14),
+        const Divider(height: 10),
         Row(
           children: [
-            const Expanded(child: Text('Total', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
-            AnimatedCount(value: _grandTotal, format: peso, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const Expanded(child: Text('Total', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15))),
+            AnimatedCount(value: _grandTotal, format: peso, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         SizedBox(
           width: double.infinity,
           child: Pressable(
             child: FilledButton(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(46),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
               onPressed: _busy || _quoting || _deliveryFee == null ? null : _place,
               child: Text(
                 _busy
@@ -625,6 +634,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ],
     ),
   );
+}
+
+/// Turns the delivery-quote failure into a sentence the customer can read.
+String deliveryAreaMessage(Object error) {
+  final copy = describeFailure(
+    error,
+    failed: 'This pin is outside the delivery area, or the quote could not be loaded.',
+  ).message;
+  final lower = copy.toLowerCase();
+  if (lower.contains('outside') && lower.contains('delivery')) {
+    return 'This address is outside the station delivery area.';
+  }
+  return copy;
 }
 
 class _Label extends StatelessWidget {
