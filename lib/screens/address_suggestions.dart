@@ -114,11 +114,16 @@ class _AddressMenu extends StatelessWidget {
         itemCount: suggestions.length,
         itemBuilder: (context, index) {
           final result = suggestions[index];
-          return ListTile(
-            dense: true,
-            leading: const Icon(Icons.place_outlined, color: RF.muted),
-            title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
-            onTap: () => onSelected(result),
+          return Material(
+            color: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            child: ListTile(
+              tileColor: Colors.white,
+              dense: true,
+              leading: const Icon(Icons.place_outlined, color: RF.muted),
+              title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+              onTap: () => onSelected(result),
+            ),
           );
         },
       );
@@ -126,25 +131,28 @@ class _AddressMenu extends StatelessWidget {
 
     return Material(
       color: Colors.white,
+      surfaceTintColor: Colors.transparent,
       elevation: 8,
       shadowColor: const Color(0x33000000),
-      borderRadius: BorderRadius.circular(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE6E2DC)),
+      ),
       clipBehavior: Clip.antiAlias,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE6E2DC)),
-        ),
+      child: ColoredBox(
+        color: Colors.white,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ConstrainedBox(constraints: const BoxConstraints(maxHeight: 280), child: body),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Text(
-                'Address suggestions · OpenStreetMap / Photon',
-                style: TextStyle(color: RF.muted, fontSize: 11),
+            const ColoredBox(
+              color: Colors.white,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Text(
+                  'Address suggestions · OpenStreetMap / Photon',
+                  style: TextStyle(color: RF.muted, fontSize: 11),
+                ),
               ),
             ),
           ],

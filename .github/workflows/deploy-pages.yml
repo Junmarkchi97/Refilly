@@ -76,9 +76,27 @@ jobs:
           PY
           flutter build web --release --base-href /Refilly/ --pwa-strategy=none --dart-define-from-file=/tmp/refilly-web-defines.json
           rm -f /tmp/refilly-web-defines.json
+          rm -f build/web/flutter_service_worker.js
+          python3 - <<'PY'
+          import pathlib, time
+          root = pathlib.Path('build/web')
+          src = root / 'main.dart.js'
+          stamp = str(int(time.time()))
+          versioned = f'main.dart.{stamp}.js'
+          src.rename(root / versioned)
+          for path in root.rglob('*'):
+              if not path.is_file() or path.name == versioned:
+                  continue
+              if path.suffix.lower() not in {'.js', '.html', '.json', '.map'}:
+                  continue
+              data = path.read_bytes()
+              if b'main.dart.js' not in data:
+                  continue
+              path.write_bytes(data.replace(b'main.dart.js', versioned.encode()))
+          PY
           touch build/web/.nojekyll
           test -s build/web/index.html
-          test -s build/web/main.dart.js
+          test -n "$(find build/web -name 'main.dart.*.js' -print -quit)"
           mkdir -p build/web/redesign
           cp -a docs/redesign/. build/web/redesign/
           test -s build/web/redesign/index.html

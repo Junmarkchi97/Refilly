@@ -84,9 +84,8 @@ class Api {
 
   /// Persists the customer's default drop-off for Profile settings and checkout autofill.
   ///
-  /// Writes the profiles columns when they exist. The live database may not have
-  /// those columns yet, so a missing-column error falls back to the signed-in
-  /// user's metadata, which does not need a schema change.
+  /// Stored on the signed-in account. The live profiles table has no
+  /// delivery_address column, and writing it raises PGRST204.
   static Future<Profile> saveDeliveryAddress({
     required String address,
     required double lat,
@@ -96,36 +95,13 @@ class Api {
     if (u == null) throw StateError('Sign in to save your address');
     final trimmed = address.trim();
     if (trimmed.isEmpty) throw ArgumentError('Delivery address required');
-    try {
-      final row = await sb
-          .from('profiles')
-          .update({
-            'delivery_address': trimmed,
-            'delivery_lat': lat,
-            'delivery_lng': lng,
-          })
-          .eq('id', u.id)
-          .select()
-          .single();
-      return Profile.fromMap(row);
-    } on PostgrestException catch (e) {
-      if (!_missingAddressColumn(e)) rethrow;
-      return _saveAddressOnAccount(trimmed, lat, lng);
-    }
-  }
-
-  static bool _missingAddressColumn(PostgrestException e) =>
-      e.code == 'PGRST204' || e.message.contains('delivery_address');
-
-  static Future<Profile> _saveAddressOnAccount(String address, double lat, double lng) async {
-    final u = sb.auth.currentUser!;
     final data = Map<String, dynamic>.from(u.userMetadata ?? {});
-    data['delivery_address'] = address;
+    data['delivery_address'] = trimmed;
     data['delivery_lat'] = lat;
     data['delivery_lng'] = lng;
     await sb.auth.updateUser(UserAttributes(data: data));
     final row = await sb.from('profiles').select().eq('id', u.id).single();
-    return Profile.fromMap(row).applyingMeta(_metaMap(sb.auth.currentUser?.userMetadata) ?? data);
+    return Profile.fromMap(row).applyingMeta(data);
   }
 
   static Map<String, dynamic>? _metaMap(Object? meta) {
