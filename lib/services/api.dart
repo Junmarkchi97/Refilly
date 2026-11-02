@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import '../config.dart';
 import '../models/models.dart';
 import '../models/refill_routine.dart';
+import '../models/saved_rider.dart';
 
 SupabaseClient get sb => Supabase.instance.client;
 
@@ -248,14 +249,56 @@ class Api {
   /// Owner: save the rider and mark the order delivering.
   /// Returns a fresh secret link token. Saving the name and phone is what
   /// starts delivery; the rider does not have to tap Start delivery first.
-  static Future<String> assignRider(String orderId, String name, String phone) async {
+  static Future<String> assignRider(String orderId, String name, String phone, {String? stationId}) async {
     final token = await sb.rpc('assign_rider', params: {
       'p_order': orderId,
       'p_name': name,
       'p_phone': phone,
     }) as String;
     await riderStatus(token, 'out_for_delivery');
+    if (stationId != null) await rememberRider(stationId, name, phone);
     return token;
+  }
+
+  /// Riders this station has used before (saved list, else past order assignments).
+  static Future<List<SavedRider>> stationRiders(String stationId) async {
+    try {
+      final rows = await sb
+          .from('station_riders')
+          .select('name, phone, last_used_at')
+          .eq('station_id', stationId)
+          .order('last_used_at', ascending: false)
+          .limit(20);
+      final saved = uniqueRidersByPhone(rows.map((r) => SavedRider.fromMap(Map<String, dynamic>.from(r))));
+      if (saved.isNotEmpty) return saved;
+    } catch (_) {
+      /* Table may not be migrated yet; fall back to order history. */
+    }
+    final rows = await sb
+        .from('orders')
+        .select('rider_name, rider_phone, created_at')
+        .eq('station_id', stationId)
+        .not('rider_phone', 'is', null)
+        .order('created_at', ascending: false)
+        .limit(40);
+    return uniqueRidersByPhone(rows.map((r) => SavedRider.fromMap(Map<String, dynamic>.from(r))));
+  }
+
+  /// Persist a rider for quick re-use on later orders. No-ops if the table is missing.
+  static Future<void> rememberRider(String stationId, String name, String phone) async {
+    final trimmed = name.trim();
+    final normalized = normalizeRiderPhone(phone);
+    if (trimmed.isEmpty || normalized.isEmpty) return;
+    try {
+      await sb.from('station_riders').upsert({
+        'station_id': stationId,
+        'name': trimmed,
+        'phone': normalized,
+        'last_used_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'station_id,phone');
+    } catch (_) {
+      /* Optional until the station_riders migration is applied. */
+    }
   }
 
   static Future<String?> riderToken(String orderId) async =>

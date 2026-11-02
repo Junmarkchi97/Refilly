@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
+import '../../models/saved_rider.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../widgets.dart';
@@ -74,128 +75,17 @@ class _OwnerOrdersState extends State<OwnerOrders> {
   );
 
   Future<void> _assign(Order o) async {
-    final name = TextEditingController(text: o.riderName);
-    final phone = TextEditingController(text: o.riderPhone);
-    final ok = await showDialog<bool>(
+    final picked = await showDialog<SavedRider>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          final validName = name.text.trim().isNotEmpty;
-          final validPhone = RegExp(r'^(09\d{9}|639\d{9}|\+639\d{9})$')
-              .hasMatch(phone.text.replaceAll(RegExp(r'[\s-]'), ''));
-          final ready = validName && validPhone;
-          return Dialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.delivery_dining_rounded, size: 24),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'Assign a rider',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: 'Close',
-                          onPressed: () => Navigator.pop(dialogContext, false),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Order for ${o.customer?['full_name'] ?? 'Customer'}',
-                      style: const TextStyle(color: RF.muted, fontSize: 13),
-                    ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      controller: name,
-                      textCapitalization: TextCapitalization.words,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (_) => setDialogState(() {}),
-                      decoration: const InputDecoration(
-                        labelText: 'Rider name',
-                        hintText: 'Enter full name',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: phone,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.done,
-                      onChanged: (_) => setDialogState(() {}),
-                      decoration: const InputDecoration(
-                        labelText: 'Mobile number',
-                        hintText: '09XX XXX XXXX',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline_rounded, color: RF.muted, size: 17),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            o.riderName == null
-                                ? 'Saving the rider marks this order as delivering and creates a private link to share. A new link replaces the previous one.'
-                                : 'Updating the rider creates a new private link and disables the previous one. The order stays on delivering.',
-                            style: TextStyle(color: RF.muted, fontSize: 12, height: 1.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(dialogContext, false),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          flex: 2,
-                          child: FilledButton(
-                            onPressed: ready ? () => Navigator.pop(dialogContext, true) : null,
-                            child: Text(o.riderName == null ? 'Save rider' : 'Update rider'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+      builder: (dialogContext) => AssignRiderDialog(
+        order: o,
+        loadRiders: () => Api.stationRiders(widget.station.id),
       ),
     );
-    final riderName = name.text.trim();
-    final riderPhone = phone.text.replaceAll(RegExp(r'[\s-]'), '');
-    name.dispose();
-    phone.dispose();
-    if (ok != true || !mounted) return;
+    if (picked == null || !mounted) return;
     try {
-      final token = await Api.assignRider(o.id, riderName, riderPhone);
-      if (mounted) await shareRiderLink(context, Api.riderLink(token), riderName);
+      final token = await Api.assignRider(o.id, picked.name, picked.phone, stationId: widget.station.id);
+      if (mounted) await shareRiderLink(context, Api.riderLink(token), picked.name);
     } catch (e) {
       if (mounted) {
         showFailureNotice(context, e, failed: 'Could not assign the rider.');
@@ -539,6 +429,205 @@ class OwnerOrderCard extends StatelessWidget {
               Row(children: actions),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dialog to pick a saved rider or enter a new name and phone.
+class AssignRiderDialog extends StatefulWidget {
+  final Order order;
+  final Future<List<SavedRider>> Function() loadRiders;
+  const AssignRiderDialog({
+    super.key,
+    required this.order,
+    required this.loadRiders,
+  });
+
+  @override
+  State<AssignRiderDialog> createState() => _AssignRiderDialogState();
+}
+
+class _AssignRiderDialogState extends State<AssignRiderDialog> {
+  late final _name = TextEditingController(text: widget.order.riderName ?? '');
+  late final _phone = TextEditingController(text: widget.order.riderPhone ?? '');
+  late final Future<List<SavedRider>> _riders = widget.loadRiders();
+  String? _selectedPhone;
+
+  bool get _ready {
+    final validName = _name.text.trim().isNotEmpty;
+    final validPhone = RegExp(r'^(09\d{9}|639\d{9}|\+639\d{9})$')
+        .hasMatch(_phone.text.replaceAll(RegExp(r'[\s-]'), ''));
+    return validName && validPhone;
+  }
+
+  void _select(SavedRider rider) {
+    setState(() {
+      _name.text = rider.name;
+      _phone.text = rider.phone;
+      _selectedPhone = rider.normalizedPhone;
+    });
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final updating = widget.order.riderName != null;
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.delivery_dining_rounded, size: 24),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Assign a rider',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Order for ${widget.order.customer?['full_name'] ?? 'Customer'}',
+                style: const TextStyle(color: RF.muted, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              FutureBuilder<List<SavedRider>>(
+                future: _riders,
+                builder: (context, snap) {
+                  final riders = snap.data ?? const <SavedRider>[];
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    );
+                  }
+                  if (riders.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Saved riders', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final rider in riders)
+                              ChoiceChip(
+                                selected: _selectedPhone == rider.normalizedPhone,
+                                avatar: Icon(
+                                  Icons.person_outline_rounded,
+                                  size: 16,
+                                  color: _selectedPhone == rider.normalizedPhone ? Colors.white : RF.ink,
+                                ),
+                                label: Text('${rider.name} · ${rider.phone}'),
+                                onSelected: (_) => _select(rider),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tap a rider to fill the form, or enter someone new below.',
+                          style: TextStyle(color: RF.muted, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              TextField(
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() => _selectedPhone = null),
+                decoration: const InputDecoration(
+                  labelText: 'Rider name',
+                  hintText: 'Enter full name',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.done,
+                onChanged: (_) => setState(() => _selectedPhone = null),
+                decoration: const InputDecoration(
+                  labelText: 'Mobile number',
+                  hintText: '09XX XXX XXXX',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: RF.muted, size: 17),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      updating
+                          ? 'Updating the rider creates a new private link and disables the previous one. The order stays on delivering.'
+                          : 'Saving the rider marks this order as delivering and creates a private link to share. A new link replaces the previous one.',
+                      style: const TextStyle(color: RF.muted, fontSize: 12, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton(
+                      onPressed: _ready
+                          ? () => Navigator.pop(
+                                context,
+                                SavedRider(name: _name.text.trim(), phone: normalizeRiderPhone(_phone.text)),
+                              )
+                          : null,
+                      child: Text(updating ? 'Update rider' : 'Save rider'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
