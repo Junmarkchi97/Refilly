@@ -294,6 +294,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
       busy: busy,
       onShare: open && o.riderName != null ? () => _shareExisting(o) : null,
       onConfirmCash: o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid' ? () => _confirmCod(o) : null,
+      onMarkDelivered: ownerCanMarkDelivered(o.status) ? () => _act(o, 'delivered') : null,
       actions: [
         if (o.status == 'pending') ...[
           _btn('Reject', () => _act(o, 'cancelled', confirm: 'Reject this order?'), primary: false, danger: true, busy: busy),
@@ -307,7 +308,6 @@ class _OwnerOrdersState extends State<OwnerOrders> {
           if (o.status == 'preparing')
             _btn('Cancel', () => _act(o, 'cancelled', confirm: 'Cancel this order?'), primary: false, danger: true, busy: busy),
         ],
-        if (o.status == 'out_for_delivery') _btn('Mark delivered', () => _act(o, 'delivered'), busy: busy),
       ],
     );
   }
@@ -318,6 +318,7 @@ class OwnerOrderCard extends StatelessWidget {
   final bool busy;
   final VoidCallback? onShare;
   final VoidCallback? onConfirmCash;
+  final VoidCallback? onMarkDelivered;
   final List<Widget> actions;
   const OwnerOrderCard({
     super.key,
@@ -326,6 +327,7 @@ class OwnerOrderCard extends StatelessWidget {
     this.busy = false,
     this.onShare,
     this.onConfirmCash,
+    this.onMarkDelivered,
   });
 
   @override
@@ -467,6 +469,29 @@ class OwnerOrderCard extends StatelessWidget {
                 ),
               ),
             ],
+            if (onMarkDelivered != null) ...[
+              const SizedBox(height: 12),
+              Pressable(
+                enabled: !busy,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: busy ? () {} : onMarkDelivered,
+                    child: busy
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                          )
+                        : const Text('Mark delivered'),
+                  ),
+                ),
+              ),
+            ],
             if (actions.isNotEmpty) ...[
               const SizedBox(height: 12),
               Row(children: actions),
@@ -501,6 +526,10 @@ String _paymentLabel(String method) => switch (method) {
   'maya' => 'Maya',
   _ => method,
 };
+
+/// Accepted, preparing, and out-for-delivery orders can be closed by the owner.
+bool ownerCanMarkDelivered(String status) =>
+    status == 'accepted' || status == 'preparing' || status == 'out_for_delivery';
 
 String? _prettyPhone(String? raw) {
   final trimmed = raw?.trim();

@@ -35,6 +35,7 @@ void main() {
         body: OwnerOrderCard(
           order: _order(),
           onShare: () {},
+          onMarkDelivered: () {},
           actions: const [
             Expanded(child: OutlinedButton(onPressed: null, child: Text('Change rider'))),
             SizedBox(width: 10),
@@ -61,6 +62,9 @@ void main() {
     expect(find.text('Rider'), findsOneWidget);
     expect(find.text('John'), findsOneWidget);
     expect(find.text('Share link'), findsOneWidget);
+    expect(find.text('Mark delivered'), findsOneWidget);
+    expect(find.text('Change rider'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
     expect(
       find.byWidgetPredicate((widget) {
         final decoration = widget is Container ? widget.decoration : null;
@@ -72,5 +76,18 @@ void main() {
     final name = tester.getTopLeft(find.text('Junmark'));
     final price = tester.getTopLeft(find.text('₱1.00'));
     expect((name.dy - price.dy).abs(), lessThan(2));
+
+    await tester.tap(find.text('Mark delivered'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
+  test('owner can mark an in-progress order delivered', () {
+    expect(ownerCanMarkDelivered('pending'), isFalse);
+    expect(ownerCanMarkDelivered('accepted'), isTrue);
+    expect(ownerCanMarkDelivered('preparing'), isTrue);
+    expect(ownerCanMarkDelivered('out_for_delivery'), isTrue);
+    expect(ownerCanMarkDelivered('delivered'), isFalse);
+    expect(ownerCanMarkDelivered('cancelled'), isFalse);
   });
 }
