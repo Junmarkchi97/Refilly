@@ -19,16 +19,23 @@ class OwnerProducts extends StatefulWidget {
 class _OwnerProductsState extends State<OwnerProducts> {
   late Future<List<Product>> _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20));
   final Future<List<Category>> _cats = Api.categories();
+  final _busy = <String>{};
 
   void _reload() => setState(() => _f = Api.products(widget.station.id, onlyAvailable: false).timeout(const Duration(seconds: 20)));
 
   Future<void> _edit([Product? p]) async {
-    final cats = await _cats;
+    late final List<Category> cats;
+    try {
+      cats = await _cats;
+    } catch (e) {
+      if (mounted) showFailureNotice(context, e, failed: 'Could not load product categories.');
+      return;
+    }
     if (!mounted) return;
     final name = TextEditingController(text: p?.name);
     final unit = TextEditingController(text: p?.unit ?? 'gallon');
     final price = TextEditingController(text: p?.price.toStringAsFixed(2));
-    String? cat = p?.categoryId ?? cats.firstOrNull?.id;
+    String? cat = cats.any((c) => c.id == p?.categoryId) ? p?.categoryId : cats.firstOrNull?.id;
     String? imageUrl = p?.imageUrl;
     Uint8List? newBytes;
     String newExt = 'jpg';
@@ -89,13 +96,15 @@ class _OwnerProductsState extends State<OwnerProducts> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: cat,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
-                  onChanged: (v) => setD(() => cat = v),
-                ),
-                const SizedBox(height: 12),
+                if (cats.isNotEmpty) ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: cat,
+                    decoration: const InputDecoration(labelText: 'Category'),
+                    items: [for (final c in cats) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                    onChanged: (v) => setD(() => cat = v),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextField(
                   controller: name,
                   decoration: const InputDecoration(labelText: 'Name'),
@@ -159,69 +168,190 @@ class _OwnerProductsState extends State<OwnerProducts> {
       if (p == null) {
         await sb.from('products').insert(data);
       } else {
-        await sb.from('products').update(data).eq('id', p.id);
+        await sb.from('products').update(data).eq('id', p.id).eq('station_id', widget.station.id);
       }
       if (p?.imageUrl != null && p!.imageUrl != imageUrl) await Api.deleteProductImage(p.imageUrl!);
       if (mounted) {
         _reload();
-        showAppNotice(context, 'Product saved', kind: AppNotice.success);
+        showAppNotice(context, p == null ? 'Product added' : 'Product updated', kind: AppNotice.success);
       }
     } catch (e) {
       if (mounted) showFailureNotice(context, e, failed: 'Could not save this product.');
     }
   }
 
+  Future<void> _setAvailable(Product p, bool available) async {
+    if (_busy.contains(p.id)) return;
+    setState(() => _busy.add(p.id));
+    try {
+      await sb.from('products').update({'is_available': available}).eq('id', p.id).eq('station_id', widget.station.id);
+      _reload();
+    } catch (e) {
+      if (mounted) showFailureNotice(context, e, failed: 'Could not update availability.');
+    } finally {
+      if (mounted) setState(() => _busy.remove(p.id));
+    }
+  }
+
+  Future<void> _remove(Product p) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => RemoveProductDialog(name: p.name),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _busy.add(p.id));
+    try {
+      await sb.from('products').delete().eq('id', p.id).eq('station_id', widget.station.id);
+      if (p.imageUrl != null) await Api.deleteProductImage(p.imageUrl!);
+      if (mounted) {
+        _reload();
+        showAppNotice(context, 'Product removed', kind: AppNotice.success);
+      }
+    } catch (e) {
+      if (mounted) showFailureNotice(context, e, failed: 'Could not remove this product.');
+    } finally {
+      if (mounted) setState(() => _busy.remove(p.id));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: () => _edit(),
-      icon: const Icon(Icons.add),
-      label: const Text('Product'),
-    ),
-    body: FutureBuilder<List<Product>>(
-      future: _f,
-      builder: (context, snap) => StateSwitcher(
-        child: KeyedSubtree(
-          key: ValueKey(snap.hasData),
-          child: Builder(
-            builder: (context) {
-              if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
-              if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
-              if (snap.data!.isEmpty) {
-                return EmptyState(
-                  icon: Icons.inventory_2_rounded,
-                  title: 'No products yet',
-                  subtitle: 'Add your water refills, containers and essentials so customers can order.',
-                  actionLabel: 'Add product',
-                  onAction: () => _edit(),
-                );
-              }
-              return ListView(
-                padding: EdgeInsets.only(bottom: bottomInset(context, 140)),
-                children: [
-                  for (final (pIdx, p) in (snap.data!).indexed)
-                    FadeSlideIn(
-                      index: pIdx,
-                      child: ListTile(
-                        leading: ProductThumb(p.imageUrl, size: 52, radius: 12),
-                        title: Text(p.name),
-                        subtitle: Text('${peso(p.price)} / ${p.unit}'),
-                        onTap: () => _edit(p),
-                        trailing: Switch(
-                          value: p.isAvailable,
-                          onChanged: (v) async {
-                            await sb.from('products').update({'is_available': v}).eq('id', p.id);
-                            _reload();
-                          },
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _edit(),
+              icon: const Icon(Icons.add),
+              label: const Text('Add product'),
+            ),
           ),
         ),
-      ),
+        Expanded(
+          child: FutureBuilder<List<Product>>(
+            future: _f,
+            builder: (context, snap) => StateSwitcher(
+              child: KeyedSubtree(
+                key: ValueKey(snap.hasData),
+                child: Builder(
+                  builder: (context) {
+                    if (snap.hasError) return LoadFailureView(error: snap.error!, onRetry: _reload);
+                    if (!snap.hasData) return const Column(children: [SlowLoadingHint(), Expanded(child: SkeletonList())]);
+                    if (snap.data!.isEmpty) {
+                      return const EmptyState(
+                        icon: Icons.inventory_2_rounded,
+                        title: 'No products yet',
+                        subtitle: 'Add your water refills, containers and essentials so customers can order.',
+                      );
+                    }
+                    return ListView(
+                      padding: EdgeInsets.only(bottom: bottomInset(context, 120)),
+                      children: [
+                        for (final (pIdx, p) in (snap.data!).indexed)
+                          FadeSlideIn(
+                            index: pIdx,
+                            child: OwnerProductCard(
+                              product: p,
+                              busy: _busy.contains(p.id),
+                              onEdit: () => _edit(p),
+                              onRemove: () => _remove(p),
+                              onAvailable: (v) => _setAvailable(p, v),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     ),
+  );
+}
+
+class OwnerProductCard extends StatelessWidget {
+  final Product product;
+  final bool busy;
+  final VoidCallback onEdit;
+  final VoidCallback onRemove;
+  final ValueChanged<bool> onAvailable;
+  const OwnerProductCard({
+    super.key,
+    required this.product,
+    required this.onEdit,
+    required this.onRemove,
+    required this.onAvailable,
+    this.busy = false,
+  });
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+    padding: const EdgeInsets.fromLTRB(12, 12, 8, 4),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            ProductThumb(product.imageUrl, size: 56, radius: 14),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text('${peso(product.price)} / ${product.unit}', style: const TextStyle(color: RF.muted)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            TextButton.icon(
+              onPressed: busy ? null : onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Edit'),
+            ),
+            TextButton.icon(
+              onPressed: busy ? null : onRemove,
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: const Text('Remove'),
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFFD14343)),
+            ),
+            const Spacer(),
+            Semantics(
+              label: product.isAvailable ? 'Available for customers' : 'Hidden from customers',
+              child: Switch(
+                value: product.isAvailable,
+                onChanged: busy ? null : onAvailable,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class RemoveProductDialog extends StatelessWidget {
+  final String name;
+  const RemoveProductDialog({super.key, required this.name});
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Remove product?'),
+    content: Text('$name will leave your menu. Past orders keep this item.'),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+      FilledButton(
+        style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD14343)),
+        onPressed: () => Navigator.pop(context, true),
+        child: const Text('Remove'),
+      ),
+    ],
   );
 }
