@@ -77,6 +77,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  void _clearAddress() {
+    _address.clear();
+    _onAddressChanged('');
+  }
+
   void _onAddressChanged(String input) {
     _request.reset();
     _addressDebounce?.cancel();
@@ -450,22 +455,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Deliver to', style: TextStyle(color: RF.muted, fontSize: 13, fontWeight: FontWeight.w600)),
-                  TextField(
-                    controller: _address,
-                    onChanged: _onAddressChanged,
-                    textInputAction: TextInputAction.search,
-                    maxLines: 2,
-                    minLines: 1,
-                    decoration: const InputDecoration(
-                      hintText: 'House no., street, barangay, city',
-                      filled: false,
-                      isDense: true,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 4),
-                    ),
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _address,
+                          onChanged: _onAddressChanged,
+                          textInputAction: TextInputAction.search,
+                          maxLines: 2,
+                          minLines: 1,
+                          decoration: const InputDecoration(
+                            hintText: 'House no., street, barangay, city',
+                            filled: false,
+                            isDense: true,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 4),
+                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
+                      ),
+                      if (_address.text.trim().isNotEmpty)
+                        IconButton(
+                          tooltip: 'Clear address',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          onPressed: _clearAddress,
+                          icon: const Icon(Icons.close_rounded, size: 18, color: RF.muted),
+                        ),
+                    ],
                   ),
                 ],
               ),

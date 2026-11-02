@@ -49,6 +49,48 @@ void main() {
     expect(button.height, lessThan(50));
   });
 
+  testWidgets('the address field can be cleared', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final station = Station.fromMap({
+      'id': 's1',
+      'name': 'AquaPure Refilling - Cubao',
+      'lat': 14.65,
+      'lng': 121.05,
+      'is_open': true,
+      'delivery_radius_km': 10,
+      'delivery_fee': 50,
+    });
+    final product = Product.fromMap({
+      'id': 'p1',
+      'station_id': 's1',
+      'name': 'Purified Water Refill',
+      'unit': '5 gal',
+      'price': 30,
+    });
+    final profile = Profile.fromMap({
+      'id': 'u1',
+      'full_name': 'Junmark',
+      'role': 'customer',
+      'delivery_address': 'Molave, Zamboanga del Sur, 7023',
+    });
+
+    await tester.pumpWidget(MaterialApp(
+      theme: refillyTheme(),
+      home: CheckoutScreen(station: station, cart: {product: 1}, profile: profile),
+    ));
+    await tester.pump();
+
+    expect(find.text('Molave, Zamboanga del Sur, 7023'), findsOneWidget);
+    await tester.tap(find.byTooltip('Clear address'));
+    await tester.pump();
+
+    expect(find.text('Molave, Zamboanga del Sur, 7023'), findsNothing);
+    expect(find.byTooltip('Clear address'), findsNothing);
+  });
+
   test('a pin outside the station area uses a readable sentence', () {
     expect(
       deliveryAreaMessage(Exception('outside station delivery area')),
