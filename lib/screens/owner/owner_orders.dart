@@ -355,7 +355,7 @@ class OwnerOrderCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: RF.fill,
+                  backgroundColor: _panel,
                   child: Text(
                     customer.characters.first.toUpperCase(),
                     style: const TextStyle(fontWeight: FontWeight.w800, color: RF.ink),
@@ -396,15 +396,15 @@ class OwnerOrderCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            InfoBox(
+            _Panel(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Column(
                 children: [
                   _DetailLine(icon: Icons.phone_rounded, label: 'Phone', value: _prettyPhone(phone) ?? 'No phone'),
-                  const Divider(height: 18),
+                  const Divider(height: 18, color: _panelLine),
                   _DetailLine(icon: Icons.location_on_outlined, label: 'Deliver to', value: order.deliveryAddress),
                   if (note != null && note.isNotEmpty) ...[
-                    const Divider(height: 18),
+                    const Divider(height: 18, color: _panelLine),
                     _DetailLine(icon: Icons.sticky_note_2_outlined, label: 'Note', value: note),
                   ],
                 ],
@@ -429,7 +429,7 @@ class OwnerOrderCard extends StatelessWidget {
             ],
             if (order.riderName != null) ...[
               const SizedBox(height: 12),
-              InfoBox(
+              _Panel(
                 padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
                 child: Row(
                   children: [
@@ -476,6 +476,23 @@ class OwnerOrderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+const _panel = Color(0xFFF4F4F5);
+const _panelLine = Color(0xFFE4E4E7);
+
+class _Panel extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets padding;
+  const _Panel({required this.child, required this.padding});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: padding,
+    decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(14)),
+    child: child,
+  );
 }
 
 String _paymentLabel(String method) => switch (method) {

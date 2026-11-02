@@ -61,6 +61,13 @@ void main() {
     expect(find.text('Rider'), findsOneWidget);
     expect(find.text('John'), findsOneWidget);
     expect(find.text('Share link'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((widget) {
+        final decoration = widget is Container ? widget.decoration : null;
+        return decoration is BoxDecoration && decoration.color == RF.fill;
+      }),
+      findsNothing,
+    );
 
     final name = tester.getTopLeft(find.text('Junmark'));
     final price = tester.getTopLeft(find.text('₱1.00'));
