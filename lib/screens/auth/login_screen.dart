@@ -62,10 +62,14 @@ class _LoginScreenState extends State<LoginScreen> {
       await SocialAuth.signIn(provider);
       // For mobile, the browser returns through the registered deep link.
       // On the web Supabase redirects and AuthGate observes the new session.
-    } catch (error) {
+    } on StateError catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Sign-in could not start. Please try again. ($error)'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message.toString())));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Sign-in could not start. Please try again.'),
         ));
       }
     } finally {
@@ -166,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 14),
               _socialButton(
                 label: 'Continue with Google',
-                icon: const Text('G', style: TextStyle(
-                  color: Color(0xFF4285F4), fontWeight: FontWeight.w900, fontSize: 22,
-                )),
+                icon: const GoogleMark(size: 20),
                 onPressed: _busy ? null : () => _socialSignIn(OAuthProvider.google),
               ),
               if (SocialAuth.appleAvailable) ...[
