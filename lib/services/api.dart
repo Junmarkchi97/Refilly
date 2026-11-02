@@ -245,9 +245,18 @@ class Api {
     await sb.rpc('cancel_order', params: {'p_order': orderId});
   }
 
-  /// Owner: set the (account-less) rider's name/phone; returns a fresh secret link token.
-  static Future<String> assignRider(String orderId, String name, String phone) async =>
-      await sb.rpc('assign_rider', params: {'p_order': orderId, 'p_name': name, 'p_phone': phone}) as String;
+  /// Owner: save the rider and mark the order delivering.
+  /// Returns a fresh secret link token. Saving the name and phone is what
+  /// starts delivery; the rider does not have to tap Start delivery first.
+  static Future<String> assignRider(String orderId, String name, String phone) async {
+    final token = await sb.rpc('assign_rider', params: {
+      'p_order': orderId,
+      'p_name': name,
+      'p_phone': phone,
+    }) as String;
+    await riderStatus(token, 'out_for_delivery');
+    return token;
+  }
 
   static Future<String?> riderToken(String orderId) async =>
       (await sb.from('order_rider_links').select('token').eq('order_id', orderId).maybeSingle())?['token'] as String?;
