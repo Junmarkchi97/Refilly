@@ -20,6 +20,30 @@ class Profile {
       deliveryAddress!.isNotEmpty &&
       deliveryLat != null &&
       deliveryLng != null;
+
+  /// Fills a missing drop-off from auth metadata when the profiles columns are absent.
+  Profile applyingMeta(Map<String, dynamic>? meta) {
+    if (hasSavedAddress || meta == null) return this;
+    final address = meta['delivery_address'];
+    final lat = _metaDouble(meta['delivery_lat']);
+    final lng = _metaDouble(meta['delivery_lng']);
+    if (address is! String || address.trim().isEmpty || lat == null || lng == null) return this;
+    return Profile.fromMap({
+      'id': id,
+      'full_name': fullName,
+      'phone': phone,
+      'role': role,
+      'delivery_address': address,
+      'delivery_lat': lat,
+      'delivery_lng': lng,
+    });
+  }
+}
+
+double? _metaDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
 }
 
 class Station {

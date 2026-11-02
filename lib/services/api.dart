@@ -79,10 +79,14 @@ class Api {
     final u = sb.auth.currentUser;
     if (u == null) return null;
     final r = await sb.from('profiles').select().eq('id', u.id).maybeSingle();
-    return r == null ? null : Profile.fromMap(r);
+    return r == null ? null : Profile.fromMap(r).applyingMeta(_metaMap(u.userMetadata));
   }
 
   /// Persists the customer's default drop-off for Profile settings and checkout autofill.
+  ///
+  /// Writes the profiles columns when they exist. The live database may not have
+  /// those columns yet, so a missing-column error falls back to the signed-in
+  /// user's metadata, which does not need a schema change.
   static Future<Profile> saveDeliveryAddress({
     required String address,
     required double lat,
@@ -92,18 +96,40 @@ class Api {
     if (u == null) throw StateError('Sign in to save your address');
     final trimmed = address.trim();
     if (trimmed.isEmpty) throw ArgumentError('Delivery address required');
-    final row = await sb
-        .from('profiles')
-        .update({
-          'delivery_address': trimmed,
-          'delivery_lat': lat,
-          'delivery_lng': lng,
-        })
-        .eq('id', u.id)
-        .select()
-        .single();
-    return Profile.fromMap(row);
+    try {
+      final row = await sb
+          .from('profiles')
+          .update({
+            'delivery_address': trimmed,
+            'delivery_lat': lat,
+            'delivery_lng': lng,
+          })
+          .eq('id', u.id)
+          .select()
+          .single();
+      return Profile.fromMap(row);
+    } on PostgrestException catch (e) {
+      if (!_missingAddressColumn(e)) rethrow;
+      return _saveAddressOnAccount(trimmed, lat, lng);
+    }
   }
+
+  static bool _missingAddressColumn(PostgrestException e) =>
+      e.code == 'PGRST204' || e.message.contains('delivery_address');
+
+  static Future<Profile> _saveAddressOnAccount(String address, double lat, double lng) async {
+    final u = sb.auth.currentUser!;
+    final data = Map<String, dynamic>.from(u.userMetadata ?? {});
+    data['delivery_address'] = address;
+    data['delivery_lat'] = lat;
+    data['delivery_lng'] = lng;
+    await sb.auth.updateUser(UserAttributes(data: data));
+    final row = await sb.from('profiles').select().eq('id', u.id).single();
+    return Profile.fromMap(row).applyingMeta(_metaMap(sb.auth.currentUser?.userMetadata) ?? data);
+  }
+
+  static Map<String, dynamic>? _metaMap(Map<dynamic, dynamic>? meta) =>
+      meta == null ? null : Map<String, dynamic>.from(meta);
 
   static Future<List<Station>> stations() async => (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
 
