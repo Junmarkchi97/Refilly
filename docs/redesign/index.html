@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en-PH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refilly screens</title>
+<link rel="icon" href="assets/refilly_icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #171717;
+    --muted: #5e5953;
+    --blue: #0968ee;
+    --blue-ink: #0754c2;
+    --blue-soft: #e7f0fe;
+    --good: #0d6a3e;
+    --line: rgba(32, 24, 16, .08);
+    --shadow: 0 8px 24px rgba(48, 34, 18, .06), 0 1px 2px rgba(48, 34, 18, .04);
+    --card: #fff;
+    --r: 24px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    margin: 0;
+    background: #e7e5e2;
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 16px;
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  img { display: block; }
+  .site { padding: 28px 32px 0; max-width: 1480px; }
+  .lockup { display: flex; align-items: center; gap: 12px; }
+  .lockup img { width: 40px; height: 40px; border-radius: 10px; }
+  .lockup h1 { margin: 0; font-size: 22px; letter-spacing: -.04em; }
+  .lockup p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 8px; }
+  .nav a {
+    text-decoration: none; color: var(--ink); background: #fff;
+    border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,.8);
+  }
+  .nav a[aria-current="true"] { background: #141414; color: #fff; }
+  .block { padding: 8px 32px 12px; }
+  .intro h2 { margin: 18px 0 4px; font-size: 20px; letter-spacing: -.03em; }
+  .intro p { margin: 0 0 14px; max-width: 640px; color: #3f3b37; font-size: 15px; line-height: 1.45; }
+  #single-title { margin: 8px 32px 0; font-size: 20px; letter-spacing: -.03em; }
+  .row { display: flex; gap: 28px; align-items: flex-start; width: max-content; padding-bottom: 8px; }
+  .device { margin: 0; width: 390px; }
+  figcaption { width: 390px; padding: 12px 6px 28px; }
+  figcaption strong { display: block; font-size: 15px; letter-spacing: -.02em; }
+  figcaption span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+  figcaption em { display: inline-block; margin-top: 6px; font-style: normal; font-weight: 700; font-size: 13px; color: var(--blue-ink); }
+
+  body[data-view="overview"] [data-block="more"],
+  body[data-view="home"] [data-block="more"],
+  body[data-view="water"] [data-block="more"],
+  body[data-view="confirm"] [data-block="more"],
+  body[data-view="rice"] [data-block="lead"],
+  body[data-view="essentials"] [data-block="lead"],
+  body[data-view="progress"] [data-block="lead"] { display: none; }
+  body[data-view="home"] .device:not([data-id="home"]),
+  body[data-view="water"] .device:not([data-id="water"]),
+  body[data-view="confirm"] .device:not([data-id="confirm"]),
+  body[data-view="rice"] .device:not([data-id="rice"]),
+  body[data-view="essentials"] .device:not([data-id="essentials"]),
+  body[data-view="progress"] .device:not([data-id="progress"]) { display: none; }
+  body[data-view="home"] .intro,
+  body[data-view="water"] .intro,
+  body[data-view="confirm"] .intro,
+  body[data-view="rice"] .intro,
+  body[data-view="essentials"] .intro,
+  body[data-view="progress"] .intro { display: none; }
+
+  .screen {
+    width: 390px; height: 844px; border-radius: 36px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    background:
+      radial-gradient(130% 52% at -8% -6%, rgba(255, 178, 140, .5), transparent 52%),
+      radial-gradient(90% 42% at 108% -4%, rgba(168, 200, 255, .48), transparent 48%),
+      radial-gradient(70% 36% at 78% 18%, rgba(220, 200, 242, .36), transparent 58%),
+      #f6f3ee;
+    box-shadow: 0 24px 60px rgba(40, 32, 24, .1), 0 2px 8px rgba(40, 32, 24, .04);
+    border: 1px solid rgba(255,255,255,.7);
+  }
+  .screen ::-webkit-scrollbar { width: 0; height: 0; }
+  .status {
+    height: 52px; flex: none; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 22px 6px; font-weight: 600; font-size: 15px; letter-spacing: -.02em;
+  }
+  .status-icons { display: flex; align-items: center; gap: 6px; }
+  .status-icons svg { display: block; }
+  .body { flex: 1; min-height: 0; overflow: auto; padding: 2px 20px 8px; }
+  .icon { width: 22px; height: 22px; display: block; }
+  .icon.sm { width: 18px; height: 18px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
+    background: #fff; box-shadow: 0 6px 16px rgba(50, 36, 22, .06);
+    display: grid; place-items: center; color: var(--ink); position: relative; padding: 0;
+  }
+  .icon-btn .ndot {
+    position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--blue); box-shadow: 0 0 0 2px #fff;
+  }
+  .toast {
+    position: absolute; z-index: 20; left: 16px; right: 16px; top: 62px;
+    background: #171717; color: #fff; border-radius: 16px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.35; opacity: 0; transform: translateY(-6px);
+    pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  .appbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%; background: #f3d2c0; color: #6a3a28;
+    display: grid; place-items: center; font-weight: 700; font-size: 18px; position: relative; flex: none;
+  }
+  .avatar .badge {
+    position: absolute; right: -3px; bottom: -2px; width: 18px; height: 18px; border-radius: 5px;
+    box-shadow: 0 0 0 2px #fff;
+  }
+  .kicker { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .addr {
+    border: 0; background: none; padding: 0; display: flex; align-items: center; gap: 2px;
+    font-weight: 700; font-size: 15px; letter-spacing: -.02em;
+  }
+  .addr svg { width: 16px; height: 16px; }
+  .appbar-actions { display: flex; gap: 8px; }
+  .welcome { margin-top: 22px; }
+  .welcome h2 { margin: 0; font-size: 34px; line-height: 1.05; letter-spacing: -.045em; font-weight: 700; }
+  .welcome p { margin: 8px 0 0; font-size: 22px; line-height: 1.2; letter-spacing: -.03em; font-weight: 500; color: #2a2724; }
+
+  .upcoming {
+    margin-top: 20px; background: #fff; border-radius: 22px; box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,.9); display: grid; grid-template-columns: 52px 1fr auto;
+    gap: 10px; align-items: center; padding: 10px 12px 10px 10px;
+  }
+  .upcoming strong { display: block; font-size: 15px; letter-spacing: -.02em; }
+  .upcoming span { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+  .shot { width: 52px; height: 52px; overflow: hidden; display: grid; place-items: center; flex: none; }
+  .shot img { width: 118%; height: 118%; max-width: none; object-fit: contain; }
+  .shot.lg { width: 72px; height: 72px; }
+  .shot.xl { width: 68px; height: 68px; }
+  .pill-status {
+    background: var(--blue-soft); color: var(--blue-ink); font-style: normal; font-weight: 700;
+    font-size: 13px; padding: 6px 10px; border-radius: 999px;
+  }
+  .cats { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cat {
+    position: relative; height: 156px; border: 0; border-radius: 26px; background: #fff;
+    box-shadow: var(--shadow); overflow: hidden; padding: 14px; text-align: left;
+    display: flex; align-items: flex-end;
+  }
+  .cat img {
+    position: absolute; width: 188px; height: 188px; max-width: none; right: -46px; bottom: -36px; object-fit: cover;
+  }
+  .cat::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, #fff 0 22%, rgba(255,255,255,.92) 38%, rgba(255,255,255,0) 62%);
+  }
+  .cat-copy { position: relative; z-index: 1; }
+  .cat-copy strong { display: block; font-size: 16px; letter-spacing: -.02em; }
+  .cat-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 1.3; max-width: 92px; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 8px; }
+  .sec h3 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+  .sec button { border: 0; background: none; padding: 0; color: var(--muted); font-weight: 600; font-size: 14px; }
+  .elist { background: #fff; border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+  .erow { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; }
+  .erow + .erow { border-top: 1px solid #f0ebe6; }
+  .erow strong { display: block; font-size: 14px; letter-spacing: -.02em; }
+  .erow span { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+  .mini {
+    height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: #141414; color: #fff;
+    font-size: 13px; font-weight: 700;
+  }
+  .near-row { display: flex; align-items: baseline; gap: 8px; padding: 6px 2px; }
+  .near-row strong { font-size: 14px; font-weight: 700; letter-spacing: -.02em; }
+  .near-row span { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .near-row em { font-style: normal; color: var(--good); font-weight: 700; font-size: 13px; }
+
+  .tabs {
+    flex: none; margin: 0 14px 10px; height: 60px; border-radius: 24px; background: #fff;
+    box-shadow: 0 10px 28px rgba(48, 34, 18, .08); display: grid; grid-template-columns: repeat(4, 1fr);
+  }
+  .tab {
+    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; color: #5c574f; font-size: 12px; font-weight: 600;
+  }
+  .tab.on { color: #141414; font-weight: 700; }
+  .tab svg { width: 22px; height: 22px; }
+
+  .topbar { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 4px; height: 48px; }
+  .mark { width: 28px; height: 28px; min-width: 28px; min-height: 28px; flex: none; border-radius: 7px; object-fit: contain; }
+  .orb-wrap { position: relative; width: 132px; height: 132px; margin: 2px auto 12px; flex: none; }
+  .orb-wrap::after {
+    content: ""; position: absolute; left: 16px; right: 16px; bottom: 4px; height: 12px; border-radius: 50%;
+    background: rgba(60, 40, 20, .16); filter: blur(6px); z-index: 0;
+  }
+  .orb {
+    position: relative; z-index: 1; width: 132px; height: 132px; border-radius: 50%; overflow: hidden;
+    background: #fff; display: grid; place-items: center;
+    box-shadow: 0 12px 28px rgba(60, 40, 20, .08);
+  }
+  .orb img { width: 90%; height: 90%; object-fit: contain; }
+  .sheet {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; background: #fff;
+    border-radius: 32px 32px 0 0; box-shadow: 0 -10px 30px rgba(50, 34, 18, .05);
+  }
+  .sheet-body { flex: 1; min-height: 0; overflow: auto; padding: 16px 16px 8px; }
+  .sheet-body h2, .center-title { margin: 2px 0 2px; text-align: center; font-size: 22px; letter-spacing: -.04em; }
+  .subhead { margin: 0 0 8px; text-align: center; color: var(--muted); font-size: 13px; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #efebe6; border-radius: 16px; }
+  .mode {
+    border: 0; background: transparent; border-radius: 12px; height: 40px; font-weight: 700; font-size: 14px;
+  }
+  .mode.on { background: #141414; color: #fff; }
+  .mode-note { margin: 8px 2px 10px; color: #3f3b37; font-size: 13px; line-height: 1.35; min-height: 34px; }
+  .pcard {
+    width: 100%; text-align: left; display: grid; grid-template-columns: 72px 1fr auto; gap: 8px; align-items: center;
+    padding: 8px 12px 8px 8px; margin: 0 0 10px; border-radius: 22px; background: #fff;
+    border: 1px solid rgba(32, 24, 16, .06); box-shadow: var(--shadow);
+  }
+  .pcard.on { background: #f7faff; box-shadow: 0 0 0 1.5px var(--blue), 0 10px 24px rgba(9, 104, 238, .08); }
+  .pcard-copy strong { display: block; font-size: 15px; letter-spacing: -.02em; }
+  .meta { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+  .stock { display: block; margin-top: 2px; color: var(--good); font-size: 13px; font-weight: 600; }
+  .pcard-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 84px; }
+  .pill { background: #f8e6da; color: #8c4518; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .amt { font-size: 16px; font-weight: 700; letter-spacing: -.03em; }
+  .amt-note { font-size: 12px; color: var(--muted); text-align: right; }
+  .dock { flex: none; padding: 4px 16px 14px; background: #fff; }
+  .dock .pay { padding: 4px 0 8px; }
+  .qty-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .qty-row strong { display: block; font-size: 14px; }
+  .qty-row span, .fine { color: var(--muted); font-size: 13px; }
+  .fine { margin: 8px 0 0; text-align: center; }
+  .stepper { display: inline-flex; align-items: center; gap: 2px; background: #f4f1ec; border-radius: 999px; padding: 3px; }
+  .stepper button {
+    width: 36px; height: 36px; border: 0; border-radius: 50%; background: #fff; font-size: 20px; font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .stepper button:disabled { opacity: .35; cursor: default; }
+  .stepper b { min-width: 26px; text-align: center; font-size: 15px; }
+  .cta {
+    width: 100%; height: 52px; border: 0; border-radius: 999px; background: #141414; color: #fff;
+    font-size: 16px; font-weight: 700; letter-spacing: -.02em;
+  }
+  .cta:active { transform: scale(.985); }
+  .cta:disabled { opacity: .45; }
+
+  .supplier, .info, .pay, .sum {
+    display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center;
+  }
+  .supplier { grid-template-columns: 52px 1fr; margin-bottom: 6px; }
+  .bubble {
+    width: 40px; height: 40px; border-radius: 50%; background: #f6f3ee; display: grid; place-items: center; color: var(--ink);
+  }
+  .info { margin: 5px 0; }
+  .info strong, .supplier strong, .pay strong, .sum strong { display: block; font-size: 15px; letter-spacing: -.02em; }
+  .info span, .supplier span, .pay span, .sum .meta { color: var(--muted); font-size: 13px; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 8px; }
+  .choice {
+    height: 56px; border-radius: 18px; border: 1px solid var(--line); background: #fff; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-weight: 700; font-size: 14px;
+  }
+  .choice.on { background: #f7faff; box-shadow: 0 0 0 1.5px var(--blue), 0 8px 20px rgba(9, 104, 238, .08); }
+  .collect {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 0 8px;
+  }
+  .collect strong { display: block; font-size: 14px; }
+  .field { display: block; margin: 4px 0 8px; }
+  .field span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  textarea.notes {
+    width: 100%; border: 0; resize: none; background: #f6f3ee; border-radius: 14px;
+    padding: 8px 12px; min-height: 42px; font-size: 14px; line-height: 1.35;
+  }
+  textarea.notes:focus { box-shadow: 0 0 0 1.5px var(--blue); outline: none; }
+  .pay {
+    width: 100%; text-align: left; border: 0; background: #fff; border-radius: 18px; padding: 8px 4px;
+  }
+  .peso {
+    width: 40px; height: 40px; border-radius: 50%; background: #e7f6ee; color: var(--good);
+    display: grid; place-items: center; font-weight: 700;
+  }
+  .fees { display: grid; gap: 6px; margin-bottom: 10px; }
+  .fee { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: #3f3b37; }
+  .fee.total { margin-top: 2px; padding-top: 8px; border-top: 1px solid #efeae4; color: var(--ink); font-weight: 700; font-size: 16px; }
+  .block-label { margin: 8px 0 6px; font-size: 13px; font-weight: 700; color: #3f3b37; }
+
+  .brandline { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.03em; }
+  .brandline img { width: 22px; height: 22px; border-radius: 6px; }
+  .friendly { margin: 4px 0 0; font-size: 25px; line-height: 1.1; letter-spacing: -.04em; font-weight: 700; }
+  .remind {
+    margin-top: 8px; background: #fff; border-radius: 18px; box-shadow: var(--shadow);
+    padding: 8px 12px; display: flex; gap: 10px; align-items: flex-start;
+    font-size: 14px; line-height: 1.35; color: #3f3b37;
+  }
+  .remind i { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--blue); flex: none; }
+  .ecard {
+    margin-top: 8px; background: #fff; border-radius: 26px; box-shadow: var(--shadow); padding: 10px 12px;
+  }
+  .ecard .cta { height: 46px; }
+  .ecard-top { display: grid; grid-template-columns: 68px 1fr auto; gap: 10px; align-items: center; }
+  .ecard-top strong { display: block; font-size: 16px; letter-spacing: -.02em; }
+  .ecard-top .meta { margin-top: 2px; }
+  .price-lg { font-size: 16px; font-weight: 700; letter-spacing: -.03em; }
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; background: #f6f3ee;
+    border-radius: 16px; padding: 7px 10px; margin: 6px 0;
+  }
+  .meta-grid .wide { grid-column: 1 / -1; }
+  .meta-grid span { display: block; color: var(--muted); font-size: 12px; font-weight: 600; }
+  .meta-grid strong { font-size: 14px; }
+  .secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .ghost {
+    height: 40px; border-radius: 999px; border: 1px solid #e3dcd4; background: #fff; font-weight: 600; font-size: 14px;
+  }
+  .editor { margin-top: 10px; }
+  .editor p { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .segs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .segs button { height: 40px; border-radius: 12px; border: 0; background: #f4f1ec; font-weight: 700; font-size: 14px; }
+  .segs button.on { background: #141414; color: #fff; }
+
+  .progress-title { padding: 0 20px 6px; }
+  .progress-title h2 { margin: 0; font-size: 26px; letter-spacing: -.04em; }
+  .progress-title p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .progress-body { padding-top: 0; }
+  .panel { background: #fff; border-radius: 28px; box-shadow: var(--shadow); padding: 14px 14px 6px; }
+  .panel .kicker { margin: 0; }
+  .panel h3 { margin: 2px 0 2px; font-size: 20px; letter-spacing: -.03em; color: var(--blue-ink); }
+  .panel .lead { margin: 0 0 8px; color: #3f3b37; font-size: 14px; line-height: 1.3; }
+  .steps { list-style: none; margin: 0; padding: 0; position: relative; }
+  .steps::before {
+    content: ""; position: absolute; left: 10px; top: 16px; bottom: 16px; width: 2px; background: #e6e0d8;
+  }
+  .tstep { display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 4px 0; position: relative; align-items: center; }
+  .node {
+    width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid #ddd6ce;
+    display: grid; place-items: center; position: relative; z-index: 1;
+  }
+  .tstep.done .node { background: #171717; border-color: #171717; color: #fff; }
+  .tstep.now .node { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 5px rgba(9, 104, 238, .16); }
+  .node svg { width: 12px; height: 12px; }
+  .node .dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .tstep strong { display: block; font-size: 14px; letter-spacing: -.02em; }
+  .tstep span { display: block; margin-top: 1px; color: var(--muted); font-size: 13px; }
+  .soft-card { margin-top: 8px; background: #fff; border-radius: 22px; box-shadow: var(--shadow); padding: 12px 14px; }
+  .soft-card h3 { margin: 0 0 4px; font-size: 16px; letter-spacing: -.02em; }
+  .detail { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 14px; }
+  .detail span { color: var(--muted); }
+  .help { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .help button {
+    height: 44px; border-radius: 16px; border: 1px solid #e3dcd4; background: #fff; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tokens { padding: 8px 32px 48px; color: #3f3b37; font-size: 13px; line-height: 1.5; max-width: 860px; }
+  .tokens strong { color: var(--ink); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+  .swatch { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 999px; padding: 4px 10px 4px 4px; font-weight: 600; }
+  .swatch i { width: 18px; height: 18px; border-radius: 50%; display: block; }
+  body.shot .site, body.shot .tokens, body.shot figcaption, body.shot .intro, body.shot #single-title { display: none !important; }
+  body.shot { background: #e7e5e2; }
+  body.shot .block { padding: 16px; }
+  body.shot .row { width: auto; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } .cta:active { transform: none; } }
+</style>
+</head>
+<body data-view="all">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6.5 7h13l-1.4 9.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.6L6 7Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M9 7V5.8A2.8 2.8 0 0 1 11.8 3h.4A2.8 2.8 0 0 1 15 5.8V7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.6 12 4l8 6.6V20a1 1 0 0 1-1 1h-5.2v-6.2H10.2V21H5a1 1 0 0 1-1-1Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.2-5.5M20 4v4.5h-4.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M7 3.5h10V20l-2.2-1.3L12.5 20 10.2 18.7 8 20l-2.2-1.3L4 20V5.5A2 2 0 0 1 6 3.5h1Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M8.5 8h7M8.5 12h7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.1" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M5.2 19.2c1.3-2.8 3.6-4.2 6.8-4.2s5.5 1.4 6.8 4.2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.1" fill="none" stroke="currentColor" stroke-width="1.75"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 8v5l3 2" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path d="M5 20V7l7-3 7 3v13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M3 20h18M10 10h.01M14 10h.01M10 14h.01M14 14h.01" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M6 21V5.5A1.5 1.5 0 0 1 7.5 4H16l3 3V21" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/><path d="M15 12h.01" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M8 4h2.2l1.2 3.2-1.7 1a12 12 0 0 0 5.1 5.1l1-1.7L19.2 13V15.2A2 2 0 0 1 17.3 17 14.5 14.5 0 0 1 7 6.7 2 2 0 0 1 8.8 4H8Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M6 17.2 4 20l3.2-1A8.5 8.5 0 1 0 6 17.2Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="site">
+  <div class="lockup">
+    <img src="assets/refilly_icon.svg" alt="Refilly">
+    <div>
+      <h1>Refilly</h1>
+      <p>Water refills and rice. High-fidelity screens for the Flutter app.</p>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Screens">
+    <a href="#all" data-view="all">All screens</a>
+    <a href="#overview" data-view="overview">Overview</a>
+    <a href="#home" data-view="home">Home</a>
+    <a href="#water" data-view="water">Water</a>
+    <a href="#rice" data-view="rice">Rice</a>
+    <a href="#confirm" data-view="confirm">Confirm</a>
+    <a href="#essentials" data-view="essentials">Essentials</a>
+    <a href="#progress" data-view="progress">Progress</a>
+  </nav>
+</header>
+<h2 id="single-title" hidden></h2>
+
+<section class="block" data-block="lead">
+  <div class="intro">
+    <h2>Direction</h2>
+    <p>Home, choosing a refill, and confirming delivery. Same sample order across the last two: 2 round refills from AquaPure, lobby handoff, cash on delivery, ₱110.</p>
+  </div>
+  <div class="row">
+    <figure class="device" data-id="home">
+      <div class="screen" id="screen-home">
+        <div class="status"></div>
+        <div class="body">
+          <header class="appbar">
+            <div class="who">
+              <div class="avatar" aria-hidden="true">J<img class="badge" src="assets/refilly_icon.svg" alt=""></div>
+              <div>
+                <div class="kicker">Deliver to</div>
+                <button class="addr" type="button" data-toast="18 Mabini St, Brgy. Paligsahan, Quezon City">18 Mabini St <svg class="icon"><use href="#i-chev"/></svg></button>
+              </div>
+            </div>
+            <div class="appbar-actions">
+              <button class="icon-btn" type="button" aria-label="Notifications" data-toast="AquaPure confirmed today’s 2:00–4:00 PM delivery."><svg class="icon"><use href="#i-bell"/></svg><i class="ndot"></i></button>
+              <button class="icon-btn" type="button" aria-label="Cart" data-toast="Your cart is empty. Add a refill or a sack when you’re ready."><svg class="icon"><use href="#i-bag"/></svg></button>
+            </div>
+          </header>
+          <div class="welcome">
+            <h2>Hey Junmark</h2>
+            <p>Let’s keep your home stocked.</p>
+          </div>
+          <article class="upcoming">
+            <span class="shot"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+            <div>
+              <strong>Today, 2:00–4:00 PM</strong>
+              <span>2 round refills · AquaPure</span>
+            </div>
+            <em class="pill-status">Confirmed</em>
+          </article>
+          <div class="cats">
+            <button class="cat" type="button" data-toast="Round, slim, and alkaline are on Choose a refill.">
+              <img src="assets/refilly-jug-round.jpg" alt="">
+              <span class="cat-copy"><strong>Water refills</strong><span>Round, slim, and alkaline</span></span>
+            </button>
+            <button class="cat" type="button" data-toast="5, 10, and 25 kg sacks are on Choose your rice.">
+              <img src="assets/refilly-rice-10.jpg" alt="">
+              <span class="cat-copy"><strong>Rice</strong><span>5, 10, 25 kg</span></span>
+            </button>
+          </div>
+          <div class="sec"><h3>Your essentials</h3><button type="button" data-toast="The full list, snooze, and schedule live on My essentials.">See all</button></div>
+          <div class="elist">
+            <div class="erow">
+              <span class="shot"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+              <div><strong>Purified water</strong><span>Usual 2 · Due Nov 16</span></div>
+              <button class="mini" type="button" data-toast="You’ll review the cart and confirm. Nothing is ordered automatically.">Refill now</button>
+            </div>
+            <div class="erow">
+              <span class="shot"><img src="assets/refilly-rice-10.jpg" alt=""></span>
+              <div><strong>Jasmine rice</strong><span>Usual 1 · Due Nov 18</span></div>
+              <button class="mini" type="button" data-toast="You’ll review the cart and confirm. Nothing is ordered automatically.">Refill now</button>
+            </div>
+          </div>
+          <div class="sec"><h3>Nearby suppliers</h3></div>
+          <div class="near-row"><strong>AquaPure Station</strong><span>Water · 0.8 km</span><em>Open</em></div>
+          <div class="near-row"><strong>Golden Grain</strong><span>Rice · 1.1 km</span><em>Open</em></div>
+        </div>
+        <nav class="tabs" aria-label="Primary">
+          <button class="tab on" type="button"><svg><use href="#i-home"/></svg>Home</button>
+          <button class="tab" type="button" data-toast="My essentials keeps your usuals and reminders."><svg><use href="#i-repeat"/></svg>Essentials</button>
+          <button class="tab" type="button" data-toast="Today’s AquaPure order is on Order progress."><svg><use href="#i-receipt"/></svg>Orders</button>
+          <button class="tab" type="button" data-toast="Account holds your profile, saved address, and phone verification."><svg><use href="#i-user"/></svg>Account</button>
+        </nav>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>Home</strong>
+        <span>Welcome, today’s confirmed window, both categories, usuals, and two nearby suppliers.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+
+    <figure class="device" data-id="water">
+      <div class="screen" id="screen-water">
+        <div class="status"></div>
+        <div class="topbar">
+          <button class="icon-btn" type="button" aria-label="Back" data-toast="Returns to Home."><svg class="icon"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="orb-wrap"><div class="orb"><img id="water-orb" src="assets/refilly-jug-round.jpg" alt=""></div></div>
+        <div class="sheet">
+          <div class="sheet-body">
+            <h2>Choose a refill</h2>
+            <p class="subhead">AquaPure Station · 0.8 km · Open</p>
+            <div class="modes" role="group" aria-label="Container option">
+              <button class="mode on" type="button" data-mode="refill" aria-pressed="true">Refill only</button>
+              <button class="mode" type="button" data-mode="new" aria-pressed="false">New container</button>
+            </div>
+            <p class="mode-note" id="mode-note">You send back an empty container. The price is for the water only.</p>
+            <button class="pcard on" type="button" data-id="round" aria-pressed="true">
+              <span class="shot lg"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Purified water</strong><span class="meta">Round · 5 gal</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="pill">Usual</span><span class="amt">₱35</span><span class="amt-note">Water only</span></span>
+            </button>
+            <button class="pcard" type="button" data-id="slim" aria-pressed="false">
+              <span class="shot lg"><img src="assets/refilly-jug-slim.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Purified water</strong><span class="meta">Slim · 5 gal</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="amt">₱32</span><span class="amt-note">Water only</span></span>
+            </button>
+            <button class="pcard" type="button" data-id="alk" aria-pressed="false">
+              <span class="shot lg"><img src="assets/refilly-jug-alkaline.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Alkaline water</strong><span class="meta">Round · 5 gal</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="amt">₱48</span><span class="amt-note">Water only</span></span>
+            </button>
+          </div>
+          <div class="dock">
+            <div class="qty-row">
+              <div><strong>Quantity</strong><span id="water-sum">2 × ₱35</span></div>
+              <div class="stepper">
+                <button type="button" data-qty="dec" aria-label="Decrease quantity">−</button>
+                <b id="water-qty">2</b>
+                <button type="button" data-qty="inc" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+            <button class="cta" id="water-cta" type="button">Add to cart · ₱70</button>
+            <p class="fine">Delivery fee is shown before you place the order.</p>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>Choose a refill</strong>
+        <span>Refill only is separate from a new container. The blue ring is the selected product.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+
+    <figure class="device" data-id="confirm">
+      <div class="screen" id="screen-confirm">
+        <div class="status"></div>
+        <div class="topbar">
+          <button class="icon-btn" type="button" aria-label="Back" data-toast="Returns to the cart."><svg class="icon"><use href="#i-back"/></svg></button>
+          <img class="mark" src="assets/refilly_icon.svg" width="28" height="28" alt="Refilly">
+        </div>
+        <div class="sheet">
+          <div class="sheet-body">
+            <h2>Confirm delivery</h2>
+            <p class="subhead">Review every charge before you place it</p>
+            <div class="supplier">
+              <span class="shot"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+              <div><strong>AquaPure Station</strong><span>Quezon City · 0.8 km · Open</span></div>
+            </div>
+            <div class="sum">
+              <span class="shot"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+              <div><strong>Purified water</strong><span class="meta">Round · 5 gal · Refill only · × 2</span></div>
+              <b class="amt">₱70</b>
+            </div>
+            <div class="info">
+              <span class="bubble"><svg class="icon sm"><use href="#i-pin"/></svg></span>
+              <div>
+                <span class="kicker">Deliver to</span>
+                <strong>18 Mabini St, Brgy. Paligsahan</strong>
+                <span>Quezon City</span>
+              </div>
+            </div>
+            <div class="info">
+              <span class="bubble"><svg class="icon sm"><use href="#i-clock"/></svg></span>
+              <div>
+                <span class="kicker">Delivery window</span>
+                <strong>Today, 2:00–4:00 PM</strong>
+                <span>AquaPure’s next open window</span>
+              </div>
+            </div>
+            <div class="block-label">Where should we leave it?</div>
+            <div class="choices">
+              <button class="choice on" type="button" data-hand="lobby" aria-pressed="true"><svg class="icon sm"><use href="#i-building"/></svg>Lobby</button>
+              <button class="choice" type="button" data-hand="door" aria-pressed="false"><svg class="icon sm"><use href="#i-door"/></svg>Doorstep</button>
+            </div>
+            <div class="collect">
+              <div><strong>Empty containers to collect</strong><span class="meta" id="collect-help">Round containers we take back</span></div>
+              <div class="stepper">
+                <button type="button" id="empties-dec" aria-label="Fewer empty containers">−</button>
+                <b id="collect-count">2</b>
+                <button type="button" id="empties-inc" aria-label="More empty containers">+</button>
+              </div>
+            </div>
+            <label class="field"><span>Delivery instructions</span>
+              <textarea class="notes" id="instructions" rows="2">Call when you arrive. Leave at the lobby desk.</textarea>
+            </label>
+          </div>
+          <div class="dock">
+            <button class="pay" type="button" data-toast="Cash on delivery is the payment method. You pay the rider.">
+              <span class="peso">₱</span>
+              <span><strong>Cash on Delivery</strong><span>Pay the rider when it arrives</span></span>
+              <svg class="icon sm"><use href="#i-right"/></svg>
+            </button>
+            <div class="fees">
+              <div class="fee"><span>Water, 2 refills</span><span>₱70</span></div>
+              <div class="fee"><span>Delivery fee</span><span>₱40</span></div>
+              <div class="fee"><span>Empty container pickup</span><span id="fee-empties">Free</span></div>
+              <div class="fee total"><span>Total</span><span>₱110</span></div>
+            </div>
+            <button class="cta" id="place-order" type="button">Place order · ₱110</button>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>Confirm delivery</strong>
+        <span>Supplier, window, lobby or doorstep, empties, instructions, and every charge.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="block" data-block="more">
+  <div class="intro">
+    <h2>Same style, extended</h2>
+    <p>Rice quantities, saved essentials, and order progress. No map. A reminder never places an order by itself.</p>
+  </div>
+  <div class="row">
+    <figure class="device" data-id="rice">
+      <div class="screen" id="screen-rice">
+        <div class="status"></div>
+        <div class="topbar">
+          <button class="icon-btn" type="button" aria-label="Back" data-toast="Returns to Home."><svg class="icon"><use href="#i-back"/></svg></button>
+        </div>
+        <div class="orb-wrap"><div class="orb"><img id="rice-orb" src="assets/refilly-rice-10.jpg" alt=""></div></div>
+        <div class="sheet">
+          <div class="sheet-body">
+            <h2>Choose your rice</h2>
+            <p class="subhead">Golden Grain · 1.1 km · Open</p>
+            <p class="mode-note">Sealed whole sacks. You choose the size and how many.</p>
+            <button class="pcard" type="button" data-id="r5" aria-pressed="false">
+              <span class="shot lg"><img src="assets/refilly-rice-5.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Sinandomeng</strong><span class="meta">5 kg sack</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="amt">₱275</span><span class="amt-note">Whole sack</span></span>
+            </button>
+            <button class="pcard on" type="button" data-id="r10" aria-pressed="true">
+              <span class="shot lg"><img src="assets/refilly-rice-10.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Jasmine rice</strong><span class="meta">10 kg sack</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="pill">Usual</span><span class="amt">₱545</span><span class="amt-note">Whole sack</span></span>
+            </button>
+            <button class="pcard" type="button" data-id="r25" aria-pressed="false">
+              <span class="shot lg"><img src="assets/refilly-rice-25.jpg" alt=""></span>
+              <span class="pcard-copy"><strong>Sinandomeng</strong><span class="meta">25 kg sack</span><span class="stock">Available today</span></span>
+              <span class="pcard-price"><span class="amt">₱1,280</span><span class="amt-note">Whole sack</span></span>
+            </button>
+          </div>
+          <div class="dock">
+            <div class="qty-row">
+              <div><strong>Quantity</strong><span id="rice-sum">1 × ₱545</span></div>
+              <div class="stepper">
+                <button type="button" data-qty="dec" aria-label="Decrease quantity">−</button>
+                <b id="rice-qty">1</b>
+                <button type="button" data-qty="inc" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+            <button class="cta" id="rice-cta" type="button">Add to cart · ₱545</button>
+            <p class="fine">Delivery fee is shown before you place the order.</p>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>Choose your rice</strong>
+        <span>5 kg, 10 kg, and 25 kg. Jasmine 10 kg is the saved usual.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+
+    <figure class="device" data-id="essentials">
+      <div class="screen" id="screen-essentials">
+        <div class="status"></div>
+        <div class="body">
+          <div class="brandline"><img src="assets/refilly_icon.svg" alt=""><span>Refilly</span></div>
+          <h2 class="friendly">Your usuals, ready when you need them.</h2>
+          <div class="remind"><i></i><span>We’ll remind you when a refill is close. You confirm before an order is placed.</span></div>
+
+          <article class="ecard" data-routine="water">
+            <div class="ecard-top">
+              <span class="shot xl"><img src="assets/refilly-jug-round.jpg" alt=""></span>
+              <div><strong>Purified water</strong><span class="meta">Round · 5 gal</span><span class="meta">AquaPure Station</span></div>
+              <b class="price-lg">₱35</b>
+            </div>
+            <div class="meta-grid">
+              <div><span>Usual quantity</span><strong>2</strong></div>
+              <div><span>Next refill</span><strong class="due">Mon, Nov 16</strong></div>
+              <div class="wide"><span>Schedule</span><strong class="sched-label">Every 14 days</strong></div>
+            </div>
+            <button class="cta refill" type="button">Refill now</button>
+            <div class="secondary">
+              <button class="ghost snooze" type="button">Snooze 3 days</button>
+              <button class="ghost edit" type="button">Edit schedule</button>
+            </div>
+            <div class="editor" hidden>
+              <p>Remind every</p>
+              <div class="segs">
+                <button type="button" data-days="7">7 days</button>
+                <button type="button" data-days="14" class="on">14 days</button>
+                <button type="button" data-days="30">30 days</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="ecard" data-routine="rice">
+            <div class="ecard-top">
+              <span class="shot xl"><img src="assets/refilly-rice-10.jpg" alt=""></span>
+              <div><strong>Jasmine rice</strong><span class="meta">10 kg sack</span><span class="meta">Golden Grain</span></div>
+              <b class="price-lg">₱545</b>
+            </div>
+            <div class="meta-grid">
+              <div><span>Usual quantity</span><strong>1</strong></div>
+              <div><span>Next refill</span><strong class="due">Wed, Nov 18</strong></div>
+              <div class="wide"><span>Schedule</span><strong class="sched-label">Every 30 days</strong></div>
+            </div>
+            <button class="cta refill" type="button">Refill now</button>
+            <div class="secondary">
+              <button class="ghost snooze" type="button">Snooze 3 days</button>
+              <button class="ghost edit" type="button">Edit schedule</button>
+            </div>
+            <div class="editor" hidden>
+              <p>Remind every</p>
+              <div class="segs">
+                <button type="button" data-days="7">7 days</button>
+                <button type="button" data-days="14">14 days</button>
+                <button type="button" data-days="30" class="on">30 days</button>
+              </div>
+            </div>
+          </article>
+        </div>
+        <nav class="tabs" aria-label="Primary">
+          <button class="tab" type="button" data-toast="Home is the welcome screen."><svg><use href="#i-home"/></svg>Home</button>
+          <button class="tab on" type="button"><svg><use href="#i-repeat"/></svg>Essentials</button>
+          <button class="tab" type="button" data-toast="Today’s AquaPure order is on Order progress."><svg><use href="#i-receipt"/></svg>Orders</button>
+          <button class="tab" type="button" data-toast="Account holds your profile, saved address, and phone verification."><svg><use href="#i-user"/></svg>Account</button>
+        </nav>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>My essentials</strong>
+        <span>Usual quantity, next refill, refill now, snooze, and schedule. Confirmation stays with you.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+
+    <figure class="device" data-id="progress">
+      <div class="screen" id="screen-progress">
+        <div class="status"></div>
+        <div class="topbar">
+          <button class="icon-btn" type="button" aria-label="Back" data-toast="Returns to Orders."><svg class="icon"><use href="#i-back"/></svg></button>
+          <img class="mark" src="assets/refilly_icon.svg" width="28" height="28" alt="Refilly">
+        </div>
+        <div class="progress-title">
+          <h2>Order progress</h2>
+          <p>Order #RF-20418</p>
+        </div>
+        <div class="body progress-body">
+          <section class="panel" aria-label="Order status">
+            <h3>Confirmed</h3>
+            <p class="lead">AquaPure accepted this order.</p>
+            <ol class="steps">
+              <li class="tstep done"><span class="node"><svg><use href="#i-check"/></svg></span><div><strong>Waiting for supplier acceptance</strong><span>Done · 1:06 PM</span></div></li>
+              <li class="tstep now"><span class="node"><i class="dot"></i></span><div><strong>Confirmed</strong><span>Now · Window locked in</span></div></li>
+              <li class="tstep"><span class="node"></span><div><strong>Preparing</strong><span>Filling your containers</span></div></li>
+              <li class="tstep"><span class="node"></span><div><strong>Out for delivery</strong><span>A rider is assigned here</span></div></li>
+              <li class="tstep"><span class="node"></span><div><strong>Delivered</strong><span id="progress-delivered">Lobby handoff</span></div></li>
+            </ol>
+          </section>
+          <section class="soft-card">
+            <h3>Delivery window</h3>
+            <div class="detail"><span>When</span><strong>Today, 2:00–4:00 PM</strong></div>
+            <div class="detail"><span>Where</span><strong id="progress-where">Lobby</strong></div>
+            <div class="detail"><span>Address</span><strong>18 Mabini St</strong></div>
+          </section>
+          <section class="soft-card">
+            <h3>Order details</h3>
+            <div class="detail"><span>Supplier</span><strong>AquaPure Station</strong></div>
+            <div class="detail"><span>Items</span><strong>2 × round refill</strong></div>
+            <div class="detail"><span>Empties</span><strong id="progress-collect">Collect 2 containers</strong></div>
+            <div class="detail"><span>Payment</span><strong>Cash · ₱110</strong></div>
+          </section>
+          <section class="soft-card">
+            <h3>Need help?</h3>
+            <div class="help">
+              <button type="button" data-toast="Prototype line · 0917 555 0184"><svg class="icon sm"><use href="#i-phone"/></svg>Call AquaPure</button>
+              <button type="button" data-toast="Support would open a chat. Prototype only."><svg class="icon sm"><use href="#i-chat"/></svg>Message support</button>
+            </div>
+          </section>
+        </div>
+        <div class="toast" role="status"></div>
+      </div>
+      <figcaption>
+        <strong>Order progress</strong>
+        <span>Five-step timeline, the delivery window, order details, and support. No live map.</span>
+        <em>Prototype data</em>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="tokens">
+  <div class="swatches">
+    <span class="swatch"><i style="background:#171717"></i>Ink #171717</span>
+    <span class="swatch"><i style="background:#0968ee"></i>Brand #0968EE</span>
+    <span class="swatch"><i style="background:#141414"></i>Button #141414</span>
+    <span class="swatch"><i style="background:#f6f3ee;border:1px solid #e4ddd4"></i>Surface #F6F3EE</span>
+    <span class="swatch"><i style="background:#0d6a3e"></i>Open #0D6A3E</span>
+  </div>
+  <p><strong>Prototype data.</strong> Junmark, 18 Mabini St, Brgy. Paligsahan, Quezon City. Prices are Philippine pesos. Brand blue is only the selected product, the confirmed status, the notification dot, and the current timeline step. Cards use a 24px radius, the sheet 32px, and buttons a full pill. Type is Inter, already used in the Flutter app.</p>
+</footer>
+
+<script>
+const statusHTML = `<span>9:41</span><span class="status-icons" aria-hidden="true">
+  <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="5" width="3" height="7" rx="1"/><rect x="9" y="2.5" width="3" height="9.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+  <svg width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.2a8 8 0 0 1 13 0"/><path d="M3.4 6.6a4.8 4.8 0 0 1 8.2 0"/><path d="M6 9.1a2 2 0 0 1 3 0"/></svg>
+  <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".7" y=".7" width="20" height="10.6" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="2.2" y="2.2" width="15" height="7.6" rx="1.2" fill="currentColor"/><path d="M22.2 3.6h1.1c.5 0 .9.4.9.9v2.9c0 .5-.4.9-.9.9h-1.1" fill="currentColor"/></svg>
+</span>`;
+if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
+document.querySelectorAll('.status').forEach(el => { el.innerHTML = statusHTML; });
+
+const VIEWS = ['all','overview','home','water','rice','confirm','essentials','progress'];
+const TITLES = { home:'Home', water:'Choose a refill', rice:'Choose your rice', confirm:'Confirm delivery', essentials:'My essentials', progress:'Order progress' };
+function applyView() {
+  const raw = location.hash.replace('#','');
+  const view = VIEWS.includes(raw) ? raw : 'all';
+  document.body.dataset.view = view;
+  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.view === view ? 'true' : 'false'));
+  const single = document.getElementById('single-title');
+  if (TITLES[view]) { single.hidden = false; single.textContent = TITLES[view]; }
+  else single.hidden = true;
+}
+window.addEventListener('hashchange', applyView);
+applyView();
+
+function showToast(screen, message) {
+  const el = screen.querySelector('.toast');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+document.querySelectorAll('[data-toast]').forEach(btn => {
+  btn.addEventListener('click', () => showToast(btn.closest('.screen'), btn.dataset.toast));
+});
+
+const money = n => '₱' + n.toLocaleString('en-PH');
+const WATER = {
+  round: { refill: 35, container: 150, img: 'assets/refilly-jug-round.jpg' },
+  slim: { refill: 32, container: 130, img: 'assets/refilly-jug-slim.jpg' },
+  alk: { refill: 48, container: 160, img: 'assets/refilly-jug-alkaline.jpg' },
+};
+const waterState = { mode: 'refill', id: 'round', qty: 2 };
+function waterUnit(id) {
+  const p = WATER[id];
+  return waterState.mode === 'refill' ? p.refill : p.refill + p.container;
+}
+function renderWater() {
+  const root = document.getElementById('screen-water');
+  root.querySelectorAll('.pcard').forEach(card => {
+    const id = card.dataset.id;
+    const on = id === waterState.id;
+    card.classList.toggle('on', on);
+    card.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const unit = waterUnit(id);
+    card.querySelector('.amt').textContent = money(unit);
+    card.querySelector('.amt-note').textContent = waterState.mode === 'refill' ? 'Water only' : `${money(WATER[id].refill)} + ${money(WATER[id].container)}`;
+  });
+  root.querySelectorAll('.mode').forEach(b => {
+    const on = b.dataset.mode === waterState.mode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  root.querySelector('#water-qty').textContent = waterState.qty;
+  root.querySelector('[data-qty="dec"]').disabled = waterState.qty <= 1;
+  root.querySelector('[data-qty="inc"]').disabled = waterState.qty >= 8;
+  const unit = waterUnit(waterState.id);
+  const total = unit * waterState.qty;
+  root.querySelector('#water-sum').textContent = `${waterState.qty} × ${money(unit)}`;
+  root.querySelector('#water-cta').textContent = `Add to cart · ${money(total)}`;
+  root.querySelector('#water-orb').src = WATER[waterState.id].img;
+  root.querySelector('#mode-note').textContent = waterState.mode === 'refill'
+    ? 'You send back an empty container. The price is for the water only.'
+    : 'You keep the new container. The price includes the container and the water.';
+}
+document.getElementById('screen-water').addEventListener('click', e => {
+  const card = e.target.closest('.pcard');
+  if (card) { waterState.id = card.dataset.id; renderWater(); return; }
+  const mode = e.target.closest('.mode');
+  if (mode) { waterState.mode = mode.dataset.mode; renderWater(); return; }
+  if (e.target.closest('[data-qty="dec"]')) { waterState.qty = Math.max(1, waterState.qty - 1); renderWater(); }
+  if (e.target.closest('[data-qty="inc"]')) { waterState.qty = Math.min(8, waterState.qty + 1); renderWater(); }
+  if (e.target.closest('#water-cta')) {
+    showToast(document.getElementById('screen-water'), `Added to the prototype cart · ${money(waterUnit(waterState.id) * waterState.qty)}. Nothing was ordered.`);
+  }
+});
+
+const RICE = {
+  r5: { price: 275, img: 'assets/refilly-rice-5.jpg' },
+  r10: { price: 545, img: 'assets/refilly-rice-10.jpg' },
+  r25: { price: 1280, img: 'assets/refilly-rice-25.jpg' },
+};
+const riceState = { id: 'r10', qty: 1 };
+function renderRice() {
+  const root = document.getElementById('screen-rice');
+  root.querySelectorAll('.pcard').forEach(card => {
+    const on = card.dataset.id === riceState.id;
+    card.classList.toggle('on', on);
+    card.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  root.querySelector('#rice-qty').textContent = riceState.qty;
+  root.querySelector('[data-qty="dec"]').disabled = riceState.qty <= 1;
+  root.querySelector('[data-qty="inc"]').disabled = riceState.qty >= 6;
+  const price = RICE[riceState.id].price;
+  root.querySelector('#rice-sum').textContent = `${riceState.qty} × ${money(price)}`;
+  root.querySelector('#rice-cta').textContent = `Add to cart · ${money(price * riceState.qty)}`;
+  root.querySelector('#rice-orb').src = RICE[riceState.id].img;
+}
+document.getElementById('screen-rice').addEventListener('click', e => {
+  const card = e.target.closest('.pcard');
+  if (card) { riceState.id = card.dataset.id; renderRice(); return; }
+  if (e.target.closest('[data-qty="dec"]')) { riceState.qty = Math.max(1, riceState.qty - 1); renderRice(); }
+  if (e.target.closest('[data-qty="inc"]')) { riceState.qty = Math.min(6, riceState.qty + 1); renderRice(); }
+  if (e.target.closest('#rice-cta')) {
+    showToast(document.getElementById('screen-rice'), `Added to the prototype cart · ${money(RICE[riceState.id].price * riceState.qty)}. Nothing was ordered.`);
+  }
+});
+
+let empties = 2;
+let handoff = 'lobby';
+const NOTES = {
+  lobby: 'Call when you arrive. Leave at the lobby desk.',
+  door: 'Call when you arrive. Leave at the door.',
+};
+const notesEl = document.getElementById('instructions');
+function renderConfirm() {
+  document.querySelectorAll('#screen-confirm .choice').forEach(b => {
+    const on = b.dataset.hand === handoff;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('collect-count').textContent = String(empties);
+  document.getElementById('empties-dec').disabled = empties <= 0;
+  document.getElementById('empties-inc').disabled = empties >= 6;
+  document.getElementById('fee-empties').textContent = empties === 0 ? '—' : 'Free';
+  document.getElementById('collect-help').textContent = empties === 0 ? 'No empties on this trip' : 'Round containers we take back';
+  const where = handoff === 'lobby' ? 'Lobby' : 'Doorstep';
+  document.getElementById('progress-where').textContent = where;
+  document.getElementById('progress-delivered').textContent = `${where} handoff`;
+  const collect = empties === 0 ? 'None' : `Collect ${empties}`;
+  document.getElementById('progress-collect').textContent = collect;
+}
+document.getElementById('screen-confirm').addEventListener('click', e => {
+  const choice = e.target.closest('.choice');
+  if (choice) {
+    const next = choice.dataset.hand;
+    if (!notesEl.dataset.dirty && (notesEl.value === NOTES[handoff] || notesEl.value.trim() === '')) notesEl.value = NOTES[next];
+    handoff = next;
+    renderConfirm();
+    return;
+  }
+  if (e.target.closest('#empties-dec')) { empties = Math.max(0, empties - 1); renderConfirm(); }
+  if (e.target.closest('#empties-inc')) { empties = Math.min(6, empties + 1); renderConfirm(); }
+  if (e.target.closest('#place-order')) showToast(document.getElementById('screen-confirm'), 'Prototype only. No order was sent.');
+});
+notesEl.addEventListener('input', () => { notesEl.dataset.dirty = '1'; });
+
+const DUE = { water: 'Mon, Nov 16', rice: 'Wed, Nov 18' };
+document.getElementById('screen-essentials').addEventListener('click', e => {
+  const card = e.target.closest('.ecard');
+  if (!card) return;
+  const screen = document.getElementById('screen-essentials');
+  if (e.target.closest('.refill')) {
+    showToast(screen, 'Next you’ll review the cart and confirm. Nothing is ordered automatically.');
+    return;
+  }
+  if (e.target.closest('.edit')) {
+    const editor = card.querySelector('.editor');
+    editor.hidden = !editor.hidden;
+    return;
+  }
+  const dayBtn = e.target.closest('[data-days]');
+  if (dayBtn) {
+    card.querySelectorAll('[data-days]').forEach(b => b.classList.toggle('on', b === dayBtn));
+    card.querySelector('.sched-label').textContent = `Every ${dayBtn.dataset.days} days`;
+    card.querySelector('.editor').hidden = true;
+    showToast(screen, `Reminder set to every ${dayBtn.dataset.days} days. You still confirm each order.`);
+    return;
+  }
+  if (e.target.closest('.snooze')) {
+    const btn = card.querySelector('.snooze');
+    const due = card.querySelector('.due');
+    const key = card.dataset.routine;
+    if (btn.dataset.snoozed === '1') {
+      btn.dataset.snoozed = '0';
+      btn.textContent = 'Snooze 3 days';
+      due.textContent = DUE[key];
+      showToast(screen, 'Snooze cleared. The usual reminder is back.');
+    } else {
+      btn.dataset.snoozed = '1';
+      btn.textContent = 'Unsnooze';
+      due.textContent = 'Thu, Nov 5';
+      showToast(screen, 'Snoozed until Thu, Nov 5. No order was created.');
+    }
+  }
+});
+</script>
+</body>
+</html>

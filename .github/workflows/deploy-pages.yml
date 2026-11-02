@@ -79,6 +79,9 @@ jobs:
           touch build/web/.nojekyll
           test -s build/web/index.html
           test -s build/web/main.dart.js
+          mkdir -p build/web/redesign
+          cp -a docs/redesign/. build/web/redesign/
+          test -s build/web/redesign/index.html
 
       - name: Upload GitHub Pages site
         uses: actions/upload-pages-artifact@v4
