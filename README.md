@@ -1,61 +1,81 @@
 <div align="center">
-  <img src="assets/brand/refilly_app_icon.png" alt="Refilly blue R logo" width="112" height="112" />
+  <img src="assets/brand/refilly_app_icon.png" alt="Refilly logo" width="112" height="112" />
 
   # Refilly
 
   **Restock the essentials. Repeat without the hassle.**
 
-  Discover local suppliers for the household essentials you buy again and again.
+  Order water refills from local refilling stations, track them to your door, and reorder in a few taps.
 
-  **Water refills available first · Rice & LPG gas planned**
-
-  [Features](#what-refilly-does) · [Preview](#product-preview) · [Setup](#run-locally) · [Roadmap](#refill-focused-roadmap)
+  [Try the web app](https://junmarkchi97.github.io/Refilly/) · [The problem](#the-problem) · [Screenshots](#screenshots) · [Run locally](#run-locally)
 </div>
+
+<p align="center">
+  <img src="docs/screenshots/refilly-mockup.jpg" alt="Refilly on three phones: choosing a refill, the home screen, and live order progress" width="100%" />
+</p>
+
+<p align="center"><sub>Mockup built from real screenshots of the current app.</sub></p>
 
 ---
 
 ## What is Refilly?
 
-Refilly is a **repeat-essentials ordering platform**, built around everyday replenishment. Think **water refills, rice, and LPG gas**—products households need on a regular basis.
+Refilly is a mobile and web app for ordering the **household essentials you buy again and again**, starting with **water refills**. Customers find nearby water refilling stations, choose a refill (bring your own container or get a new one), pay cash on delivery, and follow the order until it reaches the door. Station owners get a simple dashboard for orders, products, riders, and sales.
 
-It is **not** intended to be a general-purpose delivery, food-ordering, or courier app. Delivery is part of fulfilling an essentials order; **easy ordering and reordering are the core experience**.
+Water is live today. Rice and LPG gas are planned next.
 
-> **Current launch scope:** Water refilling stations and water products. **Rice and LPG gas are future categories**, not available to order yet. Automated recurring subscriptions and scheduled deliveries are also not implemented.
+## The problem
 
-## Product preview
+In many Filipino households, drinking water comes from the neighborhood refilling station. Ordering it is still mostly manual:
 
-<div align="center">
-  <a href="docs/showcase/refilly-product-mockup.webp">
-    <img src="docs/showcase/refilly-product-mockup.webp" alt="Refilly showcase: recurring household essentials with water available now, rice and LPG planned, and three phone mockups of browsing, ordering and address entry" width="100%" />
-  </a>
-</div>
+- **You have to message or call** the station every time, often on Messenger or by text, and wait for a reply.
+- **Prices and delivery fees are unclear** until someone answers.
+- **There is no way to know where your order is.** Is it confirmed? Is the rider on the way? When will it arrive?
+- **Stations track orders by hand** in chats and notebooks, so orders get missed, riders get the wrong address, and cash collection is hard to reconcile.
+- **Reordering the same thing every week** means repeating the whole conversation again.
 
-<p align="center"><sub>Product concept supplied for Refilly branding. It includes illustrative screens and sample details, not actual screenshots. Water refilling is available first; rice and LPG are planned.</sub></p>
+## Why I built Refilly
 
-### Feature-flow illustration
+I made Refilly to fix this. I wanted ordering a water refill to be as easy as tapping **Order now**, with clear prices up front, a delivery you can actually follow, and a one-tap reorder for next time. I also wanted small refilling stations to have a real tool to receive orders, assign riders, and see their sales, without needing a big system.
 
-<div align="center">
-  <a href="docs/showcase/refilly-product-overview.svg">
-    <img src="docs/showcase/refilly-product-overview.svg" alt="Refilly product mockup: water-station discovery, address-aware checkout and one-tap reordering" width="100%" />
-  </a>
-</div>
+— Junmark
 
-<sub>Conceptual product mockup based on existing Flutter flows; **not an actual screenshot**. Water refilling is the current category. Rice and LPG gas are planned.</sub>
+## How Refilly solves it
 
-## Feature showcase
+| Problem | What Refilly does |
+| --- | --- |
+| Messaging the station every time | Browse nearby stations and products, then order in a few taps |
+| Unclear prices and fees | The total, including the delivery fee, is shown before you place the order |
+| Not knowing where your order is | Live order progress: sent, confirmed, preparing, delivering, delivered |
+| Wrong or vague addresses | Saved delivery address with a map pin, plus lobby or doorstep handoff notes |
+| Repeating the same order | Reorder past orders and save them to **My Essentials** with refill reminders |
+| Stations tracking orders by hand | Owner dashboard to accept orders, assign saved riders, share a private rider link, and view sales |
 
-<div align="center">
-  <img src="docs/showcase/01-refill-essentials.svg" alt="Refilly: everyday essentials, water available now with rice and LPG planned" width="24%" />
-  <img src="docs/showcase/02-find-stations.svg" alt="Refilly: discover nearby water refilling stations on a map" width="24%" />
-  <img src="docs/showcase/03-reorder.svg" alt="Refilly: reorder completed or cancelled refill orders" width="24%" />
-  <img src="docs/showcase/04-order-updates.svg" alt="Refilly: follow order preparation and delivery status" width="24%" />
-</div>
+## Screenshots
 
-<div align="center">
-  <img src="docs/showcase/05-station-owner.svg" alt="Refilly for station owners: products, orders, and sales" width="24%" />
-</div>
+All screenshots below are from the current app.
 
-<sub>**Design previews:** App Store–style illustrations of product flows, **not literal screenshots or a guarantee of current UI appearance**. Sample names, amounts, and counts are illustrative. The app currently supports water refilling; rice and LPG are planned.</sub>
+### For customers
+
+<p align="center">
+  <img src="docs/screenshots/home.jpg" alt="Home screen" width="24%" />
+  <img src="docs/screenshots/choose-refill.jpg" alt="Choose a refill" width="24%" />
+  <img src="docs/screenshots/checkout.jpg" alt="Confirm delivery checkout" width="24%" />
+  <img src="docs/screenshots/order-progress.jpg" alt="Order progress tracking" width="24%" />
+</p>
+
+<p align="center"><sub>Home · Choose a refill · Confirm delivery · Order progress</sub></p>
+
+### For station owners
+
+<p align="center">
+  <img src="docs/screenshots/owner-orders.jpg" alt="Owner orders" width="24%" />
+  <img src="docs/screenshots/owner-products.jpg" alt="Owner products" width="24%" />
+  <img src="docs/screenshots/owner-sales.jpg" alt="Owner sales" width="24%" />
+  <img src="docs/screenshots/delivery-address.jpg" alt="Delivery address with map pin" width="24%" />
+</p>
+
+<p align="center"><sub>Orders · Products · Sales · Delivery address</sub></p>
 
 ## What Refilly does
 
