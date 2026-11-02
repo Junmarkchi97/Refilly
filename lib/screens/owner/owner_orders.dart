@@ -256,26 +256,88 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     }
   }
 
-  Widget _btn(String label, VoidCallback? onTap, {bool primary = true, bool busy = false}) {
-    final style = ButtonStyle(
-      minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-    );
+  Widget _btn(String label, VoidCallback? onTap, {bool primary = true, bool busy = false, bool danger = false}) {
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
     final child = busy && primary
         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
         : Text(label);
-    return Expanded(
-      child: Pressable(
-        child: primary
-            ? FilledButton(style: style, onPressed: busy ? () {} : onTap, child: child)
-            : OutlinedButton(style: style, onPressed: busy ? null : onTap, child: child),
-      ),
-    );
+    final button = danger
+        ? OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFD14343),
+              side: const BorderSide(color: Color(0xFFF0B4B4)),
+              minimumSize: const Size.fromHeight(48),
+              shape: shape,
+            ),
+            onPressed: busy ? null : onTap,
+            child: child,
+          )
+        : primary
+            ? FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: shape),
+                onPressed: busy ? () {} : onTap,
+                child: child,
+              )
+            : OutlinedButton(
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: shape),
+                onPressed: busy ? null : onTap,
+                child: child,
+              );
+    return Expanded(child: Pressable(child: button));
   }
 
   Widget _tile(Order o) {
     final busy = _busy.contains(o.id);
     final open = o.status != 'delivered' && o.status != 'cancelled';
+    return OwnerOrderCard(
+      order: o,
+      busy: busy,
+      onShare: open && o.riderName != null ? () => _shareExisting(o) : null,
+      onConfirmCash: o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid' ? () => _confirmCod(o) : null,
+      actions: [
+        if (o.status == 'pending') ...[
+          _btn('Reject', () => _act(o, 'cancelled', confirm: 'Reject this order?'), primary: false, danger: true, busy: busy),
+          const SizedBox(width: 10),
+          _btn('Accept', () => _act(o, 'accepted'), busy: busy),
+        ],
+        if (o.status == 'accepted' || o.status == 'preparing') ...[
+          _btn(o.riderName == null ? 'Assign rider' : 'Change rider', () => _assign(o), primary: false),
+          const SizedBox(width: 10),
+          if (o.status == 'accepted') _btn('Preparing', () => _act(o, 'preparing'), busy: busy),
+          if (o.status == 'preparing')
+            _btn('Cancel', () => _act(o, 'cancelled', confirm: 'Cancel this order?'), primary: false, danger: true, busy: busy),
+        ],
+        if (o.status == 'out_for_delivery') _btn('Mark delivered', () => _act(o, 'delivered'), busy: busy),
+      ],
+    );
+  }
+}
+
+class OwnerOrderCard extends StatelessWidget {
+  final Order order;
+  final bool busy;
+  final VoidCallback? onShare;
+  final VoidCallback? onConfirmCash;
+  final List<Widget> actions;
+  const OwnerOrderCard({
+    super.key,
+    required this.order,
+    required this.actions,
+    this.busy = false,
+    this.onShare,
+    this.onConfirmCash,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final name = (order.customer?['full_name'] as String?)?.trim();
+    final customer = name == null || name.isEmpty ? 'Customer' : name;
+    final phone = order.contactPhone ?? order.customer?['phone'] as String?;
+    final note = order.notes?.trim();
+    final count = order.items.fold<int>(0, (total, item) => total + item.quantity);
+    final when = TimeOfDay.fromDateTime(order.createdAt).format(context);
+    final summary = [when, _paymentLabel(order.paymentMethod)].join(' · ');
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
@@ -286,15 +348,16 @@ class _OwnerOrdersState extends State<OwnerOrders> {
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: RF.fill,
                   child: Text(
-                    ((o.customer?['full_name'] as String?) ?? 'C').characters.first.toUpperCase(),
+                    customer.characters.first.toUpperCase(),
                     style: const TextStyle(fontWeight: FontWeight.w800, color: RF.ink),
                   ),
                 ),
@@ -303,95 +366,157 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(o.customer?['full_name'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                      Text(
-                        '${TimeOfDay.fromDateTime(o.createdAt).format(context)} · ${o.items.fold<int>(0, (t, i) => t + i.quantity)} items · ${o.paymentMethod.toUpperCase()}',
-                        style: const TextStyle(color: RF.muted, fontSize: 13),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              customer,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(peso(order.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(summary, style: const TextStyle(color: RF.muted, fontSize: 13)),
+                          ),
+                          const SizedBox(width: 8),
+                          StatusPill(order.status),
+                        ],
                       ),
                     ],
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(peso(o.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
-                    const SizedBox(height: 4),
-                    StatusPill(o.status),
-                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            RouteBox(from: o.contactPhone ?? o.customer?['phone'] ?? 'No phone', to: o.deliveryAddress),
-            const SizedBox(height: 8),
-            for (final i in o.items)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    ProductThumb(i.imageUrl, size: 36, radius: 9),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text('${i.quantity} × ${i.productName}', style: const TextStyle(color: RF.muted)),
-                    ),
-                    Text(peso(i.unitPrice * i.quantity), style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 14),
+            InfoBox(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Column(
+                children: [
+                  _DetailLine(icon: Icons.phone_rounded, label: 'Phone', value: _prettyPhone(phone) ?? 'No phone'),
+                  const Divider(height: 18),
+                  _DetailLine(icon: Icons.location_on_outlined, label: 'Deliver to', value: order.deliveryAddress),
+                  if (note != null && note.isNotEmpty) ...[
+                    const Divider(height: 18),
+                    _DetailLine(icon: Icons.sticky_note_2_outlined, label: 'Note', value: note),
                   ],
-                ),
+                ],
               ),
-            if (o.notes?.isNotEmpty ?? false)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text('Notes: ${o.notes}', style: const TextStyle(color: RF.muted, fontSize: 13)),
-              ),
-            if (o.riderName != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: InfoBox(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+            if (order.items.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(count == 1 ? '1 item' : '$count items', style: const TextStyle(color: RF.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              for (final item in order.items)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.delivery_dining_rounded, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text('${o.riderName} ${o.riderPhone ?? ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      ),
-                      if (open)
-                        TextButton(
-                          onPressed: () => _shareExisting(o),
-                          style: TextButton.styleFrom(foregroundColor: RF.accent),
-                          child: const Text('Share link'),
-                        ),
+                      ProductThumb(item.imageUrl, size: 36, radius: 9),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text('${item.quantity} × ${item.productName}')),
+                      Text(peso(item.unitPrice * item.quantity), style: const TextStyle(fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
-              ),
-            if (o.status == 'delivered' && o.paymentMethod == 'cod' && o.paymentStatus == 'unpaid') ...[
-              const SizedBox(height: 12),
-              Row(children: [_btn('Confirm cash collected', () => _confirmCod(o))]),
             ],
-            if (open) const SizedBox(height: 12),
-            if (o.status == 'pending')
-              Row(
-                children: [
-                  _btn('Reject', () => _act(o, 'cancelled', confirm: 'Reject this order?'), primary: false, busy: busy),
-                  const SizedBox(width: 10),
-                  _btn('Accept', () => _act(o, 'accepted'), busy: busy),
-                ],
+            if (order.riderName != null) ...[
+              const SizedBox(height: 12),
+              InfoBox(
+                padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+                child: Row(
+                  children: [
+                    const Icon(Icons.delivery_dining_rounded, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Rider', style: TextStyle(color: RF.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+                          Text(order.riderName!, style: const TextStyle(fontWeight: FontWeight.w700)),
+                          if (_prettyPhone(order.riderPhone) != null)
+                            Text(_prettyPhone(order.riderPhone)!, style: const TextStyle(color: RF.muted, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    if (onShare != null)
+                      TextButton(
+                        onPressed: busy ? null : onShare,
+                        style: TextButton.styleFrom(foregroundColor: RF.accent, visualDensity: VisualDensity.compact),
+                        child: const Text('Share link'),
+                      ),
+                  ],
+                ),
               ),
-            if (o.status == 'accepted' || o.status == 'preparing')
-              Row(
-                children: [
-                  _btn(o.riderName == null ? 'Assign rider' : 'Change rider', () => _assign(o), primary: false),
-                  const SizedBox(width: 10),
-                  if (o.status == 'accepted') _btn('Preparing', () => _act(o, 'preparing'), busy: busy),
-                  if (o.status == 'preparing')
-                    _btn('Cancel', () => _act(o, 'cancelled', confirm: 'Cancel this order?'), primary: false, busy: busy),
-                ],
+            ],
+            if (onConfirmCash != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  onPressed: onConfirmCash,
+                  child: const Text('Confirm cash collected'),
+                ),
               ),
-            if (o.status == 'out_for_delivery') Row(children: [_btn('Mark delivered', () => _act(o, 'delivered'), busy: busy)]),
+            ],
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(children: actions),
+            ],
           ],
         ),
       ),
     );
   }
+}
+
+String _paymentLabel(String method) => switch (method) {
+  'cod' => 'Cash',
+  'gcash' => 'GCash',
+  'maya' => 'Maya',
+  _ => method,
+};
+
+String? _prettyPhone(String? raw) {
+  final trimmed = raw?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+  if (digits.length == 11 && digits.startsWith('09')) {
+    return '${digits.substring(0, 4)} ${digits.substring(4, 7)} ${digits.substring(7)}';
+  }
+  return trimmed;
+}
+
+class _DetailLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _DetailLine({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 18, color: RF.ink),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(color: RF.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.w700, height: 1.3)),
+          ],
+        ),
+      ),
+    ],
+  );
 }
