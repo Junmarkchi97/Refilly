@@ -29,6 +29,7 @@ class _StationFormState extends State<StationForm> {
   late bool _open = widget.station.isOpen;
   late String? _photo = widget.station.photoUrl;
   bool _busy = false;
+  bool _editingPin = false;
 
   Future<void> _setPhoto(String? url) async {
     await sb.from('stations').update({'photo_url': url}).eq('id', widget.station.id);
@@ -162,20 +163,39 @@ class _StationFormState extends State<StationForm> {
       TextField(controller: _fee, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Delivery fee (₱)')),
       const SizedBox(height: 12),
       SwitchListTile(title: const Text('Open for orders'), value: _open, onChanged: (v) => setState(() => _open = v)),
-      const Text('Tap the map to set your station location'),
+      Text(
+        _editingPin ? 'Tap the map to move your station pin' : 'Pin is locked. Tap Edit on the map to move it.',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       const SizedBox(height: 8),
       ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: SizedBox(
           height: (MediaQuery.sizeOf(context).height * 0.5).clamp(360, 560),
-          child: RepaintBoundary(
-            child: FlutterMap(
-              options: MapOptions(initialCenter: _pt, initialZoom: 14, onTap: (_, p) => setState(() => _pt = p)),
-              children: [
-                osmTiles(),
-                MarkerLayer(markers: [photoPin(_pt, _photo)]),
-              ],
-            ),
+          child: Stack(
+            children: [
+              RepaintBoundary(
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: _pt,
+                    initialZoom: 14,
+                    onTap: _editingPin ? (_, p) => setState(() => _pt = p) : null,
+                  ),
+                  children: [
+                    osmTiles(),
+                    MarkerLayer(markers: [photoPin(_pt, _photo)]),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: _MapEditButton(
+                  editing: _editingPin,
+                  onPressed: () => setState(() => _editingPin = !_editingPin),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -183,4 +203,36 @@ class _StationFormState extends State<StationForm> {
       FilledButton(onPressed: _save, child: const Text('Save station')),
     ],
   );
+}
+
+class _MapEditButton extends StatelessWidget {
+  final bool editing;
+  final VoidCallback onPressed;
+  const _MapEditButton({required this.editing, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = editing ? Colors.white : RF.ink;
+    return Material(
+      color: editing ? RF.button : Colors.white,
+      elevation: 3,
+      shadowColor: const Color(0x33171717),
+      borderRadius: BorderRadius.circular(100),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(100),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(editing ? Icons.check_rounded : Icons.edit_location_alt_rounded, size: 18, color: fg),
+              const SizedBox(width: 6),
+              Text(editing ? 'Done' : 'Edit', style: TextStyle(fontWeight: FontWeight.w700, color: fg)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

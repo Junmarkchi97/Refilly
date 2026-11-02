@@ -32,5 +32,23 @@ void main() {
     expect(tester.getSize(map).height, greaterThan(260));
     final clip = tester.widget<ClipRRect>(find.ancestor(of: map, matching: find.byType(ClipRRect)));
     expect(clip.borderRadius, BorderRadius.circular(24));
+
+    expect(tester.widget<FlutterMap>(map).options.onTap, isNull);
+    expect(find.text('Pin is locked. Tap Edit on the map to move it.'), findsOneWidget);
+
+    final list = find.ancestor(of: find.text('Edit'), matching: find.byType(Scrollable));
+    await tester.scrollUntilVisible(find.text('Edit'), 300, scrollable: list);
+    await tester.pump();
+    await tester.tap(find.text('Edit'));
+    await tester.pump();
+
+    expect(tester.widget<FlutterMap>(map).options.onTap, isNotNull);
+    expect(find.text('Tap the map to move your station pin'), findsOneWidget);
+    expect(find.text('Done'), findsOneWidget);
+
+    await tester.tap(find.text('Done'));
+    await tester.pump();
+    expect(tester.widget<FlutterMap>(map).options.onTap, isNull);
+    expect(find.text('Edit'), findsOneWidget);
   });
 }
