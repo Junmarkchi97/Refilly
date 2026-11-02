@@ -181,28 +181,32 @@ class AppCard extends StatelessWidget {
     this.color,
   });
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: margin,
-    child: Pressable(
-      enabled: onTap != null,
-      scale: onTap == null ? 1 : .97,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(RF.cardRadius);
+    return Padding(
+      padding: margin,
+      child: Pressable(
+        enabled: onTap != null,
+        scale: onTap == null ? 1 : .97,
+        child: DecoratedBox(
+          decoration: BoxDecoration(borderRadius: radius, boxShadow: RF.shadow),
+          child: Material(
             color: color ?? RF.card,
-            borderRadius: BorderRadius.circular(RF.cardRadius),
-            boxShadow: RF.shadow,
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(RF.cardRadius),
-            onTap: onTap,
-            child: Padding(padding: padding, child: child),
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: radius,
+              side: const BorderSide(color: Color(0xFFE6E6E8)),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              customBorder: RoundedRectangleBorder(borderRadius: radius),
+              child: Padding(padding: padding, child: child),
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Big bold headline + muted subtitle used at the top of screens.

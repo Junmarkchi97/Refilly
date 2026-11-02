@@ -30,8 +30,7 @@ class RF {
   static const cardRadius = 24.0;
   static const sheetRadius = 32.0;
   static final shadow = [
-    BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 8)),
-    BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .04), blurRadius: 2, offset: const Offset(0, 1)),
+    BoxShadow(color: const Color(0xFF171717).withValues(alpha: .06), blurRadius: 16, offset: const Offset(0, 6)),
   ];
   static final selectedShadow = [
     BoxShadow(color: accent.withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 10)),
