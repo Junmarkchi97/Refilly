@@ -145,14 +145,16 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Row(
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline_rounded, color: RF.muted, size: 17),
-                        SizedBox(width: 8),
+                        const Icon(Icons.info_outline_rounded, color: RF.muted, size: 17),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'We’ll create a private delivery link to share with your rider. Creating a new link disables the previous one.',
+                            o.riderName == null
+                                ? 'Saving the rider marks this order as delivering and creates a private link to share. A new link replaces the previous one.'
+                                : 'Updating the rider creates a new private link and disables the previous one. The order stays on delivering.',
                             style: TextStyle(color: RF.muted, fontSize: 12, height: 1.4),
                           ),
                         ),
@@ -172,7 +174,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
                           flex: 2,
                           child: FilledButton(
                             onPressed: ready ? () => Navigator.pop(dialogContext, true) : null,
-                            child: Text(o.riderName == null ? 'Create link' : 'Update link'),
+                            child: Text(o.riderName == null ? 'Save rider' : 'Update rider'),
                           ),
                         ),
                       ],
@@ -308,6 +310,8 @@ class _OwnerOrdersState extends State<OwnerOrders> {
           if (o.status == 'preparing')
             _btn('Cancel', () => _act(o, 'cancelled', confirm: 'Cancel this order?'), primary: false, danger: true, busy: busy),
         ],
+        if (o.status == 'out_for_delivery')
+          _btn(o.riderName == null ? 'Assign rider' : 'Change rider', () => _assign(o), primary: false),
       ],
     );
   }

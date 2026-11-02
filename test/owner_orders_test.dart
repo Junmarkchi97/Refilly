@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:refilly/models/models.dart';
 import 'package:refilly/screens/owner/owner_orders.dart';
+import 'package:refilly/screens/widgets.dart';
 import 'package:refilly/theme.dart';
 
 Order _order() => Order.fromMap({
@@ -89,5 +90,56 @@ void main() {
     expect(ownerCanMarkDelivered('out_for_delivery'), isTrue);
     expect(ownerCanMarkDelivered('delivered'), isFalse);
     expect(ownerCanMarkDelivered('cancelled'), isFalse);
+  });
+
+  testWidgets('a rider assignment shows as delivering', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final order = Order.fromMap({
+      ...{
+        'id': 'o1',
+        'customer_id': 'c1',
+        'station_id': 's1',
+        'delivery_address': 'TEST — accept verification',
+        'payment_method': 'cod',
+        'payment_status': 'unpaid',
+        'rider_name': 'John',
+        'rider_phone': '09752000083',
+        'contact_phone': '09752000083',
+        'notes': 'automated test order',
+        'total': 1,
+        'delivery_fee': 0,
+        'created_at': '2026-11-02T16:45:00Z',
+        'customer': {'full_name': 'Junmark'},
+        'order_items': [],
+      },
+      'status': 'out_for_delivery',
+    });
+
+    await tester.pumpWidget(MaterialApp(
+      theme: refillyTheme(),
+      home: Scaffold(
+        body: OwnerOrderCard(
+          order: order,
+          onShare: () {},
+          onMarkDelivered: () {},
+          actions: const [
+            Expanded(child: OutlinedButton(onPressed: null, child: Text('Change rider'))),
+          ],
+        ),
+      ),
+    ));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(friendlyStatus('out_for_delivery'), 'Delivering');
+    expect(find.text('Delivering'), findsOneWidget);
+    expect(find.text('Rider'), findsOneWidget);
+    expect(find.text('John'), findsOneWidget);
+    expect(find.text('Share link'), findsOneWidget);
+    expect(find.text('Mark delivered'), findsOneWidget);
+    expect(find.text('Change rider'), findsOneWidget);
   });
 }

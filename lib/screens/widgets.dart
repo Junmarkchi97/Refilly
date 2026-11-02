@@ -158,7 +158,7 @@ String friendlyStatus(String s) => switch (s) {
   'pending' => 'Waiting for supplier',
   'accepted' => 'Confirmed',
   'preparing' => 'Preparing',
-  'out_for_delivery' => 'Out for delivery',
+  'out_for_delivery' => 'Delivering',
   'delivered' => 'Delivered',
   'cancelled' => 'Cancelled',
   'open' => 'Open',
@@ -767,7 +767,7 @@ class StatusSteps extends StatelessWidget {
     ('pending', 'Order placed', 'Waiting for the supplier to accept', Icons.receipt_long_rounded),
     ('accepted', 'Confirmed', 'The supplier accepted your order', Icons.thumb_up_alt_rounded),
     ('preparing', 'Preparing', 'Your items are being filled and packed', Icons.water_drop_rounded),
-    ('out_for_delivery', 'Out for delivery', 'Your rider is on the way', Icons.delivery_dining_rounded),
+    ('out_for_delivery', 'Delivering', 'Your rider is on the way', Icons.delivery_dining_rounded),
     ('delivered', 'Delivered', 'Handed over at your address', Icons.home_rounded),
   ];
 
