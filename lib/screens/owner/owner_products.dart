@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
 
@@ -6,6 +5,7 @@ import '../../theme.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
+import '../../services/picked_image.dart';
 import '../widgets.dart';
 import '../network_states.dart';
 
@@ -54,17 +54,16 @@ class _OwnerProductsState extends State<OwnerProducts> {
     Uint8List? newBytes;
     String newExt = 'jpg';
     Future<void> pick(void Function(void Function()) setD) async {
-      final f = (await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'])).firstOrNull;
-      if (f == null) return;
-      final bytes = await f.readAsBytes();
-      if (bytes.length > 5 * 1024 * 1024) {
-        if (mounted) showAppNotice(context, 'Image must be under 5 MB');
-        return;
+      try {
+        final picked = await pickAllowedImage();
+        if (picked == null) return;
+        setD(() {
+          newBytes = picked.bytes;
+          newExt = picked.ext;
+        });
+      } catch (e) {
+        if (mounted) showFailureNotice(context, e, failed: 'Could not read that photo.');
       }
-      setD(() {
-        newBytes = bytes;
-        newExt = f.name.split('.').last.toLowerCase();
-      });
     }
 
     final saved = await showDialog<bool>(
@@ -113,7 +112,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
           'webp' => 'image/webp',
           _ => 'image/jpeg',
         };
-        imageUrl = await Api.uploadProductImage(widget.station.id, newBytes!, newExt == 'jpeg' ? 'jpg' : newExt, mime);
+        imageUrl = await Api.uploadProductImage(widget.station.id, newBytes!, newExt, mime);
       }
     } catch (e) {
       if (mounted) showFailureNotice(context, e, failed: 'Could not upload the photo.');

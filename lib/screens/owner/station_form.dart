@@ -1,10 +1,10 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
+import '../../services/picked_image.dart';
 import '../../theme.dart';
 import '../network_states.dart';
 import '../widgets.dart';
@@ -40,18 +40,11 @@ class _StationFormState extends State<StationForm> {
   }
 
   Future<void> _pickPhoto() async {
-    final f = (await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'])).firstOrNull;
-    if (f == null) return;
-    final bytes = await f.readAsBytes();
-    if (bytes.length > 5 * 1024 * 1024) {
-      if (mounted) showAppNotice(context, 'Image must be under 5 MB');
-      return;
-    }
-    var ext = f.name.split('.').last.toLowerCase();
-    if (ext == 'jpeg') ext = 'jpg';
     setState(() => _busy = true);
     try {
-      final url = await Api.uploadStationPhoto(widget.station.id, bytes, ext, ext == 'jpg' ? 'image/jpeg' : 'image/$ext');
+      final picked = await pickAllowedImage();
+      if (picked == null) return;
+      final url = await Api.uploadStationPhoto(widget.station.id, picked.bytes, picked.ext, picked.contentType);
       await _setPhoto(url);
       if (mounted) showAppNotice(context, 'Station photo updated', kind: AppNotice.success);
     } catch (e) {

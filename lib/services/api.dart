@@ -310,16 +310,22 @@ class Api {
   }
 
   /// Product photos live in the public `product-images` bucket under `<station_id>/` (owner-only writes via RLS).
+  ///
+  /// Paths are unique timestamps, so upsert is off. Upsert needs a storage SELECT
+  /// policy that this bucket does not grant to owners, which made uploads fail.
   static Future<String> uploadProductImage(String stationId, Uint8List bytes, String ext, String contentType) async {
     final path = '$stationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
-    await sb.storage.from('product-images').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: true));
+    await sb.storage.from('product-images').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: false));
     return sb.storage.from('product-images').getPublicUrl(path);
   }
 
   /// Station profile photos live in the public `station-photos` bucket under `<station_id>/` (owner-only writes via RLS).
+  ///
+  /// Paths are unique timestamps, so upsert is off. Upsert needs a storage SELECT
+  /// policy that this bucket does not grant to owners, which made uploads fail.
   static Future<String> uploadStationPhoto(String stationId, Uint8List bytes, String ext, String contentType) async {
     final path = '$stationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
-    await sb.storage.from('station-photos').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: true));
+    await sb.storage.from('station-photos').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: contentType, upsert: false));
     return sb.storage.from('station-photos').getPublicUrl(path);
   }
 
