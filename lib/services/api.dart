@@ -9,7 +9,7 @@ import '../models/refill_routine.dart';
 SupabaseClient get sb => Supabase.instance.client;
 
 const orderSelect =
-    '*, order_items(*, product:products(image_url)), customer:profiles!orders_customer_id_fkey(full_name, phone), station:stations(name, lat, lng, photo_url)';
+    '*, order_items(*, product:products(image_url)), customer:profiles!orders_customer_id_fkey(full_name, phone), station:stations(name, lat, lng, photo_url, phone)';
 
 class Api {
   static Future<List<RefillRoutine>> refillRoutines() async {
@@ -69,6 +69,9 @@ class Api {
     });
   }
 
+  static Future<bool> hasUnreadNotifications() async =>
+      (await sb.from('user_notifications').select('id').eq('is_read', false).limit(1)).isNotEmpty;
+
   static Future<int> claimRefillReminders() async =>
       (await sb.rpc('claim_refill_reminders') as num).toInt();
 
@@ -82,6 +85,14 @@ class Api {
   static Future<List<Station>> stations() async => (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
 
   static Future<List<Category>> categories() async => (await sb.from('categories').select().order('sort')).map(Category.fromMap).toList();
+
+  /// Stations with at least one available product in the category (e.g. 'rice').
+  static Future<Set<String>> stationIdsWithCategory(String slug) async {
+    final category = await sb.from('categories').select('id').eq('slug', slug).maybeSingle();
+    if (category == null) return {};
+    final rows = await sb.from('products').select('station_id').eq('category_id', category['id']).eq('is_available', true);
+    return {for (final r in rows) r['station_id'] as String};
+  }
 
   static Future<List<Product>> products(String stationId, {bool onlyAvailable = true}) async {
     var q = sb.from('products').select().eq('station_id', stationId);

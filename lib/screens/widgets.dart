@@ -7,10 +7,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../config.dart';
-import '../models/models.dart';
 import '../theme.dart';
 import 'motion.dart';
 export 'motion.dart';
+export 'design.dart';
 import '../services/api.dart';
 
 const manila = LatLng(14.5995, 120.9842);
@@ -119,14 +119,25 @@ Future<void> shareRiderLink(BuildContext context, String link, String riderName)
 Widget logoutButton() => CircleIconButton(Icons.logout_rounded, onTap: () => sb.auth.signOut());
 
 Color statusColor(String s) => switch (s) {
-  'pending' => const Color(0xFFE8890C),
-  'accepted' || 'preparing' => RF.accent,
-  'out_for_delivery' => const Color(0xFF7B61FF),
-  'delivered' || 'open' => const Color(0xFF1DB954),
+  'pending' => RF.usualInk,
+  'accepted' || 'preparing' || 'out_for_delivery' => RF.accentInk,
+  'delivered' || 'open' => RF.good,
   _ => RF.muted,
 };
 
-/// White rounded card with soft shadow (Cal AI style).
+String friendlyStatus(String s) => switch (s) {
+  'pending' => 'Waiting for supplier',
+  'accepted' => 'Confirmed',
+  'preparing' => 'Preparing',
+  'out_for_delivery' => 'Out for delivery',
+  'delivered' => 'Delivered',
+  'cancelled' => 'Cancelled',
+  'open' => 'Open',
+  'closed' => 'Closed',
+  _ => s,
+};
+
+/// White rounded card with a delicate shadow.
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding, margin;
@@ -151,11 +162,11 @@ class AppCard extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             color: color ?? RF.card,
-            borderRadius: BorderRadius.circular(RF.radius),
-            border: Border.all(color: RF.line),
+            borderRadius: BorderRadius.circular(RF.cardRadius),
+            boxShadow: RF.shadow,
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(RF.radius),
+            borderRadius: BorderRadius.circular(RF.cardRadius),
             onTap: onTap,
             child: Padding(padding: padding, child: child),
           ),
@@ -273,31 +284,32 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(color: statusColor(status).withValues(alpha: .12), borderRadius: BorderRadius.circular(100)),
+    decoration: BoxDecoration(color: statusColor(status).withValues(alpha: .1), borderRadius: BorderRadius.circular(100)),
     child: Text(
-      status == 'open' ? 'OPEN' : statusLabel(status),
-      style: TextStyle(color: statusColor(status), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .3),
+      friendlyStatus(status),
+      style: TextStyle(color: statusColor(status), fontSize: 12, fontWeight: FontWeight.w700),
     ),
   );
 }
 
-/// Minimal floating bottom navigation (black pill highlights the active tab).
+/// Floating white tab bar; the active tab is drawn in ink.
 class FloatingNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onTap;
   final List<(IconData, String)> items;
   const FloatingNav({super.key, required this.index, required this.onTap, required this.items});
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(top: BorderSide(color: RF.line)),
-    ),
-    child: SafeArea(
-      top: false,
-      child: SizedBox(
-        height: 64,
-        child: Row(
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+    child: Container(
+      height: 62,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: const Color(0xFF30220F).withValues(alpha: .08), blurRadius: 28, offset: const Offset(0, 10))],
+      ),
+      child: Row(
           children: [
             for (var i = 0; i < items.length; i++)
               Expanded(
@@ -310,27 +322,30 @@ class FloatingNav extends StatelessWidget {
                     scale: i == index ? 1 : .94,
                     duration: Motion.d(context, Motion.fast),
                     curve: Motion.curve,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(items[i].$1, size: 25, color: i == index ? RF.accent : RF.muted),
-                        const SizedBox(height: 3),
-                        AnimatedDefaultTextStyle(
-                          duration: Motion.d(context, Motion.fast),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
-                            color: i == index ? RF.accent : RF.muted,
+                    child: Semantics(
+                      selected: i == index,
+                      button: true,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(items[i].$1, size: 23, color: i == index ? RF.ink : RF.muted),
+                          const SizedBox(height: 3),
+                          AnimatedDefaultTextStyle(
+                            duration: Motion.d(context, Motion.fast),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: i == index ? FontWeight.w700 : FontWeight.w600,
+                              color: i == index ? RF.ink : RF.muted,
+                            ),
+                            child: Text(items[i].$2),
                           ),
-                          child: Text(items[i].$2),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
           ],
-        ),
       ),
     ),
   );
@@ -650,7 +665,7 @@ class PlaceRow extends StatelessWidget {
   );
 }
 
-/// Selectable option tile (Glide ride-tier row): black 2px outline when selected.
+/// Selectable option tile with a brand-blue outline when selected.
 class OptionTile extends StatelessWidget {
   final bool selected;
   final Widget child;
@@ -666,9 +681,10 @@ class OptionTile extends StatelessWidget {
         duration: Motion.d(context, Motion.fast),
         curve: Motion.curve,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: selected ? RF.selectedFill : Colors.white,
           borderRadius: BorderRadius.circular(RF.radius),
-          border: Border.all(color: selected ? RF.ink : Colors.transparent, width: 2),
+          border: Border.all(color: selected ? RF.accent : Colors.transparent, width: 1.6),
+          boxShadow: selected ? RF.selectedShadow : RF.shadow,
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(RF.radius),
@@ -704,22 +720,24 @@ class KeyValueRow extends StatelessWidget {
   );
 }
 
-/// Vertical order-status steps with a filled progress line.
+/// Vertical order timeline: finished steps in ink, the current step in brand blue.
 class StatusSteps extends StatelessWidget {
   final String status;
-  const StatusSteps(this.status, {super.key});
+  final EdgeInsets padding;
+  const StatusSteps(this.status, {super.key, this.padding = const EdgeInsets.symmetric(horizontal: 20)});
   static const _steps = [
-    ('pending', 'Order placed', 'Waiting for the station'),
-    ('accepted', 'Accepted', 'The station confirmed your order'),
-    ('preparing', 'Preparing', 'Filling your containers'),
-    ('out_for_delivery', 'On the way', 'Your rider is heading to you'),
-    ('delivered', 'Delivered', 'Enjoy your water!'),
+    ('pending', 'Waiting for supplier acceptance', 'The station will confirm shortly'),
+    ('accepted', 'Confirmed', 'Your delivery is locked in'),
+    ('preparing', 'Preparing', 'Getting your items ready'),
+    ('out_for_delivery', 'Out for delivery', 'Your rider is on the way'),
+    ('delivered', 'Delivered', 'Handed over at your address'),
   ];
   @override
   Widget build(BuildContext context) {
     final cur = _steps.indexWhere((s) => s.$1 == status);
+    final allDone = status == 'delivered';
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: padding,
       child: Column(
         children: [
           for (var i = 0; i < _steps.length; i++)
@@ -731,34 +749,61 @@ class StatusSteps extends StatelessWidget {
                     children: [
                       AnimatedContainer(
                         duration: Motion.d(context, Motion.medium),
-                        width: 18,
-                        height: 18,
-                        margin: const EdgeInsets.only(top: 2),
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: i <= cur ? RF.ink : Colors.white,
-                          border: Border.all(color: i <= cur ? RF.ink : RF.line, width: 2),
+                          color: i < cur || allDone ? RF.ink : i == cur ? RF.accent : Colors.white,
+                          border: Border.all(
+                            color: i < cur || allDone ? RF.ink : i == cur ? RF.accent : const Color(0xFFDDD6CE),
+                            width: 2,
+                          ),
+                          boxShadow: i == cur && !allDone
+                              ? [BoxShadow(color: RF.accent.withValues(alpha: .18), spreadRadius: 5)]
+                              : null,
                         ),
-                        child: i < cur ? const Icon(Icons.check, size: 11, color: Colors.white) : null,
+                        child: i < cur || allDone
+                            ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
+                            : i == cur
+                                ? Center(
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                    ),
+                                  )
+                                : null,
                       ),
                       if (i < _steps.length - 1)
                         Expanded(
-                          child: AnimatedContainer(duration: Motion.d(context, Motion.medium), width: 2, color: i < cur ? RF.ink : RF.line),
+                          child: AnimatedContainer(
+                            duration: Motion.d(context, Motion.medium),
+                            width: 2,
+                            color: i < cur ? RF.ink : const Color(0xFFE6E0D8),
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             _steps[i].$2,
-                            style: TextStyle(fontWeight: FontWeight.w700, color: i <= cur ? RF.ink : RF.muted),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              letterSpacing: -.2,
+                              color: i <= cur ? RF.ink : RF.muted,
+                            ),
                           ),
-                          if (i == cur) Text(_steps[i].$3, style: const TextStyle(color: RF.muted, fontSize: 13)),
+                          Text(
+                            i < cur || allDone ? 'Done' : _steps[i].$3,
+                            style: TextStyle(color: i == cur && !allDone ? RF.accentInk : RF.muted, fontSize: 13),
+                          ),
                         ],
                       ),
                     ),

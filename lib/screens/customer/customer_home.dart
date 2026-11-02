@@ -11,10 +11,10 @@ import '../network_states.dart';
 import '../../services/location.dart';
 import 'orders_screen.dart';
 import 'my_essentials_screen.dart';
-import 'app_drawer.dart';
 import '../notifications_screen.dart';
 import '../brand.dart';
 import 'apply_owner_screen.dart';
+import 'home_tab.dart';
 import '../auth/verify_phone_screen.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -37,35 +37,29 @@ class _CustomerHomeState extends State<CustomerHome> {
     index: _tab,
     onTap: _go,
     items: const [
+      (Icons.home_outlined, 'Home'),
       (Icons.repeat_rounded, 'Essentials'),
-      (Icons.storefront_rounded, 'Explore'),
-      (Icons.receipt_long_rounded, 'Orders'),
-      (Icons.person_rounded, 'Account'),
+      (Icons.receipt_long_outlined, 'Orders'),
+      (Icons.person_outline_rounded, 'Account'),
     ],
   );
 
   @override
-  Widget build(BuildContext context) {
-    if (_tab == 1) {
-      return StationsMap(
-        profile: widget.profile,
-        bottomBar: _nav,
-        onMenu: () => showAppDrawer(
-          context, widget.profile,
-          onOrders: () => _go(2),
-          onAccount: () => _go(3),
-        ),
-      );
-    }
-
-    return Scaffold(
-      body: SafeArea(
+  Widget build(BuildContext context) => Scaffold(
+    extendBody: true,
+    body: Ambient(
+      child: SafeArea(
         bottom: false,
         child: switch (_tab) {
-          0 => MyEssentialsScreen(
+          0 => HomeTab(
               key: ValueKey(_routineRefresh),
               profile: widget.profile,
-              onExplore: () => _go(1),
+              onEssentials: () => _go(1),
+              onOrders: () => _go(2),
+            ),
+          1 => MyEssentialsScreen(
+              profile: widget.profile,
+              onExplore: () => openStations(context, widget.profile),
               onOrders: () => _go(2),
             ),
           2 => Column(
@@ -77,10 +71,16 @@ class _CustomerHomeState extends State<CustomerHome> {
           _ => ProfileTab(profile: widget.profile),
         },
       ),
-      bottomNavigationBar: _nav,
-    );
-  }
+    ),
+    bottomNavigationBar: _nav,
+  );
 }
+
+/// Opens the supplier map. With [category] (e.g. 'rice') only stations selling it are listed.
+void openStations(BuildContext context, Profile profile, {String? category}) => Navigator.push(
+  context,
+  MaterialPageRoute(builder: (_) => StationsMap(profile: profile, category: category)),
+);
 
 class ProfileTab extends StatelessWidget {
   final Profile profile;
@@ -162,22 +162,31 @@ class ProfileTab extends StatelessWidget {
 
 class StationsMap extends StatefulWidget {
   final Profile profile;
-  final Widget? bottomBar;
-  final VoidCallback? onMenu;
-  const StationsMap({super.key, required this.profile, this.bottomBar, this.onMenu});
+  final String? category;
+  const StationsMap({super.key, required this.profile, this.category});
   @override
   State<StationsMap> createState() => _StationsMapState();
 }
 
 class _StationsMapState extends State<StationsMap> {
-  late Future<List<Station>> _f = Api.stations().timeout(const Duration(seconds: 20));
+  late Future<List<Station>> _f = _load();
   final _q = TextEditingController();
   final _map = MapController();
+
+  Future<List<Station>> _load() async {
+    final stations = await Api.stations().timeout(const Duration(seconds: 20));
+    final slug = widget.category;
+    if (slug == null) return stations;
+    final ids = await Api.stationIdsWithCategory(slug).timeout(const Duration(seconds: 20));
+    return stations.where((s) => ids.contains(s.id)).toList();
+  }
+
+  void _reload() => setState(() => _f = _load());
 
   void _open(Station s) => Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => StationScreen(station: s, profile: widget.profile),
+      builder: (_) => StationScreen(station: s, profile: widget.profile, initialCategorySlug: widget.category),
     ),
   );
 
@@ -202,11 +211,11 @@ class _StationsMapState extends State<StationsMap> {
       final shown = q.isEmpty
           ? stations
           : stations.where((s) => s.name.toLowerCase().contains(q) || (s.address ?? '').toLowerCase().contains(q)).toList();
+      final rice = widget.category == 'rice';
       return MapSheetScaffold(
-        bottomBar: widget.bottomBar,
-        initial: .46,
+        initial: .52,
         min: .22,
-        topLeft: MapButton(Icons.menu_rounded, onTap: widget.onMenu ?? () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20)))),
+        topLeft: MapButton(Icons.arrow_back_rounded, onTap: () => Navigator.maybePop(context)),
         topRight: MapButton(Icons.my_location_rounded, label: 'Locate', onTap: _locate),
         map: FlutterMap(
           mapController: _map,
@@ -228,7 +237,7 @@ class _StationsMapState extends State<StationsMap> {
             child: Row(children: [
               const RefillyMark(size: 42),
               const SizedBox(width: 12),
-              Expanded(child: Text('Explore nearby', style: Theme.of(context).textTheme.headlineSmall)),
+              Expanded(child: Text(rice ? 'Rice suppliers' : 'Choose a supplier', style: Theme.of(context).textTheme.headlineSmall)),
             ]),
           ),
           const SizedBox(height: 14),
@@ -238,34 +247,31 @@ class _StationsMapState extends State<StationsMap> {
               controller: _q,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Search local stores or areas',
-                prefixIcon: const Icon(Icons.search_rounded, color: RF.ink),
-                suffixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.schedule_rounded, size: 16),
-                      SizedBox(width: 4),
-                      Text('Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                    ],
-                  ),
+                hintText: 'Search suppliers or areas',
+                fillColor: RF.bg,
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(100), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(100),
+                  borderSide: const BorderSide(color: RF.accent, width: 1.5),
                 ),
+                prefixIcon: const Icon(Icons.search_rounded, color: RF.ink),
               ),
             ),
           ),
           const SizedBox(height: 6),
-          if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20)))),
+          if (snap.hasError) LoadFailureView(compact: true, error: snap.error!, onRetry: _reload),
           if (!snap.hasData && !snap.hasError) const Column(children: [SlowLoadingHint(), SkeletonList(count: 3, height: 60)]),
           if (snap.hasData && shown.isEmpty)
             EmptyState(
-              icon: Icons.location_off_rounded,
-              title: q.isEmpty ? 'No stations nearby' : 'No matches',
-              subtitle: q.isEmpty ? 'We are adding refilling stations in your area.' : 'Try another station name or area.',
+              icon: rice ? Icons.rice_bowl_outlined : Icons.location_off_rounded,
+              title: q.isNotEmpty ? 'No matches' : rice ? 'Rice is coming soon' : 'No suppliers nearby',
+              subtitle: q.isNotEmpty
+                  ? 'Try another supplier name or area.'
+                  : rice
+                      ? 'No supplier near you sells rice on Refilly yet. Water refills are available now.'
+                      : 'We are adding suppliers in your area.',
               actionLabel: 'Refresh',
-              onAction: () => setState(() => _f = Api.stations().timeout(const Duration(seconds: 20))),
+              onAction: _reload,
             ),
           for (final (i, s) in shown.indexed)
             FadeSlideIn(

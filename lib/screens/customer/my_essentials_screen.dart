@@ -128,17 +128,28 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
     }
   }
 
+  final Map<String, Future<Order?>> _orders = {};
+  Future<Order?> _order(RefillRoutine r) => _orders.putIfAbsent(r.sourceOrderId, () => Api.orderById(r.sourceOrderId));
+
   String _dueLabel(RefillRoutine routine) {
     final remaining = routine.daysUntil(DateTime.now());
     if (remaining < 0) return '${-remaining} day${remaining == -1 ? '' : 's'} overdue';
-    if (remaining == 0) return 'Refill due today';
-    if (remaining == 1) return 'Refill due tomorrow';
-    return 'Refill in $remaining days';
+    if (remaining == 0) return 'Due today';
+    if (remaining == 1) return 'Due tomorrow';
+    return 'Next refill ${shortDate(routine.nextDueOn)}';
   }
+
+  String _schedule(int days) => switch (days) {
+    7 => 'Every week',
+    14 => 'Every 2 weeks',
+    30 => 'Every month',
+    _ => 'Every $days days',
+  };
 
   @override
   Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: () async {
+      _orders.clear();
       _refresh();
       await _routines;
     },
@@ -152,152 +163,165 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
         final items = snapshot.data!;
         final dueCount = items.where((r) => r.isDue(DateTime.now())).length;
         return ListView(
-          padding: EdgeInsets.fromLTRB(16, 20, 16, bottomInset(context, 120)),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset(context, 120)),
           children: [
             Row(
               children: [
-                const Icon(Icons.inventory_2_rounded, color: RF.accent, size: 30),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text('My Essentials', style: Theme.of(context).textTheme.headlineSmall),
-                ),
-                IconButton(onPressed: _refresh, tooltip: 'Refresh routines', icon: const Icon(Icons.refresh_rounded)),
+                Expanded(child: Text('My essentials', style: Theme.of(context).textTheme.headlineSmall)),
+                FloatIconButton(Icons.refresh_rounded, tooltip: 'Refresh essentials', onTap: () {
+                  _orders.clear();
+                  _refresh();
+                }),
               ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Refill the things you use again and again. No automatic charges or surprise orders.',
-              style: TextStyle(color: RF.muted, height: 1.4),
-            ),
-            const SizedBox(height: 18),
-            if (dueCount > 0)
-              Card(
-                color: RF.accentSoft,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.notifications_active_outlined, color: RF.accent),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(
-                        '$dueCount essential${dueCount == 1 ? ' may' : 's may'} need a refill.',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      )),
-                    ],
+            const SizedBox(height: 4),
+            const Text('Your usuals, ready when you need them.', style: TextStyle(color: RF.muted, fontSize: 15)),
+            const SizedBox(height: 16),
+            SoftCard(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const IconBubble(Icons.notifications_none_rounded),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          dueCount == 0 ? 'Reminders, never surprise orders' : '$dueCount usual${dueCount == 1 ? ' is' : 's are'} due for a refill',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        const Text(
+                          'We remind you when it may be time. Nothing is ordered until you confirm.',
+                          style: TextStyle(color: RF.muted, fontSize: 13, height: 1.35),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
             if (items.isEmpty) ...[
-              const SizedBox(height: 38),
+              const SizedBox(height: 30),
               const EmptyState(
-                icon: Icons.auto_awesome_rounded,
-                title: 'Your essentials, on repeat',
-                subtitle: 'Order water once, then save a delivered order as a refill routine. We will remind you when it may be time.',
+                icon: Icons.repeat_rounded,
+                title: 'No usuals yet',
+                subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
               ),
               const SizedBox(height: 14),
-              FilledButton.icon(
-                onPressed: widget.onExplore,
-                icon: const Icon(Icons.storefront_rounded),
-                label: const Text('Explore water stations'),
-              ),
+              FilledButton(onPressed: widget.onExplore, child: const Text('Order water')),
               const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: widget.onOrders,
-                child: const Text('See my past orders'),
-              ),
+              OutlinedButton(onPressed: widget.onOrders, child: const Text('See past orders')),
             ],
-            for (final routine in items)
-              Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          const CircleAvatar(
-                            backgroundColor: RF.accentSoft,
-                            child: Icon(Icons.repeat_rounded, color: RF.accent),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _dueLabel(routine),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: routine.isDue(DateTime.now()) ? RF.accent : RF.ink,
-                              ),
-                            ),
-                          ),
-                          PopupMenuButton<String>(
-                            tooltip: 'Manage routine',
-                            onSelected: (action) {
-                              switch (action) {
-                                case 'frequency': _changeInterval(routine);
-                                case 'remove': _remove(routine);
-                              }
-                            },
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(value: 'frequency', child: Text('Change frequency')),
-                              PopupMenuItem(value: 'remove', child: Text('Remove routine')),
-                            ],
-                          ),
-                        ],
-                      ),
-                      FutureBuilder<Order?>(
-                        future: Api.orderById(routine.sourceOrderId),
-                        builder: (context, orderSnap) {
-                          final order = orderSnap.data;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(order?.station?['name']?.toString() ?? 'Saved refill',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  order == null
-                                      ? 'Every ${routine.intervalDays} days'
-                                      : '${order.items.map((e) => '${e.quantity} × ${e.productName}').join(', ')} · Every ${routine.intervalDays} days',
-                                  maxLines: 3, overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: RF.muted, height: 1.4),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      FilledButton.icon(
-                        onPressed: _working.contains(routine.id) ? null : () => _refill(routine),
-                        icon: const Icon(Icons.shopping_bag_outlined),
-                        label: const Text('Refill now · Review cart'),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _working.contains(routine.id) ? null : () => _action(routine, 'snooze'),
-                              child: const Text('Snooze 3 days'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _working.contains(routine.id) ? null : () => _action(routine, 'skip'),
-                              child: const Text('Skip this time'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            for (final routine in items) _routineCard(routine),
           ],
         );
       },
     ),
   );
+
+  Widget _routineCard(RefillRoutine routine) {
+    final busy = _working.contains(routine.id);
+    final due = routine.isDue(DateTime.now());
+    return SoftCard(
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.all(16),
+      child: FutureBuilder<Order?>(
+        future: _order(routine),
+        builder: (context, snap) {
+          final order = snap.data;
+          final first = order?.items.firstOrNull;
+          final qty = order?.items.fold(0, (t, i) => t + i.quantity) ?? 0;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProductArt(name: first?.productName ?? 'Water refill', imageUrl: first?.imageUrl, size: 76, radius: 18),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          first?.productName ?? 'Saved refill',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          order?.station?['name']?.toString() ?? 'Your supplier',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: RF.muted, fontSize: 13),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            if (qty > 0) Tag('Usual × $qty'),
+                            Tag(_schedule(routine.intervalDays), background: RF.fill, foreground: RF.muted),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'More options',
+                    enabled: !busy,
+                    icon: const Icon(Icons.more_horiz_rounded),
+                    onSelected: (action) {
+                      switch (action) {
+                        case 'skip': _action(routine, 'skip');
+                        case 'remove': _remove(routine);
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'skip', child: Text('Skip this time')),
+                      PopupMenuItem(value: 'remove', child: Text('Remove from essentials')),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.event_rounded, size: 18, color: due ? RF.usualInk : RF.muted),
+                  const SizedBox(width: 6),
+                  Text(
+                    _dueLabel(routine),
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: due ? RF.usualInk : RF.ink),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              FilledButton(onPressed: busy ? null : () => _refill(routine), child: const Text('Refill now')),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: busy ? null : () => _action(routine, 'snooze'),
+                      child: const Text('Snooze 3 days'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: busy ? null : () => _changeInterval(routine),
+                      child: const Text('Edit schedule'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
+
