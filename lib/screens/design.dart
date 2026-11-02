@@ -181,7 +181,11 @@ class SoftCard extends StatelessWidget {
 }
 
 /// White card whose stroke turns into a peach-to-sky gradient when selected.
+///
+/// Stroke width stays fixed so selecting a card never shifts its contents.
 class GradientFrame extends StatelessWidget {
+  static const _stroke = 1.8;
+
   final bool selected;
   final Widget child;
   final VoidCallback? onTap;
@@ -206,7 +210,7 @@ class GradientFrame extends StatelessWidget {
       child: AnimatedContainer(
         duration: Motion.d(context, Motion.fast),
         curve: Motion.curve,
-        padding: EdgeInsets.all(selected ? 1.8 : 1),
+        padding: const EdgeInsets.all(_stroke),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
           gradient: selected ? RF.borderGradient : null,
@@ -215,7 +219,7 @@ class GradientFrame extends StatelessWidget {
         ),
         child: Material(
           color: selected ? RF.selectedFill : Colors.white,
-          borderRadius: BorderRadius.circular(radius - 1.6),
+          borderRadius: BorderRadius.circular(radius - _stroke),
           clipBehavior: Clip.antiAlias,
           child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
         ),
