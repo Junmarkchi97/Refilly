@@ -54,57 +54,66 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(children: [
-                          (o.station?['photo_url'] as String?)?.isNotEmpty ?? false
-                              ? Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    StationAvatar(o.station!['photo_url'], size: 48),
-                                    Positioned(
-                                      right: -3,
-                                      bottom: -3,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(3),
-                                        decoration: BoxDecoration(color: statusColor(o.status), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                                        child: Icon(o.status == 'delivered' ? Icons.check_rounded : Icons.local_shipping_rounded, size: 11, color: Colors.white),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              (o.station?['photo_url'] as String?)?.isNotEmpty ?? false
+                                  ? Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        StationAvatar(o.station!['photo_url'], size: 48),
+                                        Positioned(
+                                          right: -3,
+                                          bottom: -3,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(3),
+                                            decoration: BoxDecoration(color: statusColor(o.status), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                                            child: Icon(o.status == 'delivered' ? Icons.check_rounded : Icons.local_shipping_rounded, size: 11, color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Container(
+                                      width: 48,
+                                      height: 48,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: statusColor(o.status).withValues(alpha: .1),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Icon(
+                                        o.status == 'delivered' ? Icons.check_rounded : Icons.local_shipping_rounded,
+                                        color: statusColor(o.status),
                                       ),
                                     ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      o.station?['name'] ?? 'Order',
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${o.items.length} item(s) · ${MaterialLocalizations.of(context).formatShortDate(o.createdAt)}',
+                                      style: const TextStyle(color: RF.muted, fontSize: 13),
+                                    ),
                                   ],
-                                )
-                              : Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: statusColor(o.status).withValues(alpha: .1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              o.status == 'delivered' ? Icons.check_rounded : Icons.local_shipping_rounded,
-                              color: statusColor(o.status),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  o.station?['name'] ?? 'Order',
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                Text(
-                                  '${o.items.length} item(s) · ${MaterialLocalizations.of(context).formatShortDate(o.createdAt)}',
-                                  style: const TextStyle(color: RF.muted, fontSize: 13),
-                                ),
-                                const SizedBox(height: 6),
-                                StatusPill(o.status),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(peso(o.total), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                            ],
                           ),
-                          Text(peso(o.total), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                          ]),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 62),
+                            child: Align(alignment: Alignment.centerLeft, child: StatusPill(o.status)),
+                          ),
                           if (o.status == 'delivered') ...[
                             const SizedBox(height: 8),
                             OutlinedButton.icon(

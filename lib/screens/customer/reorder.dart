@@ -42,11 +42,17 @@ Future<void> startReorder(BuildContext context, Order order, Profile profile, {R
     context: context,
     barrierDismissible: false,
     builder: (_) => const AlertDialog(
-      content: Row(children: [
-        SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-        SizedBox(width: 16),
-        Expanded(child: Text('Checking current products and prices…')),
-      ]),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4)),
+          SizedBox(height: 14),
+          Text(
+            'Checking current products and prices…',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     ),
   );
   Station? station;
