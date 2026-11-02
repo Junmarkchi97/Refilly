@@ -25,9 +25,16 @@ void main() {
       homeOrdersHero(const AsyncSnapshot.waiting()),
       HomeOrdersHero.loading,
     );
+  });
+
+  test('home does not leave a stuck loading bar after an orders error', () {
+    expect(
+      homeOrdersHero(const AsyncSnapshot.withError(ConnectionState.active, 'offline')),
+      HomeOrdersHero.empty,
+    );
     expect(
       homeOrdersHero(const AsyncSnapshot.nothing()),
-      HomeOrdersHero.loading,
+      HomeOrdersHero.empty,
     );
   });
 

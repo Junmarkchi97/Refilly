@@ -24,7 +24,12 @@ const _active = ['pending', 'accepted', 'preparing', 'out_for_delivery'];
 enum HomeOrdersHero { loading, empty, upcoming }
 
 HomeOrdersHero homeOrdersHero(AsyncSnapshot<List<Order>> snap) {
-  if (!snap.hasData) return HomeOrdersHero.loading;
+  if (!snap.hasData) {
+    // Only the in-flight first snapshot should show a skeleton. An error
+    // must not leave a stuck gray bar where Order now / the delivery card goes.
+    if (snap.connectionState == ConnectionState.waiting) return HomeOrdersHero.loading;
+    return HomeOrdersHero.empty;
+  }
   final upcoming = snap.data!.where((o) => _active.contains(o.status));
   return upcoming.isEmpty ? HomeOrdersHero.empty : HomeOrdersHero.upcoming;
 }
@@ -111,10 +116,7 @@ class _HomeTabState extends State<HomeTab> {
             FadeSlideIn(
               index: 0,
               child: switch (hero) {
-                HomeOrdersHero.loading => const SizedBox(
-                  height: 72,
-                  child: SkeletonList(count: 1, height: 72),
-                ),
+                HomeOrdersHero.loading => _ordersHeroSkeleton(),
                 HomeOrdersHero.empty => _startOrderCard(),
                 HomeOrdersHero.upcoming => Column(
                   children: [
@@ -245,6 +247,39 @@ class _HomeTabState extends State<HomeTab> {
               ? Tag(friendlyStatus(o.status).split(' ').first)
               : Tag(friendlyStatus(o.status), background: RF.accentSoft, foreground: RF.accentInk),
         ],
+      ),
+    );
+  }
+
+  /// Soft card shaped like the upcoming / Order now row, not a nested SkeletonList.
+  Widget _ordersHeroSkeleton() {
+    Widget bone({required double width, required double height, double radius = 8}) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(color: const Color(0xFFE8EEF4), borderRadius: BorderRadius.circular(radius)),
+    );
+    return SoftCard(
+      radius: 22,
+      padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+      child: Shimmer(
+        child: Row(
+          children: [
+            bone(width: 52, height: 52, radius: 14),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  bone(width: 150, height: 14, radius: 6),
+                  const SizedBox(height: 8),
+                  bone(width: 110, height: 12, radius: 6),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            bone(width: 72, height: 28, radius: 100),
+          ],
+        ),
       ),
     );
   }
