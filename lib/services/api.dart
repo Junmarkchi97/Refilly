@@ -79,7 +79,52 @@ class Api {
     final u = sb.auth.currentUser;
     if (u == null) return null;
     final r = await sb.from('profiles').select().eq('id', u.id).maybeSingle();
-    return r == null ? null : Profile.fromMap(r).applyingMeta(_metaMap(u.userMetadata));
+    if (r == null) return null;
+    return _withAvatar(Profile.fromMap(r).applyingMeta(_metaMap(u.userMetadata)), u.id, u.userMetadata);
+  }
+
+  /// Profile photos are stored in the existing private `owner-docs` bucket,
+  /// which already lets each signed-in user write their own folder. The live
+  /// profiles table has no avatar column, so the path is kept on the account.
+  static Future<Profile> saveProfilePhoto(Uint8List bytes, String ext, String contentType) async {
+    final u = sb.auth.currentUser;
+    if (u == null) throw StateError('Sign in to update your photo');
+    final safeExt = ext == 'jpeg' ? 'jpg' : ext;
+    if (!const {'jpg', 'png', 'webp'}.contains(safeExt)) {
+      throw ArgumentError('Use a JPG, PNG, or WebP photo');
+    }
+    final path = '${u.id}/profile-avatar.$safeExt';
+    await sb.storage.from('owner-docs').uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: contentType, upsert: true),
+    );
+    final data = Map<String, dynamic>.from(u.userMetadata ?? {});
+    data['avatar_path'] = path;
+    await sb.auth.updateUser(UserAttributes(data: data));
+    final row = await sb.from('profiles').select().eq('id', u.id).single();
+    return _withAvatar(Profile.fromMap(row).applyingMeta(data), u.id, data);
+  }
+
+  static Future<Profile> removeProfilePhoto() async {
+    final u = sb.auth.currentUser;
+    if (u == null) throw StateError('Sign in to update your photo');
+    final data = Map<String, dynamic>.from(u.userMetadata ?? {});
+    data['avatar_path'] = null;
+    await sb.auth.updateUser(UserAttributes(data: data));
+    final row = await sb.from('profiles').select().eq('id', u.id).single();
+    return Profile.fromMap(row).applyingMeta(data);
+  }
+
+  static Future<Profile> _withAvatar(Profile profile, String userId, Object? meta) async {
+    final path = ownedAvatarPath(userId, meta);
+    if (path == null) return profile;
+    try {
+      final url = await sb.storage.from('owner-docs').createSignedUrl(path, 60 * 60 * 24 * 7);
+      return profile.withAvatarUrl(url);
+    } catch (_) {
+      return profile.withAvatarUrl(null);
+    }
   }
 
   /// Persists the customer's default drop-off for Profile settings and checkout autofill.

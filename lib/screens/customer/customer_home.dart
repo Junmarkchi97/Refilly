@@ -16,6 +16,7 @@ import '../brand.dart';
 import 'apply_owner_screen.dart';
 import 'home_tab.dart';
 import '../auth/verify_phone_screen.dart';
+import 'profile_photo.dart';
 import 'saved_address_screen.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -128,14 +129,7 @@ class ProfileTab extends StatelessWidget {
         AppCard(
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: RF.ink,
-                child: Text(
-                  (profile.fullName ?? '?').characters.first.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22),
-                ),
-              ),
+              EditableProfilePhoto(profile: profile, onChanged: onProfileChanged),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

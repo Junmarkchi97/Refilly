@@ -7,6 +7,7 @@ import '../admin/admin_home.dart';
 import '../auth/verify_phone_screen.dart';
 import '../owner/owner_home.dart';
 import 'apply_owner_screen.dart';
+import 'profile_photo.dart';
 
 /// Glide-style side sheet that slides in from the left over the map.
 Future<void> showAppDrawer(BuildContext context, Profile profile, {required VoidCallback onOrders, required VoidCallback onAccount}) {
@@ -68,14 +69,7 @@ class _AppDrawer extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 16, 12, 20),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: RF.ink,
-                        child: Text(
-                          (profile.fullName ?? '?').characters.first.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22),
-                        ),
-                      ),
+                      ProfileAvatar(profile: profile, radius: 28),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(

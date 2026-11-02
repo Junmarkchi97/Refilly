@@ -5,6 +5,7 @@ class Profile {
   final String? fullName, phone;
   final String? deliveryAddress;
   final double? deliveryLat, deliveryLng;
+  final String? avatarUrl;
   final String role;
   Profile.fromMap(Map<String, dynamic> m)
     : id = m['id'],
@@ -13,7 +14,21 @@ class Profile {
       deliveryAddress = (m['delivery_address'] as String?)?.trim(),
       deliveryLat = (m['delivery_lat'] as num?)?.toDouble(),
       deliveryLng = (m['delivery_lng'] as num?)?.toDouble(),
+      avatarUrl = _text(m['avatar_url']),
       role = m['role'] ?? 'customer';
+
+  Map<String, dynamic> _asMap() => {
+    'id': id,
+    'full_name': fullName,
+    'phone': phone,
+    'role': role,
+    'delivery_address': deliveryAddress,
+    'delivery_lat': deliveryLat,
+    'delivery_lng': deliveryLng,
+    'avatar_url': avatarUrl,
+  };
+
+  Profile withAvatarUrl(String? url) => Profile.fromMap({..._asMap(), 'avatar_url': url});
 
   bool get hasSavedAddress =>
       deliveryAddress != null &&
@@ -23,21 +38,37 @@ class Profile {
 
   /// Fills a missing drop-off from auth metadata when the profiles columns are absent.
   Profile applyingMeta(Map<String, dynamic>? meta) {
-    if (hasSavedAddress || meta == null) return this;
+    if (meta == null || hasSavedAddress) return this;
     final address = meta['delivery_address'];
     final lat = _metaDouble(meta['delivery_lat']);
     final lng = _metaDouble(meta['delivery_lng']);
     if (address is! String || address.trim().isEmpty || lat == null || lng == null) return this;
     return Profile.fromMap({
-      'id': id,
-      'full_name': fullName,
-      'phone': phone,
-      'role': role,
+      ..._asMap(),
       'delivery_address': address,
       'delivery_lat': lat,
       'delivery_lng': lng,
     });
   }
+}
+
+String? _text(dynamic value) {
+  if (value is! String) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
+/// Storage path for this user's profile photo, or null when metadata is missing or unsafe.
+String? ownedAvatarPath(String userId, Object? meta) {
+  if (userId.isEmpty || meta is! Map) return null;
+  final raw = meta['avatar_path'];
+  if (raw is! String) return null;
+  final path = raw.trim();
+  final prefix = '$userId/';
+  if (path.isEmpty || path.contains('..') || path.contains('\\') || !path.startsWith(prefix)) return null;
+  final name = path.substring(prefix.length);
+  if (name.isEmpty || name.contains('/')) return null;
+  return path;
 }
 
 double? _metaDouble(Object? value) {

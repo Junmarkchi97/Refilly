@@ -6,11 +6,11 @@ import '../../models/models.dart';
 import '../../models/refill_routine.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
-import '../brand.dart';
 import '../network_states.dart';
 import '../notifications_screen.dart';
 import '../widgets.dart';
 import 'customer_home.dart';
+import 'profile_photo.dart';
 import 'reorder.dart';
 import 'station_screen.dart';
 import 'tracking_screen.dart';
@@ -129,36 +129,14 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _header(Order? lastOrderAddress) {
-    final initial = (widget.profile.fullName ?? '').trim();
     final label = _savedLabel ?? lastOrderAddress?.deliveryAddress;
     return Row(
       children: [
-        SizedBox(
-          width: 46,
-          height: 46,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(color: Color(0xFFF3D2C0), shape: BoxShape.circle),
-                child: Text(
-                  initial.isEmpty ? 'R' : initial.characters.first.toUpperCase(),
-                  style: const TextStyle(color: Color(0xFF6A3A28), fontWeight: FontWeight.w700, fontSize: 18),
-                ),
-              ),
-              Positioned(
-                right: -3,
-                bottom: -2,
-                child: Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.white, width: 2)),
-                  child: ClipRRect(borderRadius: BorderRadius.circular(4), child: const RefillyMark(size: 16)),
-                ),
-              ),
-            ],
-          ),
+        ProfileAvatar(
+          profile: widget.profile,
+          radius: 23,
+          background: const Color(0xFFF3D2C0),
+          foreground: const Color(0xFF6A3A28),
         ),
         const SizedBox(width: 10),
         Expanded(
