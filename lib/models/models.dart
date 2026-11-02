@@ -3,8 +3,23 @@ double _d(dynamic v) => v == null ? 0 : (v as num).toDouble();
 class Profile {
   final String id;
   final String? fullName, phone;
+  final String? deliveryAddress;
+  final double? deliveryLat, deliveryLng;
   final String role;
-  Profile.fromMap(Map<String, dynamic> m) : id = m['id'], fullName = m['full_name'], phone = m['phone'], role = m['role'] ?? 'customer';
+  Profile.fromMap(Map<String, dynamic> m)
+    : id = m['id'],
+      fullName = m['full_name'],
+      phone = m['phone'],
+      deliveryAddress = (m['delivery_address'] as String?)?.trim(),
+      deliveryLat = (m['delivery_lat'] as num?)?.toDouble(),
+      deliveryLng = (m['delivery_lng'] as num?)?.toDouble(),
+      role = m['role'] ?? 'customer';
+
+  bool get hasSavedAddress =>
+      deliveryAddress != null &&
+      deliveryAddress!.isNotEmpty &&
+      deliveryLat != null &&
+      deliveryLng != null;
 }
 
 class Station {

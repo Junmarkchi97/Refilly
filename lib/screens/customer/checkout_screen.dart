@@ -38,7 +38,8 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _address = TextEditingController(), _notes = TextEditingController();
+  late final _address = TextEditingController(text: widget.profile.deliveryAddress ?? '');
+  final _notes = TextEditingController();
   late final _phone = TextEditingController(text: widget.profile.phone);
   final _map = MapController();
   final _geocoder = AddressSearchService();
@@ -60,6 +61,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double? _deliveryFee;
   String? _quoteError;
   int _quoteSequence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.profile;
+    if (profile.hasSavedAddress) {
+      final point = LatLng(profile.deliveryLat!, profile.deliveryLng!);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        _map.move(point, 16);
+        await _setDrop(point);
+      });
+    }
+  }
 
   void _onAddressChanged(String input) {
     _request.reset();
@@ -178,12 +193,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     setState(() => _busy = true);
     try {
+      final address = _address.text.trim();
+      final lat = _drop?.latitude;
+      final lng = _drop?.longitude;
       final id = await Api.placeOrder(
         stationId: widget.station.id,
         cart: widget.cart,
-        address: _address.text.trim(),
-        lat: _drop?.latitude,
-        lng: _drop?.longitude,
+        address: address,
+        lat: lat,
+        lng: lng,
         phone: _phone.text.trim(),
         notes: DeliveryNotes(
           window: _window,
@@ -194,6 +212,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         payment: _payment,
         requestId: _request.id,
       );
+      if (lat != null && lng != null) {
+        try {
+          await Api.saveDeliveryAddress(address: address, lat: lat, lng: lng);
+        } catch (_) {
+          // Order already placed; address save can be retried from Account.
+        }
+      }
       if (widget.refillRoutineId != null) {
         try {
           await Api.recordRefillOrder(widget.refillRoutineId!, id);

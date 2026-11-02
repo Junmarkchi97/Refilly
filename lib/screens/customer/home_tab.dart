@@ -19,7 +19,14 @@ const _active = ['pending', 'accepted', 'preparing', 'out_for_delivery'];
 class HomeTab extends StatefulWidget {
   final Profile profile;
   final VoidCallback onEssentials, onOrders;
-  const HomeTab({super.key, required this.profile, required this.onEssentials, required this.onOrders});
+  final VoidCallback? onEditAddress;
+  const HomeTab({
+    super.key,
+    required this.profile,
+    required this.onEssentials,
+    required this.onOrders,
+    this.onEditAddress,
+  });
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
@@ -72,13 +79,13 @@ class _HomeTabState extends State<HomeTab> {
     builder: (context, orderSnap) {
       final orders = orderSnap.data ?? const <Order>[];
       final upcoming = orders.where((o) => _active.contains(o.status)).toList();
-      final lastAddress = orders.where((o) => o.deliveryAddress.isNotEmpty).firstOrNull;
+      final lastOrderAddress = orders.where((o) => o.deliveryAddress.isNotEmpty).firstOrNull;
       return RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
           padding: EdgeInsets.fromLTRB(20, 8, 20, bottomInset(context, 110)),
           children: [
-            _header(lastAddress),
+            _header(lastOrderAddress),
             const SizedBox(height: 26),
             Text('Hey $_firstName', style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 8),
@@ -107,15 +114,22 @@ class _HomeTabState extends State<HomeTab> {
             SectionHeader('Your essentials', action: 'See all', onAction: widget.onEssentials),
             FadeSlideIn(index: 2, child: _essentialsList()),
             SectionHeader('Nearby suppliers', action: 'Browse', onAction: _openStations),
-            _suppliers(lastAddress),
+            _suppliers(lastOrderAddress),
           ],
         ),
       );
     },
   );
 
-  Widget _header(Order? lastAddress) {
+  String? get _savedLabel {
+    final saved = widget.profile.deliveryAddress?.trim();
+    if (saved != null && saved.isNotEmpty) return saved;
+    return null;
+  }
+
+  Widget _header(Order? lastOrderAddress) {
     final initial = (widget.profile.fullName ?? '').trim();
+    final label = _savedLabel ?? lastOrderAddress?.deliveryAddress;
     return Row(
       children: [
         SizedBox(
@@ -149,9 +163,10 @@ class _HomeTabState extends State<HomeTab> {
         Expanded(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('You confirm the delivery address at checkout for every order.')),
-            ),
+            onTap: widget.onEditAddress ??
+                () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Update your address in Account, or confirm it at checkout.')),
+                    ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -160,7 +175,7 @@ class _HomeTabState extends State<HomeTab> {
                   children: [
                     Flexible(
                       child: Text(
-                        lastAddress == null ? 'Set at checkout' : lastAddress.deliveryAddress.split(',').first,
+                        label == null ? 'Add in Account' : label.split(',').first,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, letterSpacing: -.3),
@@ -364,16 +379,19 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _suppliers(Order? lastAddress) => FutureBuilder<List<Station>>(
+  Widget _suppliers(Order? lastOrderAddress) => FutureBuilder<List<Station>>(
     future: _stations,
     builder: (context, snap) {
       if (snap.hasError) {
         return const Text('Suppliers could not load. Pull down to retry.', style: TextStyle(color: RF.muted));
       }
       if (!snap.hasData) return const SizedBox(height: 80, child: SkeletonList(count: 2, height: 30));
-      final from = lastAddress?.deliveryLat == null || lastAddress?.deliveryLng == null
-          ? null
-          : LatLng(lastAddress!.deliveryLat!, lastAddress.deliveryLng!);
+      final profile = widget.profile;
+      final from = profile.hasSavedAddress
+          ? LatLng(profile.deliveryLat!, profile.deliveryLng!)
+          : lastOrderAddress?.deliveryLat == null || lastOrderAddress?.deliveryLng == null
+              ? null
+              : LatLng(lastOrderAddress!.deliveryLat!, lastOrderAddress.deliveryLng!);
       final distance = const Distance();
       double? km(Station s) => from == null ? null : distance.as(LengthUnit.Meter, from, LatLng(s.lat, s.lng)) / 1000;
       final list = [...snap.data!];

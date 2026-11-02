@@ -82,6 +82,29 @@ class Api {
     return r == null ? null : Profile.fromMap(r);
   }
 
+  /// Persists the customer's default drop-off for Profile settings and checkout autofill.
+  static Future<Profile> saveDeliveryAddress({
+    required String address,
+    required double lat,
+    required double lng,
+  }) async {
+    final u = sb.auth.currentUser;
+    if (u == null) throw StateError('Sign in to save your address');
+    final trimmed = address.trim();
+    if (trimmed.isEmpty) throw ArgumentError('Delivery address required');
+    final row = await sb
+        .from('profiles')
+        .update({
+          'delivery_address': trimmed,
+          'delivery_lat': lat,
+          'delivery_lng': lng,
+        })
+        .eq('id', u.id)
+        .select()
+        .single();
+    return Profile.fromMap(row);
+  }
+
   static Future<List<Station>> stations() async => (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
 
   static Future<List<Category>> categories() async => (await sb.from('categories').select().order('sort')).map(Category.fromMap).toList();

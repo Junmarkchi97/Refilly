@@ -16,6 +16,7 @@ import '../brand.dart';
 import 'apply_owner_screen.dart';
 import 'home_tab.dart';
 import '../auth/verify_phone_screen.dart';
+import 'saved_address_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   final Profile profile;
@@ -25,6 +26,7 @@ class CustomerHome extends StatefulWidget {
 }
 
 class _CustomerHomeState extends State<CustomerHome> {
+  late Profile _profile = widget.profile;
   int _tab = 0;
   int _routineRefresh = 0;
 
@@ -32,6 +34,16 @@ class _CustomerHomeState extends State<CustomerHome> {
     _tab = tab;
     if (tab == 0) _routineRefresh++;
   });
+
+  void _setProfile(Profile profile) => setState(() => _profile = profile);
+
+  Future<void> _editAddress() async {
+    final updated = await Navigator.push<Profile>(
+      context,
+      MaterialPageRoute(builder: (_) => SavedAddressScreen(profile: _profile)),
+    );
+    if (updated != null) _setProfile(updated);
+  }
 
   Widget get _nav => FloatingNav(
     index: _tab,
@@ -52,23 +64,24 @@ class _CustomerHomeState extends State<CustomerHome> {
         bottom: false,
         child: switch (_tab) {
           0 => HomeTab(
-              key: ValueKey(_routineRefresh),
-              profile: widget.profile,
+              key: ValueKey('${_routineRefresh}_${_profile.deliveryAddress}'),
+              profile: _profile,
               onEssentials: () => _go(1),
               onOrders: () => _go(2),
+              onEditAddress: _editAddress,
             ),
           1 => MyEssentialsScreen(
-              profile: widget.profile,
-              onExplore: () => openStations(context, widget.profile),
+              profile: _profile,
+              onExplore: () => openStations(context, _profile),
               onOrders: () => _go(2),
             ),
           2 => Column(
               children: [
                 const PageHeader('Orders', subtitle: 'Track, reorder and save your essentials'),
-                Expanded(child: OrdersScreen(profile: widget.profile)),
+                Expanded(child: OrdersScreen(profile: _profile)),
               ],
             ),
-          _ => ProfileTab(profile: widget.profile),
+          _ => ProfileTab(profile: _profile, onProfileChanged: _setProfile),
         },
       ),
     ),
@@ -84,10 +97,23 @@ void openStations(BuildContext context, Profile profile, {String? category}) => 
 
 class ProfileTab extends StatelessWidget {
   final Profile profile;
-  const ProfileTab({super.key, required this.profile});
+  final ValueChanged<Profile> onProfileChanged;
+  const ProfileTab({super.key, required this.profile, required this.onProfileChanged});
   @override
   Widget build(BuildContext context) {
     void go(Widget w) => Navigator.push(context, MaterialPageRoute(builder: (_) => w));
+    Future<void> editAddress() async {
+      final updated = await Navigator.push<Profile>(
+        context,
+        MaterialPageRoute(builder: (_) => SavedAddressScreen(profile: profile)),
+      );
+      if (updated != null) onProfileChanged(updated);
+    }
+
+    final addressSubtitle = profile.hasSavedAddress
+        ? profile.deliveryAddress!
+        : 'Add an address for faster checkout';
+
     return ListView(
       padding: EdgeInsets.only(bottom: bottomInset(context, 100)),
       children: [
@@ -117,6 +143,15 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
         const SectionTitle('Account'),
+        AppCard(
+          child: ListTile(
+            leading: const Icon(Icons.home_outlined),
+            title: const Text('Delivery address'),
+            subtitle: Text(addressSubtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: editAddress,
+          ),
+        ),
         AppCard(child: ListTile(
           leading: const Icon(Icons.notifications_outlined),
           title: const Text('Order notifications'),
