@@ -182,7 +182,8 @@ class SoftCard extends StatelessWidget {
 
 /// White card whose stroke turns into a peach-to-sky gradient when selected.
 ///
-/// Stroke width stays fixed so selecting a card never shifts its contents.
+/// The stroke is painted over the card. It never pads the child, so showing
+/// the border cannot wrap text or shift the contents.
 class GradientFrame extends StatelessWidget {
   static const _stroke = 1.8;
 
@@ -210,22 +211,60 @@ class GradientFrame extends StatelessWidget {
       child: AnimatedContainer(
         duration: Motion.d(context, Motion.fast),
         curve: Motion.curve,
-        padding: const EdgeInsets.all(_stroke),
         decoration: BoxDecoration(
+          color: selected ? RF.selectedFill : Colors.white,
           borderRadius: BorderRadius.circular(radius),
-          gradient: selected ? RF.borderGradient : null,
-          color: selected ? null : const Color(0x3390B8DC),
           boxShadow: selected ? RF.selectedShadow : RF.shadow,
         ),
         child: Material(
-          color: selected ? RF.selectedFill : Colors.white,
-          borderRadius: BorderRadius.circular(radius - _stroke),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(radius),
           clipBehavior: Clip.antiAlias,
-          child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(radius),
+            child: Stack(
+              children: [
+                Padding(padding: padding, child: child),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _CardStrokePainter(selected: selected, radius: radius, stroke: _stroke),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     ),
   );
+}
+
+class _CardStrokePainter extends CustomPainter {
+  final bool selected;
+  final double radius;
+  final double stroke;
+  const _CardStrokePainter({required this.selected, required this.radius, required this.stroke});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(bounds.deflate(stroke / 2), Radius.circular((radius - stroke / 2).clamp(0, radius)));
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    if (selected) {
+      paint.shader = RF.borderGradient.createShader(bounds);
+    } else {
+      paint.color = const Color(0x3390B8DC);
+    }
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CardStrokePainter old) => old.selected != selected || old.radius != radius || old.stroke != stroke;
 }
 
 /// Selectable card with a peach-to-sky gradient outline when chosen.
