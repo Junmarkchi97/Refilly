@@ -128,8 +128,11 @@ class Api {
     return Profile.fromMap(row).applyingMeta(_metaMap(sb.auth.currentUser?.userMetadata) ?? data);
   }
 
-  static Map<String, dynamic>? _metaMap(Map<dynamic, dynamic>? meta) =>
-      meta == null ? null : Map<String, dynamic>.from(meta);
+  static Map<String, dynamic>? _metaMap(Object? meta) {
+    if (meta is Map<String, dynamic>) return meta;
+    if (meta is Map) return Map<String, dynamic>.from(meta);
+    return null;
+  }
 
   static Future<List<Station>> stations() async => (await sb.from('stations').select().order('name')).map(Station.fromMap).toList();
 
