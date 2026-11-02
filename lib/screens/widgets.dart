@@ -308,7 +308,7 @@ class FloatingNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF30220F).withValues(alpha: .08), blurRadius: 28, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .1), blurRadius: 28, offset: const Offset(0, 10))],
       ),
       child: Row(
           children: [
@@ -666,7 +666,7 @@ class PlaceRow extends StatelessWidget {
   );
 }
 
-/// Selectable option tile with a brand-blue outline when selected.
+/// Selectable option tile with a peach-to-sky gradient outline when selected.
 class OptionTile extends StatelessWidget {
   final bool selected;
   final Widget child;
@@ -675,24 +675,12 @@ class OptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-    child: Pressable(
-      enabled: onTap != null,
-      scale: .98,
-      child: AnimatedContainer(
-        duration: Motion.d(context, Motion.fast),
-        curve: Motion.curve,
-        decoration: BoxDecoration(
-          color: selected ? RF.selectedFill : Colors.white,
-          borderRadius: BorderRadius.circular(RF.radius),
-          border: Border.all(color: selected ? RF.accent : Colors.transparent, width: 1.6),
-          boxShadow: selected ? RF.selectedShadow : RF.shadow,
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(RF.radius),
-          onTap: onTap,
-          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), child: child),
-        ),
-      ),
+    child: GradientFrame(
+      selected: selected,
+      onTap: onTap,
+      radius: RF.radius,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: child,
     ),
   );
 }

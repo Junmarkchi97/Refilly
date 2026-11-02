@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'motion.dart';
 
-/// Warm off-white surface with faint peach, pale-blue and lavender light.
+/// Sky-blue surface with a soft peach corner and a cooler blue wash opposite.
 class Ambient extends StatelessWidget {
   final Widget child;
   const Ambient({super.key, required this.child});
@@ -13,25 +13,25 @@ class Ambient extends StatelessWidget {
     child: DecoratedBox(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment(-1.1, -1.05),
-          radius: 1.1,
-          colors: [Color(0x80FFB28C), Color(0x00FFB28C)],
+          center: Alignment(-1.05, -1.05),
+          radius: 1.05,
+          colors: [Color(0x73FFC2A8), Color(0x00FFC2A8)],
         ),
       ),
       child: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            center: Alignment(1.15, -1.0),
-            radius: .95,
-            colors: [Color(0x7AA8C8FF), Color(0x00A8C8FF)],
+            center: Alignment(1.1, -.9),
+            radius: 1.15,
+            colors: [Color(0xB37EC8FF), Color(0x007EC8FF)],
           ),
         ),
         child: DecoratedBox(
           decoration: const BoxDecoration(
             gradient: RadialGradient(
-              center: Alignment(.6, -.55),
-              radius: .7,
-              colors: [Color(0x5CDCC8F2), Color(0x00DCC8F2)],
+              center: Alignment(.2, 1.1),
+              radius: 1.1,
+              colors: [Color(0x80C5E4FF), Color(0x00C5E4FF)],
             ),
           ),
           child: child,
@@ -120,7 +120,7 @@ class ProductOrb extends StatelessWidget {
             height: 14,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
-              boxShadow: [BoxShadow(color: const Color(0xFF3C2814).withValues(alpha: .18), blurRadius: 12)],
+              boxShadow: [BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .16), blurRadius: 12)],
             ),
           ),
         ),
@@ -180,7 +180,51 @@ class SoftCard extends StatelessWidget {
   );
 }
 
-/// Selectable card with a subtle brand-blue outline when chosen.
+/// White card whose stroke turns into a peach-to-sky gradient when selected.
+class GradientFrame extends StatelessWidget {
+  final bool selected;
+  final Widget child;
+  final VoidCallback? onTap;
+  final EdgeInsets padding;
+  final double radius;
+  const GradientFrame({
+    super.key,
+    required this.selected,
+    required this.child,
+    this.onTap,
+    this.padding = const EdgeInsets.fromLTRB(8, 8, 14, 8),
+    this.radius = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    button: onTap != null,
+    child: Pressable(
+      enabled: onTap != null,
+      scale: .98,
+      child: AnimatedContainer(
+        duration: Motion.d(context, Motion.fast),
+        curve: Motion.curve,
+        padding: EdgeInsets.all(selected ? 1.8 : 1),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          gradient: selected ? RF.borderGradient : null,
+          color: selected ? null : const Color(0x3390B8DC),
+          boxShadow: selected ? RF.selectedShadow : RF.shadow,
+        ),
+        child: Material(
+          color: selected ? RF.selectedFill : Colors.white,
+          borderRadius: BorderRadius.circular(radius - 1.6),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Selectable card with a peach-to-sky gradient outline when chosen.
 class SelectCard extends StatelessWidget {
   final bool selected;
   final Widget child;
@@ -194,30 +238,7 @@ class SelectCard extends StatelessWidget {
     this.padding = const EdgeInsets.fromLTRB(8, 8, 14, 8),
   });
   @override
-  Widget build(BuildContext context) => Semantics(
-    selected: selected,
-    button: onTap != null,
-    child: Pressable(
-      enabled: onTap != null,
-      scale: .98,
-      child: AnimatedContainer(
-        duration: Motion.d(context, Motion.fast),
-        curve: Motion.curve,
-        decoration: BoxDecoration(
-          color: selected ? RF.selectedFill : Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: selected ? RF.accent : const Color(0x0F201810), width: selected ? 1.6 : 1),
-          boxShadow: selected ? RF.selectedShadow : RF.shadow,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => GradientFrame(selected: selected, onTap: onTap, padding: padding, child: child);
 }
 
 /// Pill-shaped minus / count / plus control.
@@ -413,8 +434,8 @@ class FloatIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0x14201810)),
-          boxShadow: [BoxShadow(color: const Color(0xFF32241A).withValues(alpha: .07), blurRadius: 16, offset: const Offset(0, 6))],
+          border: Border.all(color: const Color(0x3390B8DC)),
+          boxShadow: [BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .08), blurRadius: 16, offset: const Offset(0, 6))],
         ),
         child: Material(
           color: Colors.transparent,

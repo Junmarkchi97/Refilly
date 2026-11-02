@@ -2,20 +2,26 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Refilly identity: warm off-white surfaces, near-black type, black pill actions,
-/// and brand blue reserved for highlights and selected states.
+/// Refilly identity: pale sky surfaces, near-black type, black pill actions,
+/// and a peach-to-blue gradient reserved for selected borders.
 class RF {
-  static const bg = Color(0xFFF6F3EE);
-  static const fill = Color(0xFFF1EDE7);
+  static const bg = Color(0xFFE3F2FC);
+  static const fill = Color(0xFFD3E9FA);
   static const card = Colors.white;
   static const ink = Color(0xFF171717);
   static const button = Color(0xFF141414);
-  static const muted = Color(0xFF5E5953);
-  static const line = Color(0xFFE7E1D9);
+  static const muted = Color(0xFF5C6B7A);
+  static const line = Color(0xFFC9DFF2);
   static const accent = Color(0xFF0968EE);
   static const accentInk = Color(0xFF0754C2);
-  static const accentSoft = Color(0xFFE7F0FE);
-  static const selectedFill = Color(0xFFF7FAFF);
+  static const accentSoft = Color(0xFFD9ECFC);
+  static const selectedFill = Color(0xFFF4FAFF);
+  /// Peach, blush, lavender, then sky. Matches the selected-card stroke.
+  static const borderGradient = LinearGradient(
+    begin: Alignment(-1, -.15),
+    end: Alignment(1, .15),
+    colors: [Color(0xFFFF9A78), Color(0xFFFFB4C6), Color(0xFFCBB6FF), Color(0xFF7EB6FF)],
+  );
   static const good = Color(0xFF0D6A3E);
   static const goodSoft = Color(0xFFE7F6EE);
   static const usual = Color(0xFFF8E6DA);
@@ -24,8 +30,8 @@ class RF {
   static const cardRadius = 24.0;
   static const sheetRadius = 32.0;
   static final shadow = [
-    BoxShadow(color: const Color(0xFF30220F).withValues(alpha: .06), blurRadius: 24, offset: const Offset(0, 8)),
-    BoxShadow(color: const Color(0xFF30220F).withValues(alpha: .04), blurRadius: 2, offset: const Offset(0, 1)),
+    BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 8)),
+    BoxShadow(color: const Color(0xFF1A4B7A).withValues(alpha: .04), blurRadius: 2, offset: const Offset(0, 1)),
   ];
   static final selectedShadow = [
     BoxShadow(color: accent.withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 10)),
@@ -80,8 +86,8 @@ ThemeData refillyTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: RF.button,
         foregroundColor: Colors.white,
-        disabledBackgroundColor: const Color(0xFFD9D3CB),
-        disabledForegroundColor: const Color(0xFF6E6862),
+        disabledBackgroundColor: const Color(0xFFC5D6E6),
+        disabledForegroundColor: const Color(0xFF6A7C8C),
         minimumSize: const Size(64, 54),
         shape: pill,
         textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -.2),
