@@ -198,7 +198,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
             if (items.isEmpty) ...[
               const SizedBox(height: 30),
               const EmptyState(
-                artwork: EssentialsSticker(),
+                artwork: EssentialsEmptyMark(),
                 title: 'No usuals yet',
                 subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
               ),

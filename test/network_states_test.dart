@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:refilly/screens/network_states.dart';
 import 'package:refilly/screens/widgets.dart';
 import 'package:refilly/theme.dart';
@@ -47,21 +48,22 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('essentials empty state uses the jug sticker', (tester) async {
+  testWidgets('essentials empty state uses a lucide icon, not a product photo', (tester) async {
     await tester.pumpWidget(MaterialApp(
       theme: refillyTheme(),
       home: const Scaffold(
         backgroundColor: RF.bg,
         body: EmptyState(
-          artwork: EssentialsSticker(),
+          artwork: EssentialsEmptyMark(),
           title: 'No usuals yet',
           subtitle: 'After a delivery, save the order to your essentials. Next time it takes one tap to refill.',
         ),
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.byType(EssentialsSticker), findsOneWidget);
-    expect(find.byIcon(Icons.repeat_rounded), findsNothing);
+    expect(find.byType(EssentialsEmptyMark), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+    expect(find.byIcon(LucideIcons.droplets), findsOneWidget);
     expect(find.text('No usuals yet'), findsOneWidget);
   });
 

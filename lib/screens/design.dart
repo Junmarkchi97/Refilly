@@ -1,6 +1,5 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme.dart';
 import 'motion.dart';
@@ -149,61 +148,29 @@ class ProductOrb extends StatelessWidget {
   );
 }
 
-/// Die-cut sticker of the round refill jug. This is the empty-state mark for
-/// saved usuals: the product itself, tilted like a sticker on the page.
-class EssentialsSticker extends StatelessWidget {
-  const EssentialsSticker({super.key, this.size = 124});
+/// Soft Lucide mark for the My essentials empty state (no product photos).
+class EssentialsEmptyMark extends StatelessWidget {
+  const EssentialsEmptyMark({super.key, this.size = 96});
 
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    const border = 8.0;
-    final inner = size - border * 2;
-    final radius = inner * 0.22;
-    return Semantics(
-      label: 'Water jug',
-      image: true,
-      child: SizedBox(
-        width: size + 28,
-        height: size + 20,
-        child: Center(
-          child: Transform.rotate(
-            angle: -6 * math.pi / 180,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(radius + border),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1A4B7A).withValues(alpha: .16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(border),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(radius),
-                  child: ColoredBox(
-                    color: Colors.white,
-                    child: Image.asset(
-                      'assets/products/jug-round.jpg',
-                      width: inner,
-                      height: inner,
-                      fit: BoxFit.contain,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+  Widget build(BuildContext context) => Semantics(
+    label: 'Essentials',
+    child: Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: RF.shadow),
+      child: Center(
+        child: Container(
+          width: size * .67,
+          height: size * .67,
+          decoration: const BoxDecoration(color: RF.accentSoft, shape: BoxShape.circle),
+          child: Icon(LucideIcons.droplets, size: size * .34, color: RF.accent),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// White rounded surface with a delicate shadow and no border.
