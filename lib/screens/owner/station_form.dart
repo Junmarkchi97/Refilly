@@ -112,30 +112,47 @@ class _StationFormState extends State<StationForm> {
     padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset(context, 100)),
     children: [
       Center(
-        child: Stack(
-          children: [
-            StationAvatar(_photo, size: 112),
-            if (_busy) const Positioned.fill(child: Center(child: CircularProgressIndicator())),
-          ],
+        child: SizedBox(
+          width: 112,
+          height: 112,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              StationAvatar(_photo, size: 112),
+              if (_busy) const Positioned.fill(child: Center(child: CircularProgressIndicator())),
+              if (_photo != null)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Material(
+                    color: Colors.white,
+                    elevation: 2,
+                    shadowColor: const Color(0x33171717),
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      tooltip: 'Remove photo',
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                      onPressed: _busy ? null : _removePhoto,
+                      icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFD14343)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       const SizedBox(height: 10),
       const Center(child: Text('Station photo', style: TextStyle(fontWeight: FontWeight.w700))),
       const Center(child: Text('Customers see this as your profile picture.', style: TextStyle(color: RF.muted, fontSize: 13))),
       const SizedBox(height: 10),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          FilledButton.tonalIcon(
-            onPressed: _busy ? null : _pickPhoto,
-            icon: const Icon(Icons.photo_camera_rounded),
-            label: Text(_photo == null ? 'Upload photo' : 'Replace photo'),
-          ),
-          if (_photo != null) ...[
-            const SizedBox(width: 8),
-            TextButton.icon(onPressed: _busy ? null : _removePhoto, icon: const Icon(Icons.delete_outline_rounded), label: const Text('Remove')),
-          ],
-        ],
+      Center(
+        child: FilledButton.tonalIcon(
+          onPressed: _busy ? null : _pickPhoto,
+          icon: const Icon(Icons.photo_camera_rounded),
+          label: Text(_photo == null ? 'Upload photo' : 'Replace photo'),
+        ),
       ),
       const SizedBox(height: 20),
       TextField(
