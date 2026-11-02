@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
+import '../network_states.dart';
 import 'station_screen.dart';
 import '../../models/refill_routine.dart';
 
@@ -72,11 +73,17 @@ Future<void> startReorder(BuildContext context, Order order, Profile profile, {R
   Navigator.of(context, rootNavigator: true).pop();
 
   if (error != null) {
+    final copy = describeFailure(error, failed: 'Could not prepare your reorder. Please retry.');
+    final title = switch (copy.kind) {
+      AppNotice.offline => 'No internet connection',
+      AppNotice.timeout => 'Request timed out',
+      _ => 'Unable to reorder',
+    };
     await showDialog<void>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Unable to reorder'),
-        content: Text(error.toString().replaceFirst('Bad state: ', '')),
+        title: Text(title),
+        content: Text(copy.message),
         actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
       ),
     );

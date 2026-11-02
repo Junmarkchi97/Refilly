@@ -37,7 +37,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
       if (f == null) return;
       final bytes = await f.readAsBytes();
       if (bytes.length > 5 * 1024 * 1024) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image must be under 5 MB')));
+        if (mounted) showAppNotice(context, 'Image must be under 5 MB');
         return;
       }
       setD(() {
@@ -119,7 +119,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
             FilledButton(onPressed: () {
               final amount = double.tryParse(price.text.trim());
               if (name.text.trim().isEmpty || unit.text.trim().isEmpty || amount == null || !amount.isFinite || amount <= 0) {
-                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Add a name, unit, and valid price above ₱0.')));
+                showAppNotice(ctx, 'Add a name, unit, and valid price above ₱0.');
                 return;
               }
               Navigator.pop(ctx, true);
@@ -131,7 +131,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
     if (saved != true) return;
     final validPrice = double.tryParse(price.text.trim());
     if (name.text.trim().isEmpty || unit.text.trim().isEmpty || validPrice == null || !validPrice.isFinite || validPrice <= 0) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a product name, unit, and a valid price greater than zero.')));
+      if (mounted) showAppNotice(context, 'Enter a product name, unit, and a valid price greater than zero.');
       return;
     }
     try {
@@ -144,7 +144,7 @@ class _OwnerProductsState extends State<OwnerProducts> {
         imageUrl = await Api.uploadProductImage(widget.station.id, newBytes!, newExt == 'jpeg' ? 'jpg' : newExt, mime);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Photo upload failed: $e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not upload the photo.');
       return;
     }
     final data = {
@@ -162,9 +162,12 @@ class _OwnerProductsState extends State<OwnerProducts> {
         await sb.from('products').update(data).eq('id', p.id);
       }
       if (p?.imageUrl != null && p!.imageUrl != imageUrl) await Api.deleteProductImage(p.imageUrl!);
-      if (mounted) _reload();
+      if (mounted) {
+        _reload();
+        showAppNotice(context, 'Product saved', kind: AppNotice.success);
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not save this product.');
     }
   }
 

@@ -12,6 +12,7 @@ import '../../services/location.dart';
 import '../../services/address_search.dart';
 import '../../theme.dart';
 import '../address_suggestions.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 /// Customers apply to become station owners; an admin reviews the documents.
@@ -77,11 +78,14 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
           _searchingAddress = false;
           _addressSuggestions = suggestions;
         });
-      } catch (_) {
+      } catch (e) {
         if (!mounted || requestId != _addressRequestId) return;
         setState(() {
           _searchingAddress = false;
-          _addressSearchError = 'Suggestions unavailable. You can set the pin on the map below.';
+          _addressSearchError = describeFailure(
+            e,
+            failed: 'Suggestions unavailable. You can set the pin on the map below.',
+          ).message;
         });
       }
     });
@@ -121,7 +125,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
     final f = (await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ext)).firstOrNull;
     if (f == null) return null;
     if ((await f.readAsBytes()).length > 10 * 1024 * 1024) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Maximum file size is 10 MB')));
+      if (mounted) showAppNotice(context, 'Maximum file size is 10 MB');
       return null;
     }
     return _Doc(f.name, await f.readAsBytes());
@@ -138,7 +142,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
     final p = await LocationService.current();
     if (p == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Allow location access, or drag the map instead')));
+        showAppNotice(context, 'Allow location access, or drag the map instead');
       }
       return;
     }
@@ -170,7 +174,7 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
         _mine = Api.myApplications();
       });
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not submit your application.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

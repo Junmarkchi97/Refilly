@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/api.dart';
 import '../../services/social_auth.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 import '../brand.dart';
 import '../onboarding_screen.dart';
@@ -49,7 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
         await sb.auth.signInWithPassword(email: _email.text.trim(), password: _pass.text);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) {
+        showFailureNotice(
+          context,
+          e,
+          failed: _signup
+              ? 'Could not create your account. Please try again.'
+              : 'Could not sign in. Check your details and try again.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -62,15 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await SocialAuth.signIn(provider);
       // For mobile, the browser returns through the registered deep link.
       // On the web Supabase redirects and AuthGate observes the new session.
-    } on StateError catch (error) {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message.toString())));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Sign-in could not start. Please try again.'),
-        ));
+        showFailureNotice(context, e, failed: 'Sign-in could not start. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _busy = false);

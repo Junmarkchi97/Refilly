@@ -54,4 +54,52 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(find.text('This is taking longer than usual…'), findsOneWidget);
   });
+
+  test('hides database errors behind a plain failure', () {
+    final copy = describeFailure(
+      Exception(
+        "PostgrestException(message: Could not find the 'delivery_address' column of 'profiles' in the schema cache, code: PGRST204, details: , hint: null)",
+      ),
+      failed: 'Could not save your address.',
+    );
+    expect(copy.kind, AppNotice.failed);
+    expect(copy.message, 'Could not save your address.');
+    expect(copy.message, isNot(contains('PGRST')));
+    expect(copy.message, isNot(contains('delivery_address')));
+  });
+
+  test('keeps a short sign-in message and names offline separately', () {
+    final auth = describeFailure(
+      Exception('AuthApiException(message: Invalid login credentials, statusCode: 400, code: invalid_credentials)'),
+      failed: 'Could not sign in.',
+    );
+    expect(auth.message, 'Invalid login credentials');
+
+    final offline = describeFailure(const SocketException('Failed host lookup'));
+    expect(offline.kind, AppNotice.offline);
+    expect(offline.message, contains('No internet connection'));
+
+    final timeout = describeFailure(TimeoutException('request timed out'));
+    expect(timeout.kind, AppNotice.timeout);
+
+    final readable = describeFailure(StateError('This saved order is unavailable.'));
+    expect(readable.message, 'This saved order is unavailable.');
+  });
+
+  testWidgets('success notice shows the saved-address confirmation', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showAppNotice(context, 'Address updated', kind: AppNotice.success),
+            child: const Text('Save'),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+    expect(find.text('Address updated'), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+  });
 }

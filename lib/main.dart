@@ -6,6 +6,7 @@ import 'theme.dart';
 import 'models/models.dart';
 import 'services/api.dart';
 import 'services/onboarding_store.dart';
+import 'screens/network_states.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/brand.dart';
 import 'screens/auth/login_screen.dart';
@@ -135,24 +136,51 @@ class AuthGate extends StatelessWidget {
     stream: sb.auth.onAuthStateChange,
     builder: (context, _) {
       if (sb.auth.currentSession == null) return LoginScreen(initialSignup: initialSignup);
-      return FutureBuilder<Profile?>(
-        key: ValueKey(sb.auth.currentUser?.id),
-        future: Api.me(),
-        builder: (context, snap) {
-          if (snap.hasError) return Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Could not load your profile: ${snap.error}'))));
-          if (snap.connectionState != ConnectionState.done) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          if (!snap.hasData) return const Scaffold(body: Center(child: Text('Your profile was not found. Please contact support.')));
-          final p = snap.data!;
-          switch (p.role) {
-            case 'admin':
-              return AdminHome(profile: p);
-            case 'owner':
-              return OwnerHome(profile: p);
-            default:
-              return CustomerHome(profile: p);
-          }
-        },
-      );
+      return _ProfileGate(key: ValueKey(sb.auth.currentUser?.id));
+    },
+  );
+}
+
+class _ProfileGate extends StatefulWidget {
+  const _ProfileGate({super.key});
+  @override
+  State<_ProfileGate> createState() => _ProfileGateState();
+}
+
+class _ProfileGateState extends State<_ProfileGate> {
+  late Future<Profile?> _profile = Api.me();
+
+  void _retry() => setState(() => _profile = Api.me());
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Profile?>(
+    future: _profile,
+    builder: (context, snap) {
+      if (snap.hasError) {
+        return Scaffold(body: LoadFailureView(error: snap.error!, onRetry: _retry));
+      }
+      if (snap.connectionState != ConnectionState.done) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      if (!snap.hasData) {
+        return const Scaffold(
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Your profile was not found. Please contact support.', textAlign: TextAlign.center),
+            ),
+          ),
+        );
+      }
+      final p = snap.data!;
+      switch (p.role) {
+        case 'admin':
+          return AdminHome(profile: p);
+        case 'owner':
+          return OwnerHome(profile: p);
+        default:
+          return CustomerHome(profile: p);
+      }
     },
   );
 }

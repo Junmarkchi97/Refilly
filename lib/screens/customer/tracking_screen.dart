@@ -36,9 +36,11 @@ Future<void> _reviewStation(BuildContext context, Order order) async {
     );
     if (approved != true) return;
     await Api.submitReview(order, rating, note.text);
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Thanks for reviewing the station!')));
-  } catch (_) {
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This order may already have a review.')));
+    if (context.mounted) showAppNotice(context, 'Thanks for reviewing the station!', kind: AppNotice.success);
+  } catch (e) {
+    if (context.mounted) {
+      showFailureNotice(context, e, failed: 'This order may already have a review.');
+    }
   } finally {
     note.dispose();
   }
@@ -63,9 +65,9 @@ Future<void> _cancel(BuildContext context, Order o) async {
   if (confirmed != true || !context.mounted) return;
   try {
     await Api.cancelOrder(o.id);
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order cancelled')));
+    if (context.mounted) showAppNotice(context, 'Order cancelled', kind: AppNotice.success);
   } catch (e) {
-    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not cancel order: $e')));
+    if (context.mounted) showFailureNotice(context, e, failed: 'Could not cancel this order.');
   }
 }
 
@@ -74,13 +76,13 @@ Future<void> _reorder(BuildContext context, Order o) async {
     final profile = await Api.me();
     if (!context.mounted) return;
     if (profile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in to reorder.')));
+      showAppNotice(context, 'Please sign in to reorder.', kind: AppNotice.info);
       return;
     }
     await startReorder(context, o, profile);
-  } catch (_) {
+  } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not prepare your reorder. Please retry.')));
+      showFailureNotice(context, e, failed: 'Could not prepare your reorder. Please retry.');
     }
   }
 }

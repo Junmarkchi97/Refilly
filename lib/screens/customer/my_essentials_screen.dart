@@ -48,9 +48,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
       _refresh();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to update routine: $e')),
-        );
+        showFailureNotice(context, e, failed: 'Unable to update this routine.');
       }
     } finally {
       if (mounted) setState(() => _working.remove(routine.id));
@@ -76,9 +74,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
               onPressed: () {
                 final value = int.tryParse(daysController.text.trim());
                 if (value == null || value < 1 || value > 365) {
-                  ScaffoldMessenger.of(c).showSnackBar(
-                    const SnackBar(content: Text('Enter 1–365 days.')),
-                  );
+                  showAppNotice(c, 'Enter 1–365 days.');
                   return;
                 }
                 Navigator.pop(c, value);
@@ -119,9 +115,7 @@ class _MyEssentialsScreenState extends State<MyEssentialsScreen> {
       await startReorder(context, order, widget.profile, routine: routine);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to prepare refill: $e')),
-        );
+        showFailureNotice(context, e, failed: 'Unable to prepare this refill.');
       }
     } finally {
       if (mounted) setState(() => _working.remove(routine.id));

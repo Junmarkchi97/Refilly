@@ -26,7 +26,7 @@ class _AdminHomeState extends State<AdminHome> {
       final ok = await launchUrl(Uri.parse(await Api.docUrl(path)), mode: LaunchMode.externalApplication);
       if (!ok) throw Exception('Could not open document');
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open document. Please try again.')));
+      if (mounted) showAppNotice(context, 'Unable to open document. Please try again.');
     }
   }
 
@@ -51,8 +51,15 @@ class _AdminHomeState extends State<AdminHome> {
     try {
       approve ? await Api.approve(a.id, notes.text) : await Api.reject(a.id, notes.text);
       _reload();
+      if (mounted) {
+        showAppNotice(
+          context,
+          approve ? 'Application approved' : 'Application rejected',
+          kind: AppNotice.success,
+        );
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save the decision: $e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not save the decision.');
     } finally {
       if (mounted) setState(() => _deciding = false);
     }

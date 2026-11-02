@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 class SalesScreen extends StatefulWidget {
@@ -62,7 +63,12 @@ class _SalesScreenState extends State<SalesScreen> {
             key: ValueKey(snap.hasData),
             child: Builder(
               builder: (context) {
-                if (snap.hasError) return Text('${snap.error}');
+                if (snap.hasError) {
+                  return SizedBox(
+                    height: 360,
+                    child: LoadFailureView(error: snap.error!, onRetry: () => setState(() => _f = _load()), compact: true),
+                  );
+                }
                 if (!snap.hasData) {
                   return const SizedBox(height: 420, child: SkeletonList(count: 4, height: 96));
                 }

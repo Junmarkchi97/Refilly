@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 class StationForm extends StatefulWidget {
@@ -42,7 +43,7 @@ class _StationFormState extends State<StationForm> {
     if (f == null) return;
     final bytes = await f.readAsBytes();
     if (bytes.length > 5 * 1024 * 1024) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image must be under 5 MB')));
+      if (mounted) showAppNotice(context, 'Image must be under 5 MB');
       return;
     }
     var ext = f.name.split('.').last.toLowerCase();
@@ -51,9 +52,9 @@ class _StationFormState extends State<StationForm> {
     try {
       final url = await Api.uploadStationPhoto(widget.station.id, bytes, ext, ext == 'jpg' ? 'image/jpeg' : 'image/$ext');
       await _setPhoto(url);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Station photo updated')));
+      if (mounted) showAppNotice(context, 'Station photo updated', kind: AppNotice.success);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not upload the station photo.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -64,7 +65,7 @@ class _StationFormState extends State<StationForm> {
     try {
       await _setPhoto(null);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not remove the photo.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -74,7 +75,7 @@ class _StationFormState extends State<StationForm> {
     final radius = double.tryParse(_radius.text.trim());
     final fee = double.tryParse(_fee.text.trim());
     if (radius == null || !radius.isFinite || radius <= 0 || radius > 100 || fee == null || !fee.isFinite || fee < 0 || fee > 5000) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery radius of 0–100 km and a valid delivery fee.')));
+      showAppNotice(context, 'Enter a delivery radius of 0–100 km and a valid delivery fee.');
       return;
     }
     final data = {
@@ -93,9 +94,9 @@ class _StationFormState extends State<StationForm> {
       data.remove('owner_id');
       await sb.from('stations').update(data).eq('id', widget.station.id);
       widget.onSaved();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved')));
+      if (mounted) showAppNotice(context, 'Station saved', kind: AppNotice.success);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not save the station.');
     }
   }
 

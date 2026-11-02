@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/api.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 /// Supabase phone OTP. Requires an SMS provider (e.g. Twilio) under Auth → Providers → Phone.
@@ -22,7 +23,7 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     try {
       await f();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not verify that number. Please try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -60,7 +61,9 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
                   ? null
                   : () => _run(() async {
                       await Api.sendPhoneOtp(_phone.text);
+                      if (!context.mounted) return;
                       setState(() => _sent = true);
+                      showAppNotice(context, 'We sent a code to your phone.', kind: AppNotice.success);
                     }),
               child: Text(_sent ? 'Resend code' : 'Send code'),
             ),
@@ -90,7 +93,9 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
                   ? null
                   : () => _run(() async {
                       await Api.verifyPhoneOtp(_phone.text, _code.text.trim());
-                      if (context.mounted) Navigator.pop(context, true);
+                      if (!context.mounted) return;
+                      showAppNotice(context, 'Phone verified', kind: AppNotice.success);
+                      Navigator.pop(context, true);
                     }),
             ),
           )

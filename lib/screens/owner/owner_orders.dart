@@ -195,9 +195,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
       if (mounted) await shareRiderLink(context, Api.riderLink(token), riderName);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not assign rider: $e')),
-        );
+        showFailureNotice(context, e, failed: 'Could not assign the rider.');
       }
     }
   }
@@ -235,8 +233,7 @@ class _OwnerOrdersState extends State<OwnerOrders> {
       tapHaptic();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Update failed: ${e.toString().replaceFirst('Exception: ', '')}')));
+        showFailureNotice(context, e, failed: 'Could not update this order.');
       }
     } finally {
       if (mounted) setState(() => _busy.remove(o.id));
@@ -253,9 +250,9 @@ class _OwnerOrdersState extends State<OwnerOrders> {
     if (confirmed != true) return;
     try {
       await sb.rpc('confirm_cod_collection', params: {'p_order': order.id});
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('COD payment marked as collected')));
+      if (mounted) showAppNotice(context, 'Cash payment marked as collected', kind: AppNotice.success);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment confirmation failed: $e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not confirm the payment.');
     }
   }
 

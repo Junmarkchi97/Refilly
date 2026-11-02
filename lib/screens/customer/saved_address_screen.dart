@@ -10,6 +10,7 @@ import '../../services/api.dart';
 import '../../services/location.dart';
 import '../../theme.dart';
 import '../address_suggestions.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 /// Lets a customer save a default delivery address used to autofill checkout.
@@ -67,11 +68,14 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
           _suggestions = results;
           _searching = false;
         });
-      } catch (_) {
+      } catch (e) {
         if (!mounted || requestId != _requestId) return;
         setState(() {
           _searching = false;
-          _searchError = 'Address lookup unavailable. Pin the map manually.';
+          _searchError = describeFailure(
+            e,
+            failed: 'Address lookup unavailable. Pin the map manually.',
+          ).message;
         });
       }
     });
@@ -106,11 +110,11 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
     final address = _address.text.trim();
     final pin = _pin;
     if (address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery address')));
+      showAppNotice(context, 'Enter a delivery address');
       return;
     }
     if (pin == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
+      showAppNotice(context, 'Pin your delivery location on the map');
       return;
     }
     setState(() => _busy = true);
@@ -119,7 +123,7 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
       if (!mounted) return;
       Navigator.pop(context, updated);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not save your address.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

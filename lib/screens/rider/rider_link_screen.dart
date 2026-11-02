@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/api.dart';
 import '../../services/location.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 
 /// Opened from the owner's delivery link: no account, every action is token-checked in SQL.
@@ -51,7 +52,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
   Future<void> _share() async {
     if (!await LocationService.ensurePermission()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Allow location to share it with the customer')));
+        showAppNotice(context, 'Allow location to share it with the customer');
       }
       return;
     }
@@ -85,7 +86,7 @@ class _RiderLinkScreenState extends State<RiderLinkScreen> {
       }
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not update this delivery.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

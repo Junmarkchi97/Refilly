@@ -7,6 +7,7 @@ import '../../models/refill_routine.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
 import '../brand.dart';
+import '../network_states.dart';
 import '../notifications_screen.dart';
 import '../widgets.dart';
 import 'customer_home.dart';
@@ -164,8 +165,10 @@ class _HomeTabState extends State<HomeTab> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: widget.onEditAddress ??
-                () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Update your address in Account, or confirm it at checkout.')),
+                () => showAppNotice(
+                      context,
+                      'Update your address in Account, or confirm it at checkout.',
+                      kind: AppNotice.info,
                     ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,7 +318,9 @@ class _HomeTabState extends State<HomeTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  snap.hasError ? 'Your saved essentials could not load. Pull down to retry.' : 'After a delivery, save it here for one-tap refills.',
+                  snap.hasError
+                      ? describeFailure(snap.error!, failed: 'Your saved essentials could not load. Pull down to retry.').message
+                      : 'After a delivery, save it here for one-tap refills.',
                   style: const TextStyle(color: RF.muted, fontSize: 14, height: 1.35),
                 ),
               ),
@@ -383,7 +388,10 @@ class _HomeTabState extends State<HomeTab> {
     future: _stations,
     builder: (context, snap) {
       if (snap.hasError) {
-        return const Text('Suppliers could not load. Pull down to retry.', style: TextStyle(color: RF.muted));
+        return Text(
+          describeFailure(snap.error!, failed: 'Suppliers could not load. Pull down to retry.').message,
+          style: const TextStyle(color: RF.muted),
+        );
       }
       if (!snap.hasData) return const SizedBox(height: 80, child: SkeletonList(count: 2, height: 30));
       final profile = widget.profile;

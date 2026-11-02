@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../../services/api.dart';
 import '../../theme.dart';
+import '../network_states.dart';
 
 /// Turns a delivered order into a customer-controlled recurring refill reminder.
 /// No subscriptions, auto-charges, or automatic orders are created.
@@ -73,9 +74,7 @@ Future<bool> saveRoutineFromOrder(BuildContext context, Order order) async {
               onPressed: saving ? null : () async {
                 final days = custom ? int.tryParse(controller.text.trim()) : selectedDays;
                 if (days == null || days < 1 || days > 365) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(content: Text('Enter a number from 1 to 365 days.')),
-                  );
+                  showAppNotice(dialogContext, 'Enter a number from 1 to 365 days.');
                   return;
                 }
                 update(() => saving = true);
@@ -85,9 +84,7 @@ Future<bool> saveRoutineFromOrder(BuildContext context, Order order) async {
                 } catch (e) {
                   if (dialogContext.mounted) {
                     update(() => saving = false);
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Could not save routine: $e')),
-                    );
+                    showFailureNotice(dialogContext, e, failed: 'Could not save this routine.');
                   }
                 }
               },
@@ -98,9 +95,7 @@ Future<bool> saveRoutineFromOrder(BuildContext context, Order order) async {
       ),
     );
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved! Find this refill in My Essentials.')),
-      );
+      showAppNotice(context, 'Saved. Find this refill in My Essentials.', kind: AppNotice.success);
     }
     return saved ?? false;
   } finally {

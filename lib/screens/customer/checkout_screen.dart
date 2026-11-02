@@ -13,6 +13,7 @@ import '../../services/address_search.dart';
 import '../../theme.dart';
 import '../address_suggestions.dart';
 import '../brand.dart';
+import '../network_states.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
 import 'tracking_screen.dart';
@@ -105,11 +106,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           _addressSuggestions = results;
           _searchingAddress = false;
         });
-      } catch (_) {
+      } catch (e) {
         if (!mounted || requestId != _addressRequestId) return;
         setState(() {
           _searchingAddress = false;
-          _addressSearchError = 'Address lookup unavailable. You can pin the map manually.';
+          _addressSearchError = describeFailure(
+            e,
+            failed: 'Address lookup unavailable. You can pin the map manually.',
+          ).message;
         });
       }
     });
@@ -153,7 +157,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() { _deliveryFee = fee; _quoting = false; });
     } catch (e) {
       if (!mounted || sequence != _quoteSequence) return;
-      setState(() { _quoteError = 'Delivery unavailable: $e'; _quoting = false; });
+      setState(() {
+        _quoteError = describeFailure(
+          e,
+          failed: 'This pin is outside the delivery area, or the quote could not be loaded.',
+        ).message;
+        _quoting = false;
+      });
     }
   }
 
@@ -176,15 +186,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _place() async {
     if (_busy) return;
     if (_deliveryFee == null || _quoting || _quoteError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a serviceable delivery location first.')));
+      showAppNotice(context, 'Choose a serviceable delivery location first.');
       return;
     }
     if (_drop == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pin your delivery location on the map')));
+      showAppNotice(context, 'Pin your delivery location on the map');
       return;
     }
     if (_address.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a delivery address')));
+      showAppNotice(context, 'Enter a delivery address');
       return;
     }
     if (!Api.phoneVerified && await Api.requirePhoneVerification()) {
@@ -234,7 +244,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         (route) => route.isFirst,
       );
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) showFailureNotice(context, e, failed: 'Could not place your order.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

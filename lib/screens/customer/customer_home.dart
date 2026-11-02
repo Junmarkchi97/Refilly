@@ -42,7 +42,12 @@ class _CustomerHomeState extends State<CustomerHome> {
       context,
       MaterialPageRoute(builder: (_) => SavedAddressScreen(profile: _profile)),
     );
-    if (updated != null) _setProfile(updated);
+    if (!mounted || updated == null) return;
+    setState(() {
+      _profile = updated;
+      _tab = 3;
+    });
+    showAppNotice(context, 'Address updated', kind: AppNotice.success);
   }
 
   Widget get _nav => FloatingNav(
@@ -107,7 +112,9 @@ class ProfileTab extends StatelessWidget {
         context,
         MaterialPageRoute(builder: (_) => SavedAddressScreen(profile: profile)),
       );
-      if (updated != null) onProfileChanged(updated);
+      if (updated == null || !context.mounted) return;
+      onProfileChanged(updated);
+      showAppNotice(context, 'Address updated', kind: AppNotice.success);
     }
 
     final addressSubtitle = profile.hasSavedAddress

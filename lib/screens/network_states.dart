@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../theme.dart';
+
 /// Categorizes failures without claiming the network is offline just because
 /// the server returned an error. Web transport errors often have no SocketException.
 enum LoadFailure { offline, timeout, server }
@@ -84,8 +86,8 @@ class LoadFailureView extends StatelessWidget {
       LoadFailure.server => 'Could not load this right now',
     };
     final explanation = switch (failure) {
-      LoadFailure.offline => 'Reconnect to Wi-Fi or mobile data, then retry.',
-      LoadFailure.timeout => 'The service may be slow. Please try again.',
+      LoadFailure.offline => 'Check your network and try again.',
+      LoadFailure.timeout => 'The request timed out. Please try again.',
       LoadFailure.server => 'Your data is safe. Please try again in a moment.',
     };
     return Center(
@@ -108,4 +110,110 @@ class LoadFailureView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// How a short message should look. Full-page failures stay on [LoadFailureView].
+enum AppNotice { success, info, failed, offline, timeout }
+
+class FailureCopy {
+  const FailureCopy(this.kind, this.message);
+  final AppNotice kind;
+  final String message;
+}
+
+/// Turns a thrown error into copy a customer can act on.
+/// Database, schema, and stack-trace text stays off the screen.
+FailureCopy describeFailure(Object error, {String failed = 'Something went wrong. Please try again.'}) {
+  switch (classifyLoadFailure(error)) {
+    case LoadFailure.offline:
+      return const FailureCopy(
+        AppNotice.offline,
+        'No internet connection. Check your network and try again.',
+      );
+    case LoadFailure.timeout:
+      return const FailureCopy(
+        AppNotice.timeout,
+        'The request timed out. Please try again.',
+      );
+    case LoadFailure.server:
+      final readable = _readableServerMessage(error);
+      return FailureCopy(AppNotice.failed, readable ?? failed);
+  }
+}
+
+String? _readableServerMessage(Object error) {
+  final raw = error.toString().trim();
+  if (raw.isEmpty) return null;
+  final extracted = RegExp(r'message:\s*([^,\n\)]+)').firstMatch(raw)?.group(1)?.trim();
+  final candidate = (extracted ?? raw)
+      .replaceFirst(RegExp(r'^(Exception|FormatException):\s*'), '')
+      .replaceFirst(RegExp(r'^Bad state:\s*'), '')
+      .replaceFirst(RegExp(r'^Invalid argument\(s\):\s*'), '')
+      .trim();
+  if (candidate.isEmpty || candidate.length > 140 || _looksTechnical(candidate)) return null;
+  return candidate;
+}
+
+bool _looksTechnical(String text) {
+  final lower = text.toLowerCase();
+  const markers = [
+    'postgrest',
+    'pgrst',
+    'postgres',
+    'schema cache',
+    'jwt',
+    'socketexception',
+    'clientexception',
+    'xmlhttprequest',
+    'stack trace',
+    'is not a subtype',
+    "type '",
+    'authretry',
+    'duplicate key',
+    'violates',
+    'does not exist',
+    'column ',
+    'permission denied for',
+    'statuscode',
+  ];
+  return markers.any(lower.contains) || text.contains('{') || text.contains('Exception(');
+}
+
+void showAppNotice(BuildContext context, String message, {AppNotice kind = AppNotice.failed}) {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
+  final (icon, color) = switch (kind) {
+    AppNotice.success => (Icons.check_circle_rounded, RF.good),
+    AppNotice.info => (Icons.info_outline_rounded, RF.ink),
+    AppNotice.offline => (Icons.wifi_off_rounded, const Color(0xFF3E4C59)),
+    AppNotice.timeout => (Icons.hourglass_bottom_rounded, RF.usualInk),
+    AppNotice.failed => (Icons.error_outline_rounded, const Color(0xFF9B2C2C)),
+  };
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(
+      backgroundColor: color,
+      duration: Duration(seconds: kind == AppNotice.success ? 3 : 4),
+      content: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, height: 1.3),
+            ),
+          ),
+        ],
+      ),
+    ));
+}
+
+void showFailureNotice(
+  BuildContext context,
+  Object error, {
+  String failed = 'Something went wrong. Please try again.',
+}) {
+  final copy = describeFailure(error, failed: failed);
+  showAppNotice(context, copy.message, kind: copy.kind);
 }
