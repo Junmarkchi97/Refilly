@@ -12,7 +12,6 @@ import '../../services/location.dart';
 import '../../services/address_search.dart';
 import '../../theme.dart';
 import '../address_suggestions.dart';
-import '../brand.dart';
 import '../network_states.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
@@ -274,18 +273,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           bottom: false,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Row(
-                  children: [
-                    FloatIconButton(Icons.arrow_back_ios_new_rounded, tooltip: 'Back to products', onTap: () => Navigator.maybePop(context)),
-                    const Spacer(),
-                    ClipRRect(borderRadius: BorderRadius.circular(8), child: const RefillyMark(size: 30)),
-                  ],
-                ),
-              ),
               Expanded(
                 child: Container(
+                  margin: const EdgeInsets.only(top: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(RF.sheetRadius)),
@@ -293,15 +283,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   child: Column(
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                        child: Row(
+                          children: [
+                            FloatIconButton(Icons.close_rounded, tooltip: 'Close', onTap: () => Navigator.maybePop(context)),
+                            Expanded(
+                              child: Text('Confirm delivery', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+                            ),
+                            const SizedBox(width: 42),
+                          ],
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2, bottom: 8),
+                        child: Text('Review every charge before you place it', textAlign: TextAlign.center, style: TextStyle(color: RF.muted, fontSize: 13)),
+                      ),
                       Expanded(
                         child: ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                           children: [
-                            Text('Confirm delivery', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2, bottom: 14),
-                              child: Text('Review every charge before you place it', textAlign: TextAlign.center, style: TextStyle(color: RF.muted, fontSize: 13)),
-                            ),
                             _supplierRow(st),
                             const SizedBox(height: 6),
                             for (final e in widget.cart.entries) _itemRow(e.key, e.value),
