@@ -11,6 +11,7 @@ import '../../services/api.dart';
 import '../../services/location.dart';
 import '../../services/address_search.dart';
 import '../../theme.dart';
+import '../address_suggestions.dart';
 import '../widgets.dart';
 
 /// Customers apply to become station owners; an admin reviews the documents.
@@ -236,72 +237,20 @@ class _ApplyOwnerScreenState extends State<ApplyOwnerScreen> {
                     hint: 'Shown to customers',
                     onChanged: (_) => setState(() {}),
                   ),
-                  LabeledField(
-                    controller: _addr,
-                    label: 'Station address',
-                    icon: Icons.place_rounded,
-                    hint: 'House no., street, barangay, city',
-                    onChanged: _onAddressChanged,
-                  ),
-                  if (_showAddressSuggestions)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 12),
-                      child: Material(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        clipBehavior: Clip.antiAlias,
-                        elevation: 2,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_searchingAddress)
-                              const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Expanded(child: Text('Searching Philippine addresses…')),
-                                  ],
-                                ),
-                              )
-                            else if (_addressSearchError != null)
-                              Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Text(
-                                  _addressSearchError!,
-                                  style: const TextStyle(color: RF.muted, fontSize: 13),
-                                ),
-                              )
-                            else if (_addressSuggestions.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.all(14),
-                                child: Text(
-                                  'No matching addresses yet. Try a landmark or pin the map manually.',
-                                  style: TextStyle(color: RF.muted, fontSize: 13),
-                                ),
-                              )
-                            else
-                              for (final result in _addressSuggestions)
-                                ListTile(
-                                  dense: true,
-                                  leading: const Icon(Icons.place_outlined, color: RF.muted),
-                                  title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                  onTap: () => _selectAddress(result),
-                                ),
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 8),
-                              child: Text('Address suggestions · OpenStreetMap / Photon',
-                                style: TextStyle(fontSize: 11, color: RF.muted)),
-                            ),
-                          ],
-                        ),
-                      ),
+                  AddressSuggestAnchor(
+                    open: _showAddressSuggestions,
+                    searching: _searchingAddress,
+                    error: _addressSearchError,
+                    suggestions: _addressSuggestions,
+                    onSelected: _selectAddress,
+                    child: LabeledField(
+                      controller: _addr,
+                      label: 'Station address',
+                      icon: Icons.place_rounded,
+                      hint: 'House no., street, barangay, city',
+                      onChanged: _onAddressChanged,
                     ),
+                  ),
                   LabeledField(
                     controller: _phone,
                     label: 'Station mobile',

@@ -39,7 +39,7 @@ void main() {
     final client = MockClient((request) async {
       expect(request.url.queryParameters['q'], 'Cubao');
       expect(request.url.queryParameters['countrycode'], 'PH');
-      expect(request.url.queryParameters['limit'], '5');
+      expect(request.url.queryParameters['limit'], '15');
       return http.Response(jsonEncode({'features': [sample]}), 200);
     });
     final service = AddressSearchService(client: client);

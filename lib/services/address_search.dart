@@ -58,7 +58,7 @@ class AddressSearchService {
     if (query.length < 3) return const [];
     final uri = Uri.https('photon.komoot.io', '/api', {
       'q': query,
-      'limit': '5',
+      'limit': '15',
       'countrycode': 'PH',
       'lang': 'en',
     });

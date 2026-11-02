@@ -11,6 +11,7 @@ import '../../services/checkout_request.dart';
 import '../../services/location.dart';
 import '../../services/address_search.dart';
 import '../../theme.dart';
+import '../address_suggestions.dart';
 import '../brand.dart';
 import '../widgets.dart';
 import 'station_screen.dart';
@@ -431,79 +432,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const IconBubble(Icons.location_on_outlined),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Deliver to', style: TextStyle(color: RF.muted, fontSize: 13, fontWeight: FontWeight.w600)),
-                TextField(
-                  controller: _address,
-                  onChanged: _onAddressChanged,
-                  textInputAction: TextInputAction.search,
-                  maxLines: 2,
-                  minLines: 1,
-                  decoration: const InputDecoration(
-                    hintText: 'House no., street, barangay, city',
-                    filled: false,
-                    isDense: true,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 4),
+            child: AddressSuggestAnchor(
+              open: _showAddressSuggestions,
+              searching: _searchingAddress,
+              error: _addressSearchError,
+              suggestions: _addressSuggestions,
+              onSelected: _selectAddress,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Deliver to', style: TextStyle(color: RF.muted, fontSize: 13, fontWeight: FontWeight.w600)),
+                  TextField(
+                    controller: _address,
+                    onChanged: _onAddressChanged,
+                    textInputAction: TextInputAction.search,
+                    maxLines: 2,
+                    minLines: 1,
+                    decoration: const InputDecoration(
+                      hintText: 'House no., street, barangay, city',
+                      filled: false,
+                      isDense: true,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 4),
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                   ),
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
       ),
-      if (_showAddressSuggestions)
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 8),
-          child: Material(
-            color: Colors.white,
-            elevation: 3,
-            shadowColor: Colors.black26,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_searchingAddress)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(children: [
-                      SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-                      SizedBox(width: 12),
-                      Expanded(child: Text('Searching Philippine addresses…')),
-                    ]),
-                  )
-                else if (_addressSearchError != null)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(_addressSearchError!, style: const TextStyle(color: RF.muted)),
-                  )
-                else if (_addressSuggestions.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No matches yet. Try a landmark or set the pin on the map.', style: TextStyle(color: RF.muted)),
-                  )
-                else
-                  for (final result in _addressSuggestions)
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.place_outlined, color: RF.muted),
-                      title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
-                      onTap: () => _selectAddress(result),
-                    ),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: Text('Address suggestions · OpenStreetMap / Photon', style: TextStyle(color: RF.muted, fontSize: 11)),
-                ),
-              ],
-            ),
-          ),
-        ),
       const SizedBox(height: 8),
       ClipRRect(
         borderRadius: BorderRadius.circular(20),

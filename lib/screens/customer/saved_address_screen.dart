@@ -9,6 +9,7 @@ import '../../services/address_search.dart';
 import '../../services/api.dart';
 import '../../services/location.dart';
 import '../../theme.dart';
+import '../address_suggestions.dart';
 import '../widgets.dart';
 
 /// Lets a customer save a default delivery address used to autofill checkout.
@@ -159,55 +160,24 @@ class _SavedAddressScreenState extends State<SavedAddressScreen> {
           FormSection(
             title: 'Address',
             children: [
-              TextField(
-                controller: _address,
-                onChanged: _onAddressChanged,
-                textInputAction: TextInputAction.search,
-                maxLines: 3,
-                minLines: 1,
-                decoration: const InputDecoration(
-                  hintText: 'House no., street, barangay, city',
-                  prefixIcon: Icon(Icons.location_on_outlined, color: RF.muted),
-                ),
-              ),
-              if (_showSuggestions)
-                Material(
-                  color: RF.fill,
-                  borderRadius: BorderRadius.circular(16),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_searching)
-                        const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Row(children: [
-                            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-                            SizedBox(width: 12),
-                            Expanded(child: Text('Searching Philippine addresses…')),
-                          ]),
-                        )
-                      else if (_searchError != null)
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(_searchError!, style: const TextStyle(color: RF.muted)),
-                        )
-                      else if (_suggestions.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Text('No matches yet. Try a landmark or set the pin on the map.', style: TextStyle(color: RF.muted)),
-                        )
-                      else
-                        for (final result in _suggestions)
-                          ListTile(
-                            dense: true,
-                            leading: const Icon(Icons.place_outlined, color: RF.muted),
-                            title: Text(result.label, maxLines: 2, overflow: TextOverflow.ellipsis),
-                            onTap: () => _selectSuggestion(result),
-                          ),
-                    ],
+              AddressSuggestAnchor(
+                open: _showSuggestions,
+                searching: _searching,
+                error: _searchError,
+                suggestions: _suggestions,
+                onSelected: _selectSuggestion,
+                child: TextField(
+                  controller: _address,
+                  onChanged: _onAddressChanged,
+                  textInputAction: TextInputAction.search,
+                  maxLines: 3,
+                  minLines: 1,
+                  decoration: const InputDecoration(
+                    hintText: 'House no., street, barangay, city',
+                    prefixIcon: Icon(Icons.location_on_outlined, color: RF.muted),
                   ),
                 ),
+              ),
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: SizedBox(
