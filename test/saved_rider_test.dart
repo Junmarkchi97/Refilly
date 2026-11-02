@@ -25,7 +25,7 @@ void main() {
     expect(riders.last.name, 'Ana');
   });
 
-  testWidgets('assign dialog lists saved riders and fills the form', (tester) async {
+  testWidgets('assign dialog uses a saved-riders dropdown to fill the form', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -72,12 +72,16 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
+    expect(find.byType(DropdownButtonFormField<SavedRider>), findsOneWidget);
     expect(find.text('Saved riders'), findsOneWidget);
-    expect(find.text('John · 09752000083'), findsOneWidget);
-    expect(find.text('Ana · 09171234567'), findsOneWidget);
+    expect(find.text('Choose a saved rider'), findsOneWidget);
+    expect(find.byType(ChoiceChip), findsNothing);
 
-    await tester.tap(find.text('John · 09752000083'));
+    await tester.tap(find.byType(DropdownButtonFormField<SavedRider>));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('John · 09752000083').last);
+    await tester.pumpAndSettle();
+
     final fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
     expect(fields.first.controller?.text, 'John');
     expect(fields.last.controller?.text, '09752000083');

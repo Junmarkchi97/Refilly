@@ -504,36 +504,32 @@ class _AssignRiderDialogState extends State<AssignRiderDialog> {
                     );
                   }
                   if (riders.isEmpty) return const SizedBox.shrink();
+                  final selected = riders.where((r) => r.normalizedPhone == _selectedPhone).firstOrNull;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Saved riders', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final rider in riders)
-                              ChoiceChip(
-                                selected: _selectedPhone == rider.normalizedPhone,
-                                avatar: Icon(
-                                  Icons.person_outline_rounded,
-                                  size: 16,
-                                  color: _selectedPhone == rider.normalizedPhone ? Colors.white : RF.ink,
-                                ),
-                                label: Text('${rider.name} · ${rider.phone}'),
-                                onSelected: (_) => _select(rider),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Tap a rider to fill the form, or enter someone new below.',
-                          style: TextStyle(color: RF.muted, fontSize: 12),
-                        ),
+                    child: DropdownButtonFormField<SavedRider>(
+                      initialValue: selected,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Saved riders',
+                        prefixIcon: Icon(Icons.people_outline_rounded),
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                      hint: const Text('Choose a saved rider'),
+                      items: [
+                        for (final rider in riders)
+                          DropdownMenuItem(
+                            value: rider,
+                            child: Text(
+                              '${rider.name} · ${rider.phone}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                       ],
+                      onChanged: (rider) {
+                        if (rider != null) _select(rider);
+                      },
                     ),
                   );
                 },
