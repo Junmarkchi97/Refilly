@@ -30,9 +30,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Continue with Yearly · ₱1,793'), findsOneWidget);
     expect(find.text('SAVE 40%'), findsOneWidget);
+    // Both plans must be on-screen without scrolling on a typical phone.
+    expect(find.text('Monthly'), findsOneWidget);
+    expect(tester.getRect(find.text('Monthly')).bottom, lessThan(844 - 120));
 
-    await tester.dragUntilVisible(find.text('Monthly'), find.byType(ListView), const Offset(0, -200));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Monthly'));
     await tester.pump();
     expect(find.text('Continue with Monthly · ₱249'), findsOneWidget);

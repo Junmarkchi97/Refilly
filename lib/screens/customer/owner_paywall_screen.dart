@@ -70,116 +70,100 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
       backgroundColor: RF.bg,
       body: Stack(
         children: [
-          ListView(
-            padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 56, 20, 230 + bottom),
+          Column(
             children: [
-              Center(
-                child: Container(
-                  width: 84,
-                  height: 84,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RF.borderGradient,
-                    boxShadow: RF.selectedShadow,
-                  ),
-                  child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 40),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Grow your refilling station',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Get orders from nearby customers and run deliveries in one place.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: RF.muted, fontSize: 15, height: 1.35),
-              ),
-              const SizedBox(height: 22),
-              const SoftCard(
-                padding: EdgeInsets.fromLTRB(16, 14, 16, 6),
-                child: Column(
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(20, top + 48, 20, 16),
                   children: [
-                    _Benefit(Icons.receipt_long_rounded, 'Real-time orders', 'New orders arrive with sound and a badge'),
-                    _Benefit(Icons.two_wheeler_rounded, 'Riders and live tracking', 'Assign saved riders and share a private link'),
-                    _Benefit(Icons.inventory_2_rounded, 'Your own storefront', 'Products, photos, prices, and delivery fees'),
-                    _Benefit(Icons.bar_chart_rounded, 'Sales reports', 'Daily revenue and PDF or CSV exports'),
+                    Text(
+                      'Grow your refilling station',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Get orders from nearby customers and run deliveries in one place.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: RF.muted, fontSize: 14, height: 1.35),
+                    ),
+                    const SizedBox(height: 16),
+                    _PlanCard(
+                      selected: _plan == OwnerPlan.yearly,
+                      title: 'Yearly',
+                      price: '${peso(OwnerPricing.yearly)} / year',
+                      caption: 'Just ${peso(OwnerPricing.yearlyPerMonth)} a month',
+                      badge: 'SAVE 40%',
+                      strike: peso(OwnerPricing.monthly * 12),
+                      onTap: () => setState(() => _plan = OwnerPlan.yearly),
+                    ),
+                    const SizedBox(height: 10),
+                    _PlanCard(
+                      selected: _plan == OwnerPlan.monthly,
+                      title: 'Monthly',
+                      price: '${peso(OwnerPricing.monthly)} / month',
+                      caption: 'Flexible, cancel anytime',
+                      onTap: () => setState(() => _plan = OwnerPlan.monthly),
+                    ),
+                    const SizedBox(height: 16),
+                    const SoftCard(
+                      padding: EdgeInsets.fromLTRB(14, 12, 14, 4),
+                      child: Column(
+                        children: [
+                          _Benefit(Icons.receipt_long_rounded, 'Real-time orders'),
+                          _Benefit(Icons.two_wheeler_rounded, 'Riders and live tracking'),
+                          _Benefit(Icons.inventory_2_rounded, 'Your own storefront'),
+                          _Benefit(Icons.bar_chart_rounded, 'Sales reports'),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              _PlanCard(
-                selected: _plan == OwnerPlan.yearly,
-                title: 'Yearly',
-                price: '${peso(OwnerPricing.yearly)} / year',
-                caption: 'Just ${peso(OwnerPricing.yearlyPerMonth)} a month, billed yearly',
-                badge: 'SAVE 40%',
-                strike: peso(OwnerPricing.monthly * 12),
-                onTap: () => setState(() => _plan = OwnerPlan.yearly),
-              ),
-              const SizedBox(height: 12),
-              _PlanCard(
-                selected: _plan == OwnerPlan.monthly,
-                title: 'Monthly',
-                price: '${peso(OwnerPricing.monthly)} / month',
-                caption: 'Flexible, cancel anytime',
-                onTap: () => setState(() => _plan = OwnerPlan.monthly),
+              SafeArea(
+                top: false,
+                minimum: EdgeInsets.fromLTRB(20, 0, 20, 10 + (bottom > 0 ? 0 : 6)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _busy ? null : _subscribe,
+                        child: _busy
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                            : Text(_plan == OwnerPlan.yearly
+                                ? 'Continue with Yearly · ${peso(OwnerPricing.yearly)}'
+                                : 'Continue with Monthly · ${peso(OwnerPricing.monthly)}'),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _busy ? null : _voucher,
+                      icon: const Icon(Icons.confirmation_number_outlined, size: 20),
+                      label: const Text('Have a voucher code?'),
+                    ),
+                    const Text(
+                      'No charge today. Billing starts after your station is approved.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: RF.muted, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           Positioned(
-            top: MediaQuery.paddingOf(context).top + 6,
-            right: 10,
+            top: top + 4,
+            right: 8,
             child: IconButton(
               tooltip: 'Close',
               onPressed: () => Navigator.of(context).maybePop(),
               icon: const Icon(Icons.close_rounded),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(20, 14, 20, 12 + bottom),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(RF.sheetRadius)),
-                boxShadow: RF.shadow,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _busy ? null : _subscribe,
-                      child: _busy
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                          : Text(_plan == OwnerPlan.yearly
-                              ? 'Continue with Yearly · ${peso(OwnerPricing.yearly)}'
-                              : 'Continue with Monthly · ${peso(OwnerPricing.monthly)}'),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton.icon(
-                    onPressed: _busy ? null : _voucher,
-                    icon: const Icon(Icons.confirmation_number_outlined, size: 20),
-                    label: const Text('Have a voucher code?'),
-                  ),
-                  const Text(
-                    'No charge today. Billing starts after your station is approved.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: RF.muted, fontSize: 12),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -190,29 +174,21 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
 
 class _Benefit extends StatelessWidget {
   final IconData icon;
-  final String title, subtitle;
-  const _Benefit(this.icon, this.title, this.subtitle);
+  final String title;
+  const _Benefit(this.icon, this.title);
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(bottom: 10),
     child: Row(
       children: [
         Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(color: RF.accentSoft, borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: RF.accentInk, size: 20),
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(color: RF.accentSoft, borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, color: RF.accentInk, size: 18),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              Text(subtitle, style: const TextStyle(color: RF.muted, fontSize: 13)),
-            ],
-          ),
-        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
       ],
     ),
   );
