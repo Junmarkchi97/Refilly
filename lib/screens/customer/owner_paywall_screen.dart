@@ -82,7 +82,7 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                   padding: EdgeInsets.fromLTRB(20, top + 48, 20, 16),
                   children: [
                     Text(
-                      'Grow your refilling station',
+                      'Grow your business',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
