@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/api.dart';
+import '../../services/owner_store_billing.dart';
 import '../../theme.dart';
 import '../design.dart';
 import '../motion.dart';
@@ -27,7 +28,9 @@ String peso(int v) {
 class OwnerPaywallScreen extends StatefulWidget {
   final Future<int> Function(String code)? redeemVoucher;
   final Future<void> Function(String plan)? choosePlan;
-  const OwnerPaywallScreen({super.key, this.redeemVoucher, this.choosePlan});
+  final Future<void> Function(OwnerPlan plan)? purchase;
+  final Future<OwnerStoreReceipt?> Function()? restore;
+  const OwnerPaywallScreen({super.key, this.redeemVoucher, this.choosePlan, this.purchase, this.restore});
 
   static Future<void> open(BuildContext context) => Navigator.of(context).push(
     MaterialPageRoute(fullscreenDialog: true, builder: (_) => const OwnerPaywallScreen()),
@@ -45,14 +48,61 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ApplyOwnerScreen()));
   }
 
+  bool get _usesLiveStore => widget.purchase == null && widget.choosePlan == null && widget.restore == null;
+
+  String? _userId() {
+    try {
+      return sb.auth.currentUser?.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _subscribe() async {
     setState(() => _busy = true);
     try {
-      await (widget.choosePlan ?? Api.chooseOwnerPlan)(_plan.name);
+      if (widget.purchase != null) {
+        await widget.purchase!(_plan);
+        await (widget.choosePlan ?? Api.chooseOwnerPlan)(_plan.name);
+      } else if (widget.choosePlan != null) {
+        await widget.choosePlan!(_plan.name);
+      } else {
+        final receipt = await OwnerStoreBilling.purchase(_plan.name, userId: _userId());
+        await Api.recordOwnerStorePurchase(receipt);
+      }
       if (!mounted) return;
       _continueToApplication();
+    } on StorePurchaseCancelled {
+      // The customer closed the App Store or Google Play sheet.
     } catch (e) {
-      if (mounted) showFailureNotice(context, e, failed: 'Could not save your plan. Please try again.');
+      if (mounted) showFailureNotice(context, e, failed: 'Could not start the free trial. Please try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _restore() async {
+    setState(() => _busy = true);
+    try {
+      final OwnerStoreReceipt? receipt;
+      if (widget.restore != null) {
+        receipt = await widget.restore!();
+      } else if (!_usesLiveStore) {
+        receipt = null;
+      } else {
+        receipt = await OwnerStoreBilling.restore(userId: _userId());
+      }
+      if (!mounted) return;
+      if (receipt == null) {
+        showAppNotice(context, 'No subscription was found for this account.', kind: AppNotice.info);
+        return;
+      }
+      if (_usesLiveStore) await Api.recordOwnerStorePurchase(receipt);
+      _continueToApplication();
+    } on StorePurchaseCancelled {
+      // The customer closed the App Store or Google Play sheet.
+    } catch (e) {
+      if (mounted) showFailureNotice(context, e, failed: 'Could not restore purchases. Please try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -163,10 +213,14 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                       icon: const Icon(Icons.confirmation_number_outlined, size: 20),
                       label: const Text('Have a voucher code?'),
                     ),
-                    Text(
-                      'No charge today. ${OwnerPricing.trialDays} days free, then billing starts after approval.',
+                    TextButton(
+                      onPressed: _busy ? null : _restore,
+                      child: const Text('Restore purchases'),
+                    ),
+                    const Text(
+                      'No charge for 7 days. Then your App Store or Google Play account is billed automatically. Cancel anytime in your store subscriptions.',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: RF.muted, fontSize: 12),
+                      style: TextStyle(color: RF.muted, fontSize: 12),
                     ),
                   ],
                 ),

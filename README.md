@@ -212,6 +212,21 @@ A missing production configuration intentionally **fails the deployment** rather
 
 **Typical development flow:** Sign up as a customer → apply to operate a water refilling station → admin approves → owner publishes products → customer orders or reorders → owner assigns a rider → rider fulfills the order.
 
+## Station owner subscriptions
+
+**Start free trial** buys an auto-renewing subscription with Apple In-App Purchase on iPhone and Google Play Billing on Android. The store keeps the payment method. When the 7-day trial ends, Apple or Google bills that account unless the owner cancels in their store subscriptions. A voucher still skips the store. Refilly does not collect a card number.
+
+Create the same two subscriptions before the button can charge anyone:
+
+| Product ID | Price | Trial |
+| --- | --- | --- |
+| `refilly_owner_monthly` | ₱249 / month | 7 days free |
+| `refilly_owner_yearly` | ₱1,793 / year | 7 days free |
+
+Put both in one subscription group. In App Store Connect, add an introductory offer of **1 week free**. In Play Console, add an offer whose first phase is a **7-day free trial**. Local iPhone runs from Xcode use `ios/Runner/Products.storekit`, which already includes that trial.
+
+Apply `supabase/migrations/20261103143000_owner_store_billing.sql` with the other migrations so a completed purchase is saved on the account. Apple and Google still perform the renewal charge themselves.
+
 ## Automatic web deployment (GitHub Pages)
 
 Every push to `main` now triggers [Deploy Flutter web to GitHub Pages](.github/workflows/deploy-pages.yml). It installs dependencies, runs `flutter analyze` and `flutter test`, builds a production Flutter web bundle, and publishes **only if all steps pass**. It can also be run manually using **Actions → Deploy Flutter web to GitHub Pages → Run workflow**.

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../services/api.dart';
+import '../../services/owner_store_billing.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 import 'new_order_alert.dart';
@@ -37,6 +38,16 @@ class _OwnerHomeState extends State<OwnerHome> {
   void initState() {
     super.initState();
     _loadUnread();
+    unawaited(_syncStoreSubscription());
+  }
+
+  /// After Apple or Google renews the plan, keep the saved period end in step.
+  Future<void> _syncStoreSubscription() async {
+    try {
+      await OwnerStoreBilling.sync(sb.auth.currentUser?.id);
+    } catch (_) {
+      // The dashboard still opens if the store cannot be reached.
+    }
   }
 
   @override

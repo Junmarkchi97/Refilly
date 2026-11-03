@@ -6,6 +6,7 @@ import '../config.dart';
 import '../models/models.dart';
 import '../models/refill_routine.dart';
 import '../models/saved_rider.dart';
+import 'owner_billing_ids.dart';
 
 SupabaseClient get sb => Supabase.instance.client;
 
@@ -78,6 +79,18 @@ class Api {
 
   static Future<void> chooseOwnerPlan(String plan) async {
     await sb.rpc('choose_owner_plan', params: {'p_plan': plan});
+  }
+
+  /// Saves a subscription the App Store or Google Play already accepted.
+  /// The store bills the account when the trial ends; this does not charge a card.
+  static Future<void> recordOwnerStorePurchase(OwnerStoreReceipt receipt) async {
+    await sb.rpc('record_owner_store_purchase', params: {
+      'p_plan': receipt.plan,
+      'p_product_id': receipt.productId,
+      'p_transaction_id': receipt.transactionId,
+      'p_store': receipt.store,
+      'p_period_end': receipt.periodEnd?.toUtc().toIso8601String(),
+    });
   }
 
   static Future<bool> hasUnreadNotifications() async =>
