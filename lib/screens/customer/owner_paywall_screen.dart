@@ -321,7 +321,6 @@ class _VoucherSheetState extends State<VoucherSheet> {
           onChanged: (_) => setState(() => _error = null),
           decoration: InputDecoration(
             labelText: 'Voucher code',
-            hintText: 'e.g. REFILLY6',
             prefixIcon: const Icon(Icons.confirmation_number_outlined),
             errorText: _error,
           ),
