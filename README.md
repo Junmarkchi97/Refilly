@@ -118,7 +118,7 @@ The Flutter UI and OAuth callback handlers are implemented, but login cannot com
      - `https://junmarkchi97.github.io/Refilly/`
      - `io.refilly.app://login-callback/**`
      - `http://localhost:**` (optional, for local `flutter run`)
-4. For native Apple sign-in support in a future iOS-native credential flow, enable the **Sign In with Apple** capability for your Apple App ID and iOS target. The current implementation uses the **Supabase OAuth browser flow**, not the Apple-native credential prompt.
+4. In Apple Developer → Identifiers → your App ID `ph.refilly.refilly`, enable **Sign In with Apple**. The iOS target already includes `Runner/Runner.entitlements` with that capability. On the **iOS app**, Refilly uses the native Sign in with Apple sheet and exchanges the identity token with Supabase. On **iOS Safari / web**, it still uses the Supabase OAuth browser flow.
 5. Test with a fresh Google account and Apple ID (including Apple private-relay email), and verify that Supabase creates the associated user profile automatically.
 
 **Security:** Never commit Google client secrets, Apple private keys, or a Supabase service-role key to Flutter source code. The OAuth provider secrets belong exclusively in Supabase/developer consoles. The mobile callback scheme is declared in `ios/Runner/Info.plist` and `android/app/src/main/AndroidManifest.xml`.

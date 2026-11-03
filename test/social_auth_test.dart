@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:refilly/screens/brand.dart';
 import 'package:refilly/services/social_auth.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
@@ -18,6 +19,43 @@ void main() {
     });
     test('is not shown on native Android', () {
       expect(SocialAuth.showApple(isWeb: false, platform: TargetPlatform.android), isFalse);
+    });
+    test('uses the native Apple sheet on the iOS app, OAuth on web', () {
+      expect(SocialAuth.useNativeAppleSignIn(isWeb: false, platform: TargetPlatform.iOS), isTrue);
+      expect(SocialAuth.useNativeAppleSignIn(isWeb: true, platform: TargetPlatform.iOS), isFalse);
+      expect(SocialAuth.useNativeAppleSignIn(isWeb: false, platform: TargetPlatform.android), isFalse);
+    });
+    test('joins Apple given and family names when Apple sends them', () {
+      expect(SocialAuth.appleFullName('Junmark', 'Chi'), 'Junmark Chi');
+      expect(SocialAuth.appleFullName('Junmark', null), 'Junmark');
+      expect(SocialAuth.appleFullName('  ', ''), isNull);
+    });
+    test('native Apple exchange sends the hashed nonce and persists the name', () async {
+      String? seenNonce;
+      String? savedName;
+      String? sentRawNonce;
+      await SocialAuth.signInWithAppleNative(
+        getCredential: ({required scopes, required nonce}) async {
+          seenNonce = nonce;
+          return const AuthorizationCredentialAppleID(
+            userIdentifier: 'user.1',
+            givenName: 'Junmark',
+            familyName: 'Chi',
+            email: 'private@privaterelay.appleid.com',
+            identityToken: 'fake.identity.token',
+            authorizationCode: 'code',
+            state: null,
+          );
+        },
+        signInWithIdToken: ({required provider, required idToken, required nonce}) async {
+          expect(provider, OAuthProvider.apple);
+          expect(idToken, 'fake.identity.token');
+          sentRawNonce = nonce;
+        },
+        saveFullName: (name) async => savedName = name,
+      );
+      expect(seenNonce, SocialAuth.sha256ofString(sentRawNonce!));
+      expect(savedName, 'Junmark Chi');
     });
   });
 

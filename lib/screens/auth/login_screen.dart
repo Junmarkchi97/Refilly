@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/api.dart';
@@ -69,8 +70,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _busy = true);
     try {
       await SocialAuth.signIn(provider);
-      // For mobile, the browser returns through the registered deep link.
-      // On the web Supabase redirects and AuthGate observes the new session.
+      // Native Apple returns a session immediately. Google (and Apple on web)
+      // continue in the browser / deep link; AuthGate picks up the session.
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      showFailureNotice(context, e, failed: 'Apple sign-in could not finish. Please try again.');
     } catch (e) {
       if (mounted) {
         showFailureNotice(context, e, failed: 'Sign-in could not start. Please try again.');
