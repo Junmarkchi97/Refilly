@@ -12,8 +12,10 @@ enum OwnerPlan { monthly, yearly }
 class OwnerPricing {
   static const monthly = 249;
   static const yearlyDiscount = .40;
+  static const trialDays = 7;
   static int get yearly => (monthly * 12 * (1 - yearlyDiscount)).round();
   static int get yearlyPerMonth => (yearly / 12).round();
+  static String get trialLabel => '$trialDays-day free trial';
 }
 
 String peso(int v) {
@@ -92,12 +94,26 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(color: RF.muted, fontSize: 14, height: 1.35),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: RF.goodSoft,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          '${OwnerPricing.trialLabel} · cancel anytime',
+                          style: const TextStyle(color: RF.good, fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     _PlanCard(
                       selected: _plan == OwnerPlan.yearly,
                       title: 'Yearly',
                       price: '${peso(OwnerPricing.yearly)} / year',
-                      caption: 'Just ${peso(OwnerPricing.yearlyPerMonth)} a month',
+                      caption: 'Includes ${OwnerPricing.trialLabel.toLowerCase()}',
                       badge: 'SAVE 40%',
                       strike: peso(OwnerPricing.monthly * 12),
                       onTap: () => setState(() => _plan = OwnerPlan.yearly),
@@ -107,7 +123,7 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                       selected: _plan == OwnerPlan.monthly,
                       title: 'Monthly',
                       price: '${peso(OwnerPricing.monthly)} / month',
-                      caption: 'Flexible, cancel anytime',
+                      caption: 'Includes ${OwnerPricing.trialLabel.toLowerCase()}',
                       onTap: () => setState(() => _plan = OwnerPlan.monthly),
                     ),
                     const SizedBox(height: 16),
@@ -138,8 +154,8 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                         child: _busy
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                             : Text(_plan == OwnerPlan.yearly
-                                ? 'Continue with Yearly · ${peso(OwnerPricing.yearly)}'
-                                : 'Continue with Monthly · ${peso(OwnerPricing.monthly)}'),
+                                ? 'Start free trial · Yearly ${peso(OwnerPricing.yearly)}'
+                                : 'Start free trial · Monthly ${peso(OwnerPricing.monthly)}'),
                       ),
                     ),
                     TextButton.icon(
@@ -147,10 +163,10 @@ class _OwnerPaywallScreenState extends State<OwnerPaywallScreen> {
                       icon: const Icon(Icons.confirmation_number_outlined, size: 20),
                       label: const Text('Have a voucher code?'),
                     ),
-                    const Text(
-                      'No charge today. Billing starts after your station is approved.',
+                    Text(
+                      'No charge today. ${OwnerPricing.trialDays} days free, then billing starts after approval.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: RF.muted, fontSize: 12),
+                      style: const TextStyle(color: RF.muted, fontSize: 12),
                     ),
                   ],
                 ),
