@@ -111,7 +111,13 @@ The Flutter UI and OAuth callback handlers are implemented, but login cannot com
 
 1. In [Supabase Authentication → Providers](https://supabase.com/dashboard/project/eregmlruwyzrziihihbt/auth/providers), enable **Google** and configure its Google Cloud OAuth credentials. Enable **Apple** and configure the Apple Developer Services ID, Team ID, Key ID, and client secret as instructed by Supabase.
 2. Add this OAuth callback URL to the Google Cloud authorized redirect URIs, and use the corresponding Apple Services ID return URL: `https://eregmlruwyzrziihihbt.supabase.co/auth/v1/callback`.
-3. Under [Supabase Authentication → URL Configuration](https://supabase.com/dashboard/project/eregmlruwyzrziihihbt/auth/url-configuration), allow both `https://junmarkchi97.github.io/Refilly/` (web) and `io.refilly.app://login-callback/` (native mobile), as well as your authorized development URLs.
+3. Under [Supabase Authentication → URL Configuration](https://supabase.com/dashboard/project/eregmlruwyzrziihihbt/auth/url-configuration):
+   - Set **Site URL** to `https://junmarkchi97.github.io/Refilly` (not `http://localhost:3000`). If Site URL stays on localhost, Google sign-in on the live site will bounce back to localhost after Google.
+   - Under **Redirect URLs**, add:
+     - `https://junmarkchi97.github.io/Refilly/**`
+     - `https://junmarkchi97.github.io/Refilly/`
+     - `io.refilly.app://login-callback/**`
+     - `http://localhost:**` (optional, for local `flutter run`)
 4. For native Apple sign-in support in a future iOS-native credential flow, enable the **Sign In with Apple** capability for your Apple App ID and iOS target. The current implementation uses the **Supabase OAuth browser flow**, not the Apple-native credential prompt.
 5. Test with a fresh Google account and Apple ID (including Apple private-relay email), and verify that Supabase creates the associated user profile automatically.
 

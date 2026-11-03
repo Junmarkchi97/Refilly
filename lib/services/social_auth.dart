@@ -19,11 +19,29 @@ class SocialAuth {
   static bool get appleAvailable =>
       showApple(isWeb: kIsWeb, platform: defaultTargetPlatform);
 
-  static String redirectUrl({required bool isWeb, required Uri browserUrl}) {
+  static String redirectUrl({
+    required bool isWeb,
+    required Uri browserUrl,
+    String? configuredAppUrl,
+  }) {
     if (!isWeb) return mobileRedirect;
+    // Prefer the production APP_URL so GitHub Pages OAuth never falls back to
+    // whatever Supabase has as Site URL (often http://localhost:3000).
+    final configured = (configuredAppUrl ?? AppConfig.configuredAppUrl).trim();
+    if (configured.isNotEmpty) {
+      final uri = Uri.tryParse(configured);
+      if (uri != null && uri.hasScheme && uri.host.isNotEmpty) {
+        return _webOriginPath(uri);
+      }
+    }
     // Preserve the hosted app's base path, but never feed an OAuth token,
     // fragment, or query string back into the next login redirect.
-    return '${browserUrl.origin}${browserUrl.path}';
+    return _webOriginPath(browserUrl);
+  }
+
+  static String _webOriginPath(Uri uri) {
+    final path = uri.path.isEmpty ? '/' : (uri.path.endsWith('/') ? uri.path : '${uri.path}/');
+    return '${uri.origin}$path';
   }
 
   /// Null when the provider can be offered. A sentence when Supabase has it turned off,

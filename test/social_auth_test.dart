@@ -34,6 +34,17 @@ void main() {
         browserUrl: Uri.parse('https://junmarkchi97.github.io/Refilly/?from=signup#token=secret'),
       ), 'https://junmarkchi97.github.io/Refilly/');
     });
+
+    test('prefers the production APP_URL over the current browser location', () {
+      expect(
+        SocialAuth.redirectUrl(
+          isWeb: true,
+          browserUrl: Uri.parse('https://junmarkchi97.github.io/Refilly/login'),
+          configuredAppUrl: 'https://junmarkchi97.github.io/Refilly',
+        ),
+        'https://junmarkchi97.github.io/Refilly/',
+      );
+    });
     test('explains a turned-off Google provider instead of following its error page', () {
       final message = SocialAuth.unavailableMessage(OAuthProvider.google, {
         'external': {'google': false, 'apple': false},
