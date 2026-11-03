@@ -70,6 +70,16 @@ class Api {
     });
   }
 
+  /// Returns the number of free months granted by a sponsor voucher.
+  static Future<int> redeemOwnerVoucher(String code) async {
+    final res = await sb.rpc('redeem_owner_voucher', params: {'p_code': code.trim().toUpperCase()});
+    return ((res as Map)['free_months'] as num).toInt();
+  }
+
+  static Future<void> chooseOwnerPlan(String plan) async {
+    await sb.rpc('choose_owner_plan', params: {'p_plan': plan});
+  }
+
   static Future<bool> hasUnreadNotifications() async =>
       (await sb.from('user_notifications').select('id').eq('is_read', false).limit(1)).isNotEmpty;
 

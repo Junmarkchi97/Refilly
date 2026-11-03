@@ -1,3 +1,4 @@
+import 'owner_paywall_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -13,7 +14,6 @@ import 'orders_screen.dart';
 import 'my_essentials_screen.dart';
 import '../notifications_screen.dart';
 import '../brand.dart';
-import 'apply_owner_screen.dart';
 import 'home_tab.dart';
 import '../auth/verify_phone_screen.dart';
 import 'profile_photo.dart';
@@ -177,7 +177,7 @@ class ProfileTab extends StatelessWidget {
                 title: const Text('Become a station owner', style: TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: const Text('Start selling to customers nearby'),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => go(const ApplyOwnerScreen()),
+                onTap: () => OwnerPaywallScreen.open(context),
               ),
             ],
           ),

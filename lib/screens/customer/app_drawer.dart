@@ -1,3 +1,4 @@
+import 'owner_paywall_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
@@ -7,7 +8,6 @@ import '../widgets.dart';
 import '../admin/admin_home.dart';
 import '../auth/verify_phone_screen.dart';
 import '../owner/owner_home.dart';
-import 'apply_owner_screen.dart';
 import 'profile_photo.dart';
 
 /// Glide-style side sheet that slides in from the left over the map.
@@ -49,7 +49,11 @@ class _AppDrawer extends StatelessWidget {
     final roleItem = switch (profile.role) {
       'owner' => (Icons.storefront_rounded, 'Owner dashboard', () => push(OwnerHome(profile: profile))),
       'admin' => (Icons.admin_panel_settings_rounded, 'Admin', () => push(AdminHome(profile: profile))),
-      _ => (Icons.storefront_rounded, 'Become a station owner', () => push(const ApplyOwnerScreen())),
+      _ => (Icons.storefront_rounded, 'Become a station owner', () {
+        final nav = Navigator.of(context);
+        nav.pop();
+        OwnerPaywallScreen.open(nav.context);
+      }),
     };
 
     return Align(
